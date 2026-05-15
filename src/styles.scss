@@ -1,16 +1,28 @@
-// =============================================================================
-// MiRa Companion — Global Styles
-// Importa Tailwind v4 + design tokens + applica base typography al body.
-// =============================================================================
-
-// Design tokens (CSS variables + mixins)
 @use '@angular/material' as mat;
 @use "./app/styles/tokens" as tokens;
 
-@import "tailwindcss/index.css";
+@import "tailwindcss";
 
+// 2. Iniezione del tema in Tailwind v4
+@theme {
+  --color-primary-50: var(--color-primary-50);
+  --color-primary-500: var(--color-primary-500);
+  --color-primary-600: var(--color-primary-600);
+  --color-primary-700: var(--color-primary-700);
 
+  --color-surface: var(--bg-surface);
+  --color-subtle: var(--bg-subtle);
 
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+
+  --color-border-subtle: var(--border-subtle);
+  --color-border-default: var(--border-default);
+
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+}
 
 @include mat.core();
 // Inter font (UI sans-serif)

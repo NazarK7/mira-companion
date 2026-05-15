@@ -16,7 +16,6 @@
                 <span class="wizard-stat-label">Work Dist.</span>
                 <strong class="wizard-stat-value">{{ form.value.workingDistance }} mm</strong>
             </div>
-
         </div>
     </header>
 
@@ -227,8 +226,6 @@
                                 getEulerDisplay(el.canonical.quaternion)[2] | number:'1.2-2' }}</td>
                         </ng-container>
 
-
-
                         <tr mat-header-row *matHeaderRowDef="displayColumns(); sticky: true"></tr>
                         <tr mat-row *matRowDef="let row; columns: displayColumns(); let i = index;"
                             [class.wizard-row-confirmed]="isPoseConfirmed(i)"></tr>
@@ -247,15 +244,14 @@
                 <span class="wizard-panel-chip">Live scene</span>
             </div>
 
-            <div class="wizard-stage-frame">
+            <div class="wizard-stage-frame" [class.wizard-edit-mode]="selectedIndex() !== null">
                 @if (generatedPoses().length > 0) {
                 <app-three-viewer [poses]="canonicalPosesFor3D()" [plateSetup]="wizardPlateSetup()"
                     [cameraHardware]="defaultCamera()" [selectedPoseIndex]="selectedIndex()"
                     [conflictPoseIndex]="conflictWithAny()" (poseSelected)="onPoseSelectedFrom3D($event)" />
 
                 @if (selectedIndex() !== null) {
-                <div
-                    class="absolute top-4 right-4 z-10 bg-surface/90 backdrop-blur border border-primary-500 rounded-xl p-4 shadow-xl w-[420px] flex flex-col gap-3 animate-in fade-in slide-in-from-right-4">
+                <div class="absolute flex flex-col gap-3 animate-in fade-in slide-in-from-right-4">
                     <div class="flex justify-between items-center mb-3">
                         <h4 class="text-sm font-bold uppercase text-primary-500">Edit Posa {{ selectedIndex()! + 1 }}
                         </h4>
@@ -265,7 +261,6 @@
                         </button>
                     </div>
 
-                    <!-- Camera POV viewer -->
                     <div class="rounded-lg overflow-hidden border border-divider"
                         [style.aspect-ratio]="selectedCamera().resolution_px.w + ' / ' + selectedCamera().resolution_px.h">
                         <app-camera-pov-viewer [cameraPose]="canonicalPosesFor3D()[selectedIndex()!]"
