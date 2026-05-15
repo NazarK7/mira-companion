@@ -1,0 +1,1185 @@
+MODULE Mira_Platform_Lib(SYSMODULE)
+    !
+    !***********************************************************
+    !
+    ! Module:  Mira_Platform_Lib
+    !
+    ! Description:
+    !   Mira Platform
+    !   Main Library to Manage the Application
+    !
+    ! Version: 1.0.6
+    !
+    !***********************************************************
+    !
+    PROC Read_Config_Parameter()
+        !
+        !###########################################
+        !Read config Parameter from user MiraFile
+        !###########################################
+        !
+        VAR string asData;
+        VAR num aiLine;
+        VAR num aiDelimiter;
+        VAR bool abResult;
+        VAR string vs_TemporaryConfigFileRead{3};
+        !
+        MiraConfigParameterLoaded:=FALSE;
+        MiraConfigParameter.vs_ip_address:="";
+        MiraConfigParameter.vi_port:=0;
+        MiraConfigParameter.lenguage_selected:=0;
+        !
+        Close MiraFile;
+        Open diskhome+"MiraPlatform/UsrConfig"\File:="Config.txt",MiraFile\Read;
+        !
+        aiLine:=1;
+        !
+        l_cont_read:
+        asData:=ReadStr(MiraFile);
+        IF asData<>"\\n" THEN
+            aiDelimiter:=StrFind(asData,1,":");
+            vs_TemporaryConfigFileRead{aiLine}:=StrPart(asData,aiDelimiter+1,StrLen(asData)-aiDelimiter-1);
+            aiLine:=aiLine+1;
+            GOTO l_cont_read;
+        ELSE
+            Close MiraFile;
+        ENDIF
+        !
+        MiraConfigParameter.vs_ip_address:=vs_TemporaryConfigFileRead{1};
+        abResult:=StrToVal(vs_TemporaryConfigFileRead{2},MiraConfigParameter.vi_port);
+        abResult:=StrToVal(vs_TemporaryConfigFileRead{3},MiraConfigParameter.lenguage_selected);
+        MiraConfigParameterLoaded:=True;
+        !
+    ENDPROC
+
+    !
+    PROC Read_Log_Text()
+        !
+        !###########################################
+        !Read Log Text from user MiraFile
+        !###########################################
+        !
+        VAR string asData;
+        VAR num aiLine;
+        VAR num aiDelimiter;
+        VAR string file_name;
+        !
+        IF MiraConfigParameter.lenguage_selected=1 THEN
+            file_name:="italiano.txt";
+        ELSE
+            file_name:="english.txt";
+        ENDIF
+        !
+        Close MiraFile;
+        Open diskhome+"MiraPlatform/UsrConfig"\File:=file_name,MiraFile\Read;
+        !
+        aiLine:=1;
+        !
+        l_cont_read:
+        asData:=ReadStr(MiraFile);
+        IF asData<>EOF THEN
+            aiDelimiter:=StrFind(asData,1,":");
+            MiraDictionary{aiLine}:=StrPart(asData,aiDelimiter+1,StrLen(asData)-aiDelimiter-1);
+            aiLine:=aiLine+1;
+            GOTO l_cont_read;
+        ELSE
+            Close MiraFile;
+        ENDIF
+        !
+    ENDPROC
+
+    !
+    PROC rs_ReadTool(num ToolIndex)
+        !
+        !###########################################
+        !Read Tool Data from user MiraFile
+        !###########################################
+        !
+        VAR bool abResult;
+        VAR string asData;
+        VAR num aiStartDelimiter;
+        VAR num aiDelimiter;
+        VAR string X;
+        VAR string Y;
+        VAR string Z;
+        VAR string rZ1;
+        VAR string rY;
+        VAR string rZ2;
+        VAR num aiLine;
+        !
+        MiraVisionTool.tframe:=[[0,0,0],[1,0,0,0]];
+        !
+        Close MiraFile;
+        Open diskhome+"MiraPlatform/UsrConfig"\File:="VisionTools.txt",MiraFile\Read;
+        !
+        aiLine:=1;
+        l_cont_read:
+        asData:=ReadStr(MiraFile);
+        IF asData<>EOF THEN
+            IF (aiLine=ToolIndex) THEN
+                IF asData<>"\\n" THEN
+                    !
+                    aiStartDelimiter:=StrFind(asData,1,"[");
+                    aiDelimiter:=StrFind(asData,1,",");
+                    X:=StrPart(asData,aiStartDelimiter+1,aiDelimiter-aiStartDelimiter-1);
+                    aiStartDelimiter:=aiDelimiter+1;
+                    aiDelimiter:=StrFind(asData,aiStartDelimiter,",");
+                    Y:=StrPart(asData,aiStartDelimiter,aiDelimiter-aiStartDelimiter);
+                    aiStartDelimiter:=aiDelimiter+1;
+                    aiDelimiter:=StrFind(asData,aiStartDelimiter,",");
+                    Z:=StrPart(asData,aiStartDelimiter,aiDelimiter-aiStartDelimiter);
+                    aiStartDelimiter:=aiDelimiter+1;
+                    aiDelimiter:=StrFind(asData,aiStartDelimiter,",");
+                    rZ1:=StrPart(asData,aiStartDelimiter,aiDelimiter-aiStartDelimiter);
+                    aiStartDelimiter:=aiDelimiter+1;
+                    aiDelimiter:=StrFind(asData,aiStartDelimiter,",");
+                    rY:=StrPart(asData,aiStartDelimiter,aiDelimiter-aiStartDelimiter);
+                    aiStartDelimiter:=aiDelimiter+1;
+                    aiDelimiter:=StrFind(asData,aiStartDelimiter,"]");
+                    rZ2:=StrPart(asData,aiStartDelimiter,aiDelimiter-aiStartDelimiter);
+                    !
+                    abResult:=StrToVal(X,vi_MiraXTool);
+                    abResult:=StrToVal(Y,vi_MiraYTool);
+                    abResult:=StrToVal(Z,vi_MiraZTool);
+                    abResult:=StrToVal(rZ1,vi_MirarZ1Tool);
+                    abResult:=StrToVal(rY,vi_MirarYTool);
+                    abResult:=StrToVal(rZ2,vi_MirarZ2Tool);
+                    !
+                    Close MiraFile;
+                    RETURN ;
+                ELSE
+                    Close MiraFile;
+                ENDIF
+            endif
+            aiLine:=aiLine+1;
+            GOTO l_cont_read;
+        ELSE
+            Close MiraFile;
+        ENDIF
+        !
+    ENDPROC
+
+    !
+    PROC Load_Dictionary()
+        !
+        !###########################################
+        !Initialize the system variables
+        !###########################################
+        !
+        Read_Config_Parameter;
+        Read_Log_Text;
+        !
+        rs_Log TRUE,"INFO",1;
+        IF NOT MiraConfigParameterLoaded THEN
+            rs_Log TRUE,"ERROR",84;
+        ENDIF
+        !
+    ENDPROC
+
+    !
+    FUNC string rs_NumToWord_Log(num input)
+        !
+        !###########################################
+        !Convert num to word for Log
+        !###########################################
+        !
+        VAR string debug{16};
+        !
+        FOR i FROM 1 TO 16 DO
+            IF BitCheckDnum(NumToDnum(input),i) THEN
+                debug{i}:="1";
+            ELSE
+                debug{i}:="0";
+            ENDIF
+        ENDFOR
+        !
+        RETURN debug{16}+debug{15}+debug{14}+debug{13}+debug{12}+debug{11}+debug{10}+debug{9}+debug{8}+debug{7}+debug{6}+debug{5}+debug{4}+debug{3}+debug{2}+debug{1};
+        !
+    ENDFUNC
+
+    !
+    PROC rs_Debug(string asmsg)
+        !
+        !###########################################
+        !Write Debug (communication between rbt and Mira)
+        !###########################################
+        !
+        VAR iodev debug;
+        !
+        IF asmsg="Rbt To Mira" THEN
+            !
+            Open diskhome+"MiraPlatform/RsLog"\File:="Debug.txt",debug\Append;
+            Write debug,CDate()+" "+CTime()+" "+" - "+asmsg;
+            Close debug;
+            !
+            !Command Word
+            Open diskhome+"MiraPlatform/RsLog"\File:="Debug.txt",debug\Append;
+            Write debug,"CW --> "+rs_NumToWord_Log(MiraSendData.CW);
+            Close debug;
+            !ID
+            Open diskhome+"MiraPlatform/RsLog"\File:="Debug.txt",debug\Append;
+            Write debug,"ID --> "+ValToStr(MiraSendData.ID);
+            Close debug;
+            !Coord
+            Open diskhome+"MiraPlatform/RsLog"\File:="Debug.txt",debug\Append;
+            Write debug,"X --> "+ValToStr(MiraSendData.X);
+            Close debug;
+            Open diskhome+"MiraPlatform/RsLog"\File:="Debug.txt",debug\Append;
+            Write debug,"Y --> "+ValToStr(MiraSendData.Y);
+            Close debug;
+            Open diskhome+"MiraPlatform/RsLog"\File:="Debug.txt",debug\Append;
+            Write debug,"Z --> "+ValToStr(MiraSendData.Z);
+            Close debug;
+            Open diskhome+"MiraPlatform/RsLog"\File:="Debug.txt",debug\Append;
+            Write debug,"rX --> "+ValToStr(MiraSendData.rX);
+            Close debug;
+            Open diskhome+"MiraPlatform/RsLog"\File:="Debug.txt",debug\Append;
+            Write debug,"rY --> "+ValToStr(MiraSendData.rY);
+            Close debug;
+            Open diskhome+"MiraPlatform/RsLog"\File:="Debug.txt",debug\Append;
+            Write debug,"rZ --> "+ValToStr(MiraSendData.rZ);
+            Close debug;
+            !Payload
+            Open diskhome+"MiraPlatform/RsLog"\File:="Debug.txt",debug\Append;
+            Write debug,"Pay --> "+ValToStr(MiraSendData.Payload);
+            Close debug;
+        ENDIF
+        IF asmsg="Mira to Rbt" THEN
+            !
+            Open diskhome+"MiraPlatform/RsLog"\File:="Debug.txt",debug\Append;
+            Write debug,CDate()+" "+CTime()+" "+" - "+asmsg;
+            Close debug;
+            !
+            !Command Word
+            Open diskhome+"MiraPlatform/RsLog"\File:="Debug.txt",debug\Append;
+            Write debug,"CW --> "+rs_NumToWord_Log(MiraReceiveData.CW);
+            Close debug;
+            !ID
+            Open diskhome+"MiraPlatform/RsLog"\File:="Debug.txt",debug\Append;
+            Write debug,"ID --> "+ValToStr(MiraReceiveData.ID);
+            Close debug;
+            !Acq Err
+            Open diskhome+"MiraPlatform/RsLog"\File:="Debug.txt",debug\Append;
+            Write debug,"Acq Err --> "+rs_NumToWord_Log(MiraReceiveData.AcqErr);
+            Close debug;
+            !Pay Size
+            Open diskhome+"MiraPlatform/RsLog"\File:="Debug.txt",debug\Append;
+            Write debug,"Pay Size --> "+ValToStr(MiraReceiveData.PayloadSize);
+            Close debug;
+            !Result
+            Open diskhome+"MiraPlatform/RsLog"\File:="Debug.txt",debug\Append;
+            Write debug,"Result --> "+rs_NumToWord_Log(MiraReceiveData.Result);
+            Close debug;
+            !Coord
+            Open diskhome+"MiraPlatform/RsLog"\File:="Debug.txt",debug\Append;
+            Write debug,"X --> "+ValToStr(MiraReceiveData.X);
+            Close debug;
+            Open diskhome+"MiraPlatform/RsLog"\File:="Debug.txt",debug\Append;
+            Write debug,"Y --> "+ValToStr(MiraReceiveData.Y);
+            Close debug;
+            Open diskhome+"MiraPlatform/RsLog"\File:="Debug.txt",debug\Append;
+            Write debug,"Z --> "+ValToStr(MiraReceiveData.Z);
+            Close debug;
+            Open diskhome+"MiraPlatform/RsLog"\File:="Debug.txt",debug\Append;
+            Write debug,"rX --> "+ValToStr(MiraReceiveData.rX);
+            Close debug;
+            Open diskhome+"MiraPlatform/RsLog"\File:="Debug.txt",debug\Append;
+            Write debug,"rY --> "+ValToStr(MiraReceiveData.rY);
+            Close debug;
+            Open diskhome+"MiraPlatform/RsLog"\File:="Debug.txt",debug\Append;
+            Write debug,"rZ --> "+ValToStr(MiraReceiveData.rZ);
+            Close debug;
+            !Term
+            Open diskhome+"MiraPlatform/RsLog"\File:="Debug.txt",debug\Append;
+            Write debug,"Term --> "+MiraReceiveData.Term;
+            Close debug;
+        ENDIF
+        IF asmsg="Mira to Rbt No Correction" THEN
+            !
+            Open diskhome+"MiraPlatform/RsLog"\File:="Debug.txt",debug\Append;
+            Write debug,CDate()+" "+CTime()+" "+" - "+asmsg;
+            Close debug;
+            !
+            !Command Word
+            Open diskhome+"MiraPlatform/RsLog"\File:="Debug.txt",debug\Append;
+            Write debug,"CW --> "+rs_NumToWord_Log(MiraReceiveData.CW);
+            Close debug;
+            !ID
+            Open diskhome+"MiraPlatform/RsLog"\File:="Debug.txt",debug\Append;
+            Write debug,"ID --> "+ValToStr(MiraReceiveData.ID);
+            Close debug;
+            !Acq Err
+            Open diskhome+"MiraPlatform/RsLog"\File:="Debug.txt",debug\Append;
+            Write debug,"Acq Err --> "+rs_NumToWord_Log(MiraReceiveData.AcqErr);
+            Close debug;
+            !Pay Size
+            Open diskhome+"MiraPlatform/RsLog"\File:="Debug.txt",debug\Append;
+            Write debug,"Pay Size --> "+ValToStr(MiraReceiveData.PayloadSize);
+            Close debug;
+            !Term
+            Open diskhome+"MiraPlatform/RsLog"\File:="Debug.txt",debug\Append;
+            Write debug,"Term --> "+MiraReceiveData.Term;
+            Close debug;
+        ENDIF
+        !
+        Open diskhome+"MiraPlatform/RsLog"\File:="Debug.txt",debug\Append;
+        Write debug," ";
+        Close debug;
+        !
+        IF FileSize(diskhome+"MiraPlatform/RsLog/Debug.txt")>30000 THEN
+            removefile diskhome+"MiraPlatform/RsLog/DebugOld.txt";
+            RenameFile diskhome+"MiraPlatform/RsLog/Debug.txt",diskhome+"MiraPlatform/RsLog/DebugOld.txt";
+        ENDIF
+        !
+    ERROR
+        !
+        IF ERRNO=ERR_FILEACC THEN
+            TRYNEXT;
+        ENDIF
+        !
+    ENDPROC
+
+    !
+    PROC rs_Log(bool ab_Log,string as_direction,num ai_index_msg,\string addText)
+        !
+        !###########################################
+        !Write Log MiraFile
+        !###########################################
+        !
+        VAR string as_msg;
+        VAR string as_addText;
+        VAR iodev rslog;
+        !
+        IF ab_Log THEN
+            IF Present(addText) THEN
+                as_addText:=addText;
+            ELSE
+                as_addText:="";
+            ENDIF
+            !
+            as_msg:=MiraDictionary{ai_index_msg};
+            !
+            TEST as_direction
+            CASE "INFO":
+                ErrWrite\I,"MiraPlatformLib",as_msg;
+                Open diskhome+"MiraPlatform/RsLog"\File:="Rs_Log.txt",rslog\Append;
+                Write rslog,CDate()+" "+CTime()+" "+"- "+"INFO"+": "+as_msg+" "+as_addText;
+                Close rslog;
+            CASE "ERROR":
+                ErrWrite\W,"MiraPlatformLib",as_msg;
+                Open diskhome+"MiraPlatform/RsLog"\File:="Rs_Log.txt",rslog\Append;
+                Write rslog,CDate()+" "+CTime()+" "+"- "+"ERROR"+": "+as_msg+" "+as_addText;
+                Close rslog;
+            DEFAULT:
+                ErrWrite\I,"MiraPlatformLib",as_msg;
+                Open diskhome+"MiraPlatform/RsLog"\File:="Rs_Log.txt",rslog\Append;
+                Write rslog,CDate()+" "+CTime()+" "+"- "+"INFO"+": "+as_msg+" "+as_addText;
+                Close rslog;
+            ENDTEST
+            !
+            IF FileSize(diskhome+"MiraPlatform/RsLog/Rs_Log.txt")>30000 THEN
+                removefile diskhome+"MiraPlatform/RsLog/Rs_LogOld.txt";
+                RenameFile diskhome+"MiraPlatform/RsLog/Rs_Log.txt",diskhome+"MiraPlatform/RsLog/Rs_LogOld.txt";
+            ENDIF
+        ENDIF
+        !
+    ERROR
+        !
+        IF ERRNO=ERR_FILEACC THEN
+            TRYNEXT;
+        ENDIF
+        !
+    ENDPROC
+
+    !
+    PROC rsSetDataToSend(num Command,num ModelCode,num payload)
+        !
+        !###########################################
+        !Set data to send to the Camera
+        !###########################################
+        !
+        MiraActPosToSend:=CRobT(\Tool:=MiraVisionTool\WObj:=MiraVisionwobj);
+        !
+        IF Command<>0 THEN
+            MiraSendData.CW:=pow(2,Command-1);
+        ELSE
+            MiraSendData.CW:=Command;
+        ENDIF
+        MiraSendData.ID:=ModelCode;
+        MiraSendData.X:=round(MiraActPosToSend.trans.x*1000);
+        MiraSendData.Y:=round(MiraActPosToSend.trans.y*1000);
+        MiraSendData.Z:=round(MiraActPosToSend.trans.z*1000);
+        MiraSendData.rX:=round(EulerZYX(\X,MiraActPosToSend.rot)*1000);
+        MiraSendData.rY:=round(EulerZYX(\Y,MiraActPosToSend.rot)*1000);
+        MiraSendData.rZ:=round(EulerZYX(\Z,MiraActPosToSend.rot)*1000);
+        MiraSendData.Payload:=payload;
+        !
+        rs_Debug("Rbt To Mira");
+        !
+    ENDPROC
+
+    !
+    PROC rs_analyze_Received_Data(bool ab_log)
+        !
+        !###########################################
+        !Receive and analyze data from the Camera
+        !###########################################
+        !
+        VAR num ai_State;
+        VAR num ai_X;
+        VAR num ai_Y;
+        VAR num ai_Z;
+        VAR num ai_rX;
+        VAR num ai_rY;
+        VAR num ai_rZ;
+        !
+        ai_State:=rs_read_from_socket();
+        b_result:=TRUE;
+        !
+        TEST ai_State
+        CASE KI_DATA_OK:
+            !
+            IF vb_MiraReconnection THEN
+                !
+                rs_Log ab_Log,"INFO",4;
+                rs_Log ab_Log,"INFO",7;
+                vb_MiraReconnection:=FALSE;
+                !
+            ELSEIF MiraSendData.CW=0 THEN
+                !
+                IF BitCheckDnum(NumToDnum(MiraReceiveData.CW),KI_DIN_READY)=FALSE THEN
+                    rs_Log ab_Log,"ERROR",20;
+                ENDIF
+                !
+            ELSEIF BitCheckDnum(NumToDnum(MiraSendData.CW),KI_DOUT_START_ACQ) AND BitCheckDnum(NumToDnum(MiraReceiveData.CW),KI_DIN_ACQUISITION_RUNNING) THEN
+                !
+                rs_Log ab_Log,"INFO",10;
+                vb_MiraRetrySingleMeas:=FALSE;
+                !
+                ai_X:=MiraReceiveData.X/1000;
+                ai_Y:=MiraReceiveData.Y/1000;
+                ai_Z:=MiraReceiveData.Z/1000;
+                ai_rX:=MiraReceiveData.rX/1000;
+                ai_rY:=MiraReceiveData.rY/1000;
+                ai_rZ:=MiraReceiveData.rZ/1000;
+                !
+                Apply_Correction ai_X,ai_Y,ai_Z,ai_rX,ai_rY,ai_Rz;
+                !
+                vb_nullOffset:=FALSE;
+                vb_take_with_vision:=TRUE;
+                !
+            ELSEIF BitCheckDnum(NumToDnum(MiraSendData.CW),KI_DOUT_LIGHT_TRIGGER) THEN
+                !                IF BitCheckDnum(NumToDnum(MiraReceiveData.CW),KI_DIN_LIGHT_TRIGGERED)=FALSE THEN
+                !                    UIMsgBox MiraDictionary{61}\Buttons:=btnRetryCancel\Result:=MiraAnswer;
+                !                    IF MiraAnswer=resRetry THEN
+                !                        rs_Log TRUE,"INFO",75;
+                !                        vb_MiraRetryLight:=TRUE;
+                !                    ELSEIF MiraAnswer=resCancel THEN
+                !                        rs_Log TRUE,"INFO",76;
+                !                        vb_MiraRetryLight:=FALSE;
+                !                    ELSE
+                !                    ENDIF
+                !                ENDIF
+            ELSEIF BitCheckDnum(NumToDnum(MiraSendData.CW),KI_DOUT_RESTART_CAMERA) THEN
+            ELSE
+                !
+                rs_Log ab_Log,"ERROR",24;
+                !
+            ENDIF
+            !
+        CASE KI_MIRA_CONNECTION_TIMEOUT:
+            !
+            b_result:=FALSE;
+            rs_Log ab_Log,"ERROR",28;
+            !
+        CASE KI_MIRA_SYSTEM_ERROR:
+            !
+            rs_Log ab_Log,"ERROR",30;
+            !
+        CASE KI_ID_ERROR:
+            !
+            rs_Log ab_Log,"ERROR",33;
+            !
+        CASE KI_ACQ_ERROR:
+            !
+            rs_Log ab_Log,"ERROR",24;
+            TEST MiraReceiveData.AcqErr
+            CASE 1:
+                rs_Log ab_Log,"ERROR",21;
+            CASE 2:
+                rs_Log ab_Log,"ERROR",22;
+            CASE 3:
+                rs_Log ab_Log,"ERROR",23;
+            CASE 4:
+                rs_Log ab_Log,"ERROR",83;
+            DEFAULT:
+                rs_Log ab_Log,"ERROR",31;
+            ENDTEST
+            !
+        CASE KI_PAY_SIZE_ERROR:
+            !
+            rs_Log ab_Log,"ERROR",3;
+            !
+        CASE KI_NOTFOUND_ERROR:
+            !
+            TEST MiraReceiveData.Result
+            CASE 2:
+                rs_Log ab_Log,"ERROR",11;
+            CASE 3:
+                rs_Log ab_Log,"ERROR",12;
+            CASE 4:
+                rs_Log ab_Log,"ERROR",13;
+            DEFAULT:
+                rs_Log ab_Log,"ERROR",14;
+            ENDTEST
+            !
+        CASE KI_TERM_ERROR:
+            !
+            rs_Log ab_Log,"ERROR",40;
+            !
+        CASE KI_OUTOFBOUND_MIRA_ERROR:
+            !
+            rs_Log ab_Log,"ERROR",74;
+            !
+        DEFAULT:
+            !
+            rs_Log ab_Log,"ERROR",31;
+            !
+        ENDTEST
+        !
+    ENDPROC
+
+    !
+    PROC Apply_Correction(num ai_corr_X,num ai_corr_Y,num ai_corr_Z,num ai_corr_rX,num ai_corr_rY,num ai_corr_rZ,\bool ab_reset)
+        !
+        !###########################################
+        !Apply correction in the oframe of the MiraVisionwobj
+        !###########################################
+        !
+        VAR bool ab_TempReset;
+        !
+        IF Present(ab_reset) THEN
+            ab_TempReset:=ab_reset;
+        ELSE
+            ab_TempReset:=FALSE;
+        ENDIF
+        !
+        rs_Log TRUE,"INFO",65;
+        !
+        !Check if the measured offset exceed the maximum correction
+        IF rsCheck_Offset(ai_corr_X,ai_corr_Y,ai_corr_Z,ai_corr_rX,ai_corr_rY,ai_corr_rZ)=FALSE THEN
+            rs_Log TRUE,"ERROR",80;
+            rs_Log TRUE,"ERROR",19;
+            UIMsgBox MiraDictionary{82}\Buttons:=btnRetryCancel\Result:=MiraAnswer;
+            IF MiraAnswer=resRetry THEN
+                rs_Log TRUE,"INFO",53;
+                vi_Mira_Act_Attempt:=1;
+                vb_MiraRetrySingleMeas:=TRUE;
+                GOTO L_End;
+            ELSEIF MiraAnswer=resCancel THEN
+                rs_Log TRUE,"INFO",52;
+                rs_Log TRUE,"INFO",78;
+                ab_TempReset:=TRUE;
+                rs_Log TRUE,"INFO",79;
+            ELSE
+            ENDIF
+        ENDIF
+        !
+        vi_Mira_Last_X_Received:=ai_corr_X;
+        vi_Mira_Last_Y_Received:=ai_corr_Y;
+        vi_Mira_Last_Z_Received:=ai_corr_Z;
+        vi_Mira_Last_rX_Received:=ai_corr_rX;
+        vi_Mira_Last_rY_Received:=ai_corr_rY;
+        vi_Mira_Last_rZ_Received:=ai_corr_rZ;
+        !
+        IF vb_MiraCorr_X AND ab_TempReset=FALSE THEN
+            MiraVisionwobj.oframe.trans.X:=MiraVisionwobj.oframe.trans.X+ai_corr_X;
+        ELSE
+            MiraVisionwobj.oframe.trans.X:=0;
+        ENDIF
+        !
+        IF vb_MiraCorr_Y AND ab_TempReset=FALSE THEN
+            MiraVisionwobj.oframe.trans.Y:=MiraVisionwobj.oframe.trans.Y+ai_corr_Y;
+        ELSE
+            MiraVisionwobj.oframe.trans.Y:=0;
+        ENDIF
+        !
+        IF vb_MiraCorr_Z AND ab_TempReset=FALSE THEN
+            IF ai_corr_Z>vi_Mira_Max_Dz THEN
+                ai_corr_Z:=vi_Mira_Max_Dz;
+            ENDIF
+            MiraVisionwobj.oframe.trans.Z:=MiraVisionwobj.oframe.trans.Z+ai_corr_Z;
+        ELSE
+            MiraVisionwobj.oframe.trans.Z:=0;
+        ENDIF
+        !
+        IF vb_MiraCorr_rX AND ab_TempReset=FALSE THEN
+            vi_MiratempAngleX:=vi_MiratempAngleX+ai_corr_rX;
+        ELSE
+            vi_MiratempAngleX:=0;
+        ENDIF
+        !
+        IF vb_MiraCorr_rY AND ab_TempReset=FALSE THEN
+            vi_MiratempAngleY:=vi_MiratempAngleY+ai_corr_rY;
+        ELSE
+            vi_MiratempAngleY:=0;
+        ENDIF
+        !
+        IF vb_MiraCorr_rZ AND ab_TempReset=FALSE THEN
+            vi_MiratempAngleZ:=vi_MiratempAngleZ+ai_corr_rZ;
+        ELSE
+            vi_MiratempAngleZ:=0;
+        ENDIF
+        !
+        MiraVisionwobj.oframe.rot:=OrientXYZ(vi_MiratempAngleX,vi_MiratempAngleY,vi_MiratempAngleZ);
+        !
+        rs_Log TRUE,"INFO",68;
+        !
+        L_End:
+        !
+    ENDPROC
+
+    !
+    FUNC bool rs_ResetAcqError(num ModelCode)
+        !
+        !###########################################
+        !Reset acquisition error
+        !###########################################
+        !
+        vb_MiraAcqErr:=FALSE;
+        !
+        !Set data to send to the Camera
+        rsSetDataToSend KI_DOUT_RESET_ACQ_ERR,ModelCode,0;
+        !
+        !Write the command to the Camera
+        rs_write_into_socket;
+        !
+        IF rs_read_from_socket()=KI_ACQ_ERROR THEN
+            !
+            !Reset command word and send to the Camera
+            rsResetCW ModelCode;
+            !
+            WaitTime 0.5;
+            !
+            !Set data to send to the Camera
+            rsSetDataToSend KI_DOUT_ROBOT_ERROR,ModelCode,0;
+            !
+            !Write the command to the Camera
+            rs_write_into_socket;
+            !
+            WaitTime 0.5;
+            !
+            vb_MiraAcqErr:=TRUE;
+            !
+        ENDIF
+        !
+        !Reset command word and send to the Camera
+        rsResetCW ModelCode;
+        !
+        WaitTime 0.5;
+        !
+        RETURN vb_MiraAcqErr;
+        !
+    ENDFUNC
+
+    !
+    PROC rs_ResetSystErr(num ModelCode)
+        !
+        !###########################################
+        !Reset system error
+        !###########################################
+        !
+        !Set data to send to the Camera
+        rsSetDataToSend KI_DOUT_RESET,ModelCode,0;
+        !
+        !Write the command to the Camera
+        rs_write_into_socket;
+        !
+        WaitTime 0.5;
+        !
+        !Reset command word and send to the Camera
+        rsResetCW ModelCode;
+        !
+    ENDPROC
+
+    !
+    PROC rs_ResetRecords()
+        !
+        !###########################################
+        !Reset communication variables
+        !###########################################
+        !
+        MiraSendData.CW:=0;
+        MiraSendData.ID:=0;
+        MiraSendData.X:=0;
+        MiraSendData.Y:=0;
+        MiraSendData.Z:=0;
+        MiraSendData.rX:=0;
+        MiraSendData.rY:=0;
+        MiraSendData.rZ:=0;
+        MiraSendData.Payload:=0;
+        !
+        MiraReceiveData.CW:=0;
+        MiraReceiveData.ID:=0;
+        MiraReceiveData.AcqErr:=0;
+        MiraReceiveData.PayloadSize:=0;
+        MiraReceiveData.Result:=0;
+        MiraReceiveData.X:=0;
+        MiraReceiveData.Y:=0;
+        MiraReceiveData.Z:=0;
+        MiraReceiveData.rX:=0;
+        MiraReceiveData.rY:=0;
+        MiraReceiveData.rZ:=0;
+        MiraReceiveData.Term:="";
+        !
+        vi_Mira_Last_X_Received:=0;
+        vi_Mira_Last_Y_Received:=0;
+        vi_Mira_Last_Z_Received:=0;
+        vi_Mira_Last_rX_Received:=0;
+        vi_Mira_Last_rY_Received:=0;
+        vi_Mira_Last_rZ_Received:=0;
+        !
+        vb_take_with_vision:=FALSE;
+        vb_nullOffset:=TRUE;
+        !
+        vb_MiraAcqErr:=FALSE;
+        vb_MiraSystErr:=FALSE;
+        !
+    ENDPROC
+
+    !
+    PROC rsResetCW(num ModelCode)
+        !
+        !###########################################
+        !Reset and send Command Word
+        !###########################################
+        !
+        rsSetDataToSend 0,ModelCode,0;
+        !
+        rs_write_into_socket;
+        !
+        rs_analyze_Received_Data(FALSE);
+        !
+
+    ENDPROC
+
+    !
+    PROC rs_Restart_Application()
+        !
+        !###########################################
+        !Restart Application
+        !###########################################
+        !
+        rs_reconnection;
+        !
+        !Reset Mira Platform
+        rsSetDataToSend KI_DOUT_RESTART_CAMERA,0,0;
+        !
+        rs_write_into_socket;
+        !
+    ENDPROC
+
+    !
+    PROC rs_Restart_PC()
+        !
+        !###########################################
+        !Restart PC
+        !###########################################
+        !
+        rs_reconnection;
+        !
+        !Reset Pc
+        rsSetDataToSend KI_DOUT_RESTART_CAMERA,0,255;
+        !
+        rs_write_into_socket;
+        !
+    ENDPROC
+
+    !
+    PROC rs_Calculate_Tool(num ModelCode)
+        !
+        !###########################################
+        !Convert and save user Tool
+        !###########################################
+        !
+        rs_ReadTool(ModelCode);
+        !
+        MiraVisionTool.tframe.trans.X:=vi_MiraXTool;
+        MiraVisionTool.tframe.trans.Y:=vi_MiraYTool;
+        MiraVisionTool.tframe.trans.Z:=vi_MiraZTool;
+        MiraVisionTool.tframe.rot:=OrientZYZ(vi_MirarZ1Tool,vi_MirarYTool,vi_MirarZ2Tool);
+        !
+        rs_Log TRUE,"INFO",67;
+        !
+    ENDPROC
+
+    !
+    FUNC bool rsCheck_Threshold()
+        !
+        !###########################################
+        !Check user specified Threshold
+        !###########################################
+        !
+        IF abs(vi_Mira_Last_X_Received)>vi_MiraTh_Dx AND vb_MiraCorr_X THEN
+            RETURN FALSE;
+        ENDIF
+        !
+        IF abs(vi_Mira_Last_Y_Received)>vi_MiraTh_Dy AND vb_MiraCorr_Y THEN
+            RETURN FALSE;
+        ENDIF
+        !
+        IF abs(vi_Mira_Last_Z_Received)>vi_MiraTh_Dz AND vb_MiraCorr_Z THEN
+            RETURN FALSE;
+        ENDIF
+        !
+        IF abs(vi_Mira_Last_rX_Received)>vi_MiraTh_Rx AND vb_MiraCorr_rX THEN
+            RETURN FALSE;
+        ENDIF
+        !
+        IF abs(vi_Mira_Last_rY_Received)>vi_MiraTh_Ry AND vb_MiraCorr_rY THEN
+            RETURN FALSE;
+        ENDIF
+        !
+        IF abs(vi_Mira_Last_rZ_Received)>vi_MiraTh_Rz AND vb_MiraCorr_rZ THEN
+            RETURN FALSE;
+        ENDIF
+        !
+        RETURN True;
+        !
+    ENDFUNC
+
+    !
+    FUNC bool rsCheck_Offset(num ai_corr_X,num ai_corr_Y,num ai_corr_Z,num ai_corr_rX,num ai_corr_rY,num ai_corr_rZ)
+        !
+        !###########################################
+        !Check user specified Offset
+        !###########################################
+        !
+        IF abs(ai_corr_X)>vi_MiraLim_Dx AND vb_MiraCorr_X THEN
+            RETURN FALSE;
+        ENDIF
+        !
+        IF abs(ai_corr_Y)>vi_MiraLim_Dy AND vb_MiraCorr_Y THEN
+            RETURN FALSE;
+        ENDIF
+        !
+        IF abs(ai_corr_Z)>vi_MiraLim_Dz AND vb_MiraCorr_Z THEN
+            RETURN FALSE;
+        ENDIF
+        !
+        IF abs(ai_corr_rX)>vi_MiraLim_Rx AND vb_MiraCorr_rX THEN
+            RETURN FALSE;
+        ENDIF
+        !
+        IF abs(ai_corr_rY)>vi_MiraLim_Ry AND vb_MiraCorr_rY THEN
+            RETURN FALSE;
+        ENDIF
+        !
+        IF abs(ai_corr_rZ)>vi_MiraLim_Rz AND vb_MiraCorr_rZ THEN
+            RETURN FALSE;
+        ENDIF
+        !
+        RETURN True;
+        !
+    ENDFUNC
+
+    !
+    FUNC orient OrientXYZ(num XYZ_rX,num XYZ_rY,num XYZ_rZ)
+        !
+        !###########################################
+        !Convert EulerXYZ to EulerZYX to Quaternions
+        !###########################################
+        !
+        !Matrix
+        ![r11,r12,r13]
+        ![r21,r22,r23]
+        ![r31,r32,r33]
+        VAR num r11;
+        VAR num r12;
+        VAR num r13;
+        VAR num r21;
+        VAR num r22;
+        VAR num r23;
+        VAR num r31;
+        VAR num r32;
+        VAR num r33;
+        !
+        !Calculate Matrix
+        r11:=cos(XYZ_rY)*cos(XYZ_rZ);
+        r12:=-(cos(XYZ_rY)*sin(XYZ_rZ));
+        r13:=sin(XYZ_rY);
+        r21:=(cos(XYZ_rX)*sin(XYZ_rZ))+(sin(XYZ_rX)*Sin(XYZ_rY)*Cos(XYZ_rZ));
+        r22:=(cos(XYZ_rX)*cos(XYZ_rZ))-(sin(XYZ_rX)*sin(XYZ_rY)*sin(XYZ_rZ));
+        r23:=-(sin(XYZ_rX)*cos(XYZ_rY));
+        r31:=round((sin(XYZ_rX)*sin(XYZ_rZ))-(cos(XYZ_rX)*sin(XYZ_rY)*cos(XYZ_rZ))\Dec:=4);
+        r32:=(sin(XYZ_rX)*cos(XYZ_rZ))+(cos(XYZ_rX)*sin(XYZ_rY)*sin(XYZ_rZ));
+        r33:=cos(XYZ_rX)*cos(XYZ_rY);
+        !
+        !Calculate ZYX
+        IF r31>-1 AND r31<1 THEN
+            MiraZYX_rX:=ATan2(r32,r33);
+            MiraZYX_rY:=ASin(-r31);
+            MiraZYX_rZ:=ATan2(r21,r11);
+        ENDIF
+        IF r31=1 THEN
+            MiraZYX_rX:=0;
+            MiraZYX_rY:=-90;
+            MiraZYX_rZ:=ATan2(-r23,r22);
+        ENDIF
+        IF r31=-1 THEN
+            MiraZYX_rX:=0;
+            MiraZYX_rY:=90;
+            MiraZYX_rZ:=-ATan2(-r23,r22);
+        ENDIF
+        !
+        RETURN (OrientZYX(MiraZYX_rZ,MiraZYX_rY,MiraZYX_rX));
+        !
+    ENDFUNC
+
+    !
+    FUNC orient OrientZYZ(num ZYZ_rZ1,num ZYZ_rY,num ZYZ_rZ2)
+        !
+        !###########################################
+        !Convert EulerZYZ to EulerZYX to Quaternions
+        !###########################################
+        !
+        !Matrix
+        ![r11,r12,r13]
+        ![r21,r22,r23]
+        ![r31,r32,r33]
+        VAR num r11;
+        VAR num r12;
+        VAR num r13;
+        VAR num r21;
+        VAR num r22;
+        VAR num r23;
+        VAR num r31;
+        VAR num r32;
+        VAR num r33;
+        !
+        !Calculate Matrix
+        r11:=cos(ZYZ_rZ1)*cos(ZYZ_rY)*cos(ZYZ_rZ2)-sin(ZYZ_rZ1)*sin(ZYZ_rZ2);
+        r12:=-cos(ZYZ_rZ1)*cos(ZYZ_rY)*sin(ZYZ_rZ2)-sin(ZYZ_rZ1)*cos(ZYZ_rZ2);
+        r13:=cos(ZYZ_rZ1)*sin(ZYZ_rY);
+        r21:=sin(ZYZ_rZ1)*cos(ZYZ_rY)*cos(ZYZ_rZ2)+cos(ZYZ_rZ1)*sin(ZYZ_rZ2);
+        r22:=-sin(ZYZ_rZ1)*cos(ZYZ_rY)*sin(ZYZ_rZ2)+cos(ZYZ_rZ1)*cos(ZYZ_rZ2);
+        r23:=sin(ZYZ_rZ1)*sin(ZYZ_rY);
+        r31:=round(-sin(ZYZ_rY)*cos(ZYZ_rZ2)\Dec:=4);
+        r32:=sin(ZYZ_rY)*sin(ZYZ_rZ2);
+        r33:=cos(ZYZ_rY);
+        !
+        !Calculate ZYX
+        IF r31>-1 AND r31<1 THEN
+            MiraZYX_rX:=ATan2(r32,r33);
+            MiraZYX_rY:=ASin(-r31);
+            MiraZYX_rZ:=ATan2(r21,r11);
+        ENDIF
+        IF r31=1 THEN
+            MiraZYX_rX:=0;
+            MiraZYX_rY:=-90;
+            MiraZYX_rZ:=ATan2(-r23,r22);
+        ENDIF
+        IF r31=-1 THEN
+            MiraZYX_rX:=0;
+            MiraZYX_rY:=90;
+            MiraZYX_rZ:=-ATan2(-r23,r22);
+        ENDIF
+        !
+        RETURN (OrientZYX(MiraZYX_rZ,MiraZYX_rY,MiraZYX_rX));
+        !
+    ENDFUNC
+
+    !
+    PROC rsStartAcquisition(num Command,num ModelCode)
+        !
+        !###########################################
+        !Main routine to start the iterative process
+        !###########################################
+        !
+        VAR robtarget ap_ActTemp;
+        VAR robtarget ap_ZeroTemp:=[[0,0,0],[1,0,0,0],[0,-1,1,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+        VAR string msgArray{3};
+        VAR tooldata tTempLoad;
+        VAR num error_attemp;
+
+        !
+        !Connect the socket if not already connected
+
+        IF rs_connection_status_check()=FALSE THEN
+            strMessageSocket{1}:="rsStartAcquisition start";
+            SC_VisionSC_Write_CSV_Log "ComauSocketError",strLogVisionSocketHeader,strMessageSocket,nLogVisionSocketAct,nLogVisionSocketMax;
+            rs_reconnection;
+        ENDIF
+        !
+        WaitRob\ZeroSpeed;
+        WaitTime 0.5;
+        !
+        !Set user variables depends on the modelID
+        %"ru_setVariables"%(ModelCode);
+        !
+        !Reset communication variables
+        rs_resetRecords;
+        !
+        !Tool and Frame calculation
+        rs_Calculate_Tool(ModelCode);
+        tTempLoad:=CTool();
+        MiraVisionTool.tload:=tTempLoad.tload;
+        ap_ActTemp:=CRobT(\Tool:=MiraVisionTool\WObj:=wobj0);
+        MiraVisionwobj.uframe.trans:=ap_ActTemp.trans;
+        MiraVisionwobj.uframe.rot:=ap_ActTemp.rot;
+        Apply_Correction 0,0,0,0,0,0,\ab_reset:=True;
+        ap_ZeroTemp.robconf:=ap_ActTemp.robconf;
+        !
+        !Set system iteration variables
+        vi_Mira_Act_Attempt:=1;
+        vi_Mira_Act_Iteration:=1;
+        !
+        rs_Log TRUE,"INFO",60;
+        !
+        L_Reiterate:
+        !
+        !Check if the measured offset exceed the maximum correction
+        IF rsCheck_Offset(MiraVisionwobj.oframe.trans.x,MiraVisionwobj.oframe.trans.y,MiraVisionwobj.oframe.trans.z,vi_MiratempAngleX,vi_MiratempAngleY,vi_MiratempAngleZ)=FALSE THEN
+            rs_Log TRUE,"ERROR",80;
+            msgArray{1}:=MiraDictionary{80};
+            msgArray{2}:="";
+            msgArray{3}:=MiraDictionary{82};
+            MiraAnswer:=UIMessageBox(\MsgArray:=msgArray\Buttons:=btnRetryCancel);
+            rs_Log TRUE,"ERROR",19;
+            IF MiraAnswer=resRetry THEN
+                rs_Log TRUE,"INFO",53;
+                vi_Mira_Act_Attempt:=1;
+                GOTO L_RetrySingleMeas;
+            ELSEIF MiraAnswer=resCancel THEN
+                rs_Log TRUE,"INFO",52;
+                rs_Log TRUE,"INFO",78;
+                Apply_Correction 0,0,0,0,0,0\ab_reset:=true;
+                vb_take_with_vision:=FALSE;
+                vb_nullOffset:=TRUE;
+                rs_Log TRUE,"INFO",79;
+                GOTO L_End;
+            ELSE
+            ENDIF
+        ENDIF
+        !
+        !Move in ph position
+        MoveJ ap_ZeroTemp,MiravPh,z0,MiraVisionTool,\WObj:=MiraVisionwobj;
+        WaitRob\ZeroSpeed;
+        WaitTime 0.5;
+        !
+        IF rs_connection_status_check()=FALSE THEN
+            strMessageSocket{1}:="rsStartAcquisition move pos";
+            SC_VisionSC_Write_CSV_Log "ComauSocketError",strLogVisionSocketHeader,strMessageSocket,nLogVisionSocketAct,nLogVisionSocketMax;
+            rs_reconnection;
+        ENDIF
+        !Turn on the lights
+        %"ru_Light_Management"%1,ModelCode;
+        !
+        ! ////////////////////////////////////reconnection Ileana Romata !
+        IF rs_connection_status_check()=FALSE AND error_attemp<vi_Mira_n_Attempt THEN
+            strMessageSocket{1}:="rsStartAcquisition light";
+            SC_VisionSC_Write_CSV_Log "ComauSocketError",strLogVisionSocketHeader,strMessageSocket,nLogVisionSocketAct,nLogVisionSocketMax;
+            rs_reconnection;
+            GOTO L_Reiterate;
+        ENDIF
+        L_RetrySingleMeas:
+        vb_MiraRetrySingleMeas:=True;
+        !
+        rs_Log TRUE,"INFO",9;
+        !
+        !Set data to send to the Camera
+        rsSetDataToSend Command,ModelCode,0;
+
+        !
+        !Write the command to the Camera
+        rs_write_into_socket;
+        !
+        !Receive and analize the data from the Camera
+        b_result:=FALSE;
+        rs_analyze_Received_Data(TRUE);
+        !
+        error_attemp:=error_attemp+1;
+        if b_result=FALSE AND error_attemp<vi_Mira_n_Attempt THEN
+            GOTO L_Reiterate;
+        ENDIF
+        rs_Log TRUE,"INFO",15\addText:=ValToStr(vi_MiraTime);
+        !
+        WaitTime 0.5;
+        !
+        !Reset command word and send to the Camera
+        rsResetCW ModelCode;
+        !
+        WaitTime 0.5;
+        !
+        IF vb_MiraAcqErr THEN
+            IF rs_ResetAcqError(ModelCode)=TRUE THEN
+                GOTO L_End;
+            ENDIF
+        ENDIF
+        !
+        IF vb_MiraSystErr THEN
+            rs_ResetSystErr(ModelCode);
+            GOTO L_End;
+        ENDIF
+        !
+        !Check if needed to retry the measure
+        IF vb_MiraRetrySingleMeas AND vi_Mira_Act_Attempt<vi_Mira_n_Attempt THEN
+            rs_Log TRUE,"INFO",63;
+            vi_Mira_Act_Attempt:=vi_Mira_Act_Attempt+1;
+            rs_Log TRUE,"INFO",49,\addText:=NumToStr(vi_Mira_Act_Attempt,0);
+            GOTO L_RetrySingleMeas;
+        ELSEIF vb_MiraRetrySingleMeas THEN
+            rs_Log TRUE,"ERROR",77;
+            UIMsgBox MiraDictionary{82}\Buttons:=btnRetryCancel\Result:=MiraAnswer;
+            IF MiraAnswer=resRetry THEN
+                rs_Log TRUE,"INFO",53;
+                vi_Mira_Act_Attempt:=1;
+                GOTO L_RetrySingleMeas;
+            ELSEIF MiraAnswer=resCancel THEN
+                rs_Log TRUE,"INFO",52;
+                rs_Log TRUE,"INFO",78;
+                Apply_Correction 0,0,0,0,0,0\ab_reset:=true;
+                vb_take_with_vision:=FALSE;
+                vb_nullOffset:=TRUE;
+                rs_Log TRUE,"INFO",79;
+            ELSE
+            ENDIF
+        ENDIF
+        !
+        !Check Threshold
+        IF rsCheck_Threshold()=FALSE AND vi_Mira_Act_Iteration<vi_Mira_n_Iteration THEN
+            vi_Mira_Act_Attempt:=1;
+            vi_Mira_Act_Iteration:=vi_Mira_Act_Iteration+1;
+            GOTO L_Reiterate;
+        ELSEIF rsCheck_Threshold()=FALSE THEN
+            rs_Log TRUE,"INFO",70;
+            rs_Log TRUE,"INFO",81;
+            msgArray{1}:=MiraDictionary{81};
+            msgArray{2}:="";
+            msgArray{3}:=MiraDictionary{82};
+            MiraAnswer:=UIMessageBox(\MsgArray:=msgArray\Buttons:=btnRetryCancel);
+            IF MiraAnswer=resRetry THEN
+                rs_Log TRUE,"INFO",53;
+                vi_Mira_Act_Attempt:=1;
+                vi_Mira_Act_Iteration:=1;
+                GOTO L_RetrySingleMeas;
+            ELSEIF MiraAnswer=resCancel THEN
+                rs_Log TRUE,"INFO",52;
+                Apply_Correction 0,0,0,0,0,0\ab_reset:=true;
+                vb_take_with_vision:=FALSE;
+                vb_nullOffset:=TRUE;
+            ELSE
+            ENDIF
+        ENDIF
+        !
+        L_End:
+        !
+        !Turn off the lights
+        %"ru_Light_Management"%0,ModelCode;
+        !
+        rs_Log TRUE,"INFO",71;
+        !
+    ENDPROC
+
+    !
+ENDMODULE

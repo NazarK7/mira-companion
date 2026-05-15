@@ -1,0 +1,180 @@
+<p>station-detail works!</p>
+<section class="mx-auto max-w-7xl px-6 py-8">
+    <nav class="mb-4 text-sm text-[var(--text-tertiary)]" aria-label="Breadcrumb">
+        <a routerLink="/customers" class="hover:text-[var(--color-primary-600)]">Customers</a>
+        <span class="mx-2">/</span>
+        @if (customer(); as c) {
+        <a [routerLink]="['/customers', c.slug]" class="hover:text-[var(--color-primary-600)]">
+            {{ c.name }}
+        </a>
+        <span class="mx-2">/</span>
+        }
+        @if (plant(); as p) {
+
+        <a [routerLink]="['/customers', customer()!.slug, 'plants', p.id]"
+            class="hover:text-[var(--color-primary-600)]">
+            {{ p.name }}
+        </a>
+        <span class="mx-2">/</span>
+        }
+        <span class="text-[var(--text-primary)]">{{ station()?.name ?? '—' }}</span>
+    </nav>
+
+    @if (station(); as s) {
+    <header class="mb-8 flex items-start justify-between gap-4">
+        <div>
+            @if (s.code) {
+            <p class="font-mono text-sm text-[var(--text-tertiary)]">{{ s.code }}</p>
+            }
+            <h1 class="text-3xl font-semibold text-[var(--text-primary)]">{{ s.name }}</h1>
+            <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                @if (s.line) {
+                <span class="text-[var(--text-secondary)]">
+                    <mat-icon class="!text-base !w-4 !h-4 align-middle">linear_scale</mat-icon>
+                    {{ s.line }}
+                </span>
+                }
+                @if (s.installDate) {
+                <span class="text-[var(--text-secondary)]">
+                    <mat-icon class="!text-base !w-4 !h-4 align-middle">event</mat-icon>
+                    Installed {{ s.installDate }}
+                </span>
+                }
+                @if (s.status) {
+                <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                    [class]="statusBadgeClass(s.status)">
+                    {{ s.status }}
+                </span>
+                }
+            </div>
+            @if (s.description) {
+            <p class="mt-3 max-w-2xl text-sm text-[var(--text-secondary)]">{{ s.description }}</p>
+            }
+        </div>
+        <button mat-stroked-button>
+            <mat-icon>edit</mat-icon>
+            Edit
+        </button>
+    </header>
+
+    <!-- Cameras -->
+    <div>
+        <div class="mb-4 flex items-end justify-between">
+            <h2 class="text-xl font-semibold text-[var(--text-primary)]">Cameras</h2>
+
+            <a mat-flat-button [routerLink]="[
+                '/customers',
+                customer()!.slug,
+                'plants',
+                plant()!.id,
+                'stations',
+                s.id,
+                'cameras',
+                'new'
+              ]" class="!bg-[var(--color-primary-600)]">
+                <mat-icon>add</mat-icon>
+                New Camera
+            </a>
+        </div>
+
+        @if (s.cameras.length === 0) {
+        <div
+            class="rounded-lg border border-dashed border-[var(--border-default)] bg-[var(--bg-subtle)] p-8 text-center text-sm text-[var(--text-secondary)]">
+            No cameras registered in this station yet.
+        </div>
+        } @else {
+        <ul class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3" role="list">
+            @for (cam of s.cameras; track cam.id) {
+            <li>
+                <a [routerLink]="[
+                    
+                      '/customers',
+                      customer()!.slug,
+                      'plants',
+                      plant()!.id,
+                      'stations',
+                      s.id,
+                      'cameras',
+                      cam.id
+                    ]"
+                    class="block h-full rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] transition hover:border-[var(--color-primary-500)] hover:shadow-[var(--shadow-md)]">
+                    <div class="mb-3 flex items-start justify-between gap-3">
+                        <h3 class="truncate text-base font-semibold text-[var(--text-primary)]">
+                            {{ cam.name }}
+                        </h3>
+                        <span
+                            class="inline-flex shrink-0 items-center rounded px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider"
+                            [class]="typeBadgeClass(cam.type)">
+                            {{ typeLabel(cam.type) }}
+                        </span>
+                    </div>
+
+                    <dl class="space-y-1 text-xs">
+                        @if (cam.cameraModel) {
+                        <div class="flex justify-between gap-2">
+                            <dt class="text-[var(--text-tertiary)]">Model</dt>
+                            <dd class="truncate font-mono text-[var(--text-primary)]">
+                                {{ cam.cameraModel }}
+                            </dd>
+                        </div>
+                        }
+                        @if (cam.lensFocalMm) {
+                        <div class="flex justify-between gap-2">
+                            <dt class="text-[var(--text-tertiary)]">Lens</dt>
+                            <dd class="font-mono text-[var(--text-primary)]">
+                                {{ cam.lensFocalMm }} mm
+                            </dd>
+                        </div>
+                        }
+                        @if (cam.ipAddress) {
+                        <div class="flex justify-between gap-2">
+                            <dt class="text-[var(--text-tertiary)]">IP</dt>
+                            <dd class="font-mono text-[var(--text-primary)]">
+                                {{ cam.ipAddress }}
+                            </dd>
+                        </div>
+                        }
+                        @if (cam.firmware) {
+                        <div class="flex justify-between gap-2">
+                            <dt class="text-[var(--text-tertiary)]">FW</dt>
+                            <dd class="font-mono text-[var(--text-primary)]">
+                                {{ cam.firmware }}
+                            </dd>
+                        </div>
+                        }
+                    </dl>
+
+                    <div
+                        class="mt-4 flex items-center gap-4 border-t border-[var(--border-subtle)] pt-3 text-xs text-[var(--text-tertiary)]">
+                        <span>{{ cam.jobs.length }} job{{ cam.jobs.length === 1 ? '' : 's' }}</span>
+                        @if (cam.halconLicenses.length) {
+                        <span>{{ cam.halconLicenses.length }} lic</span>
+                        }
+                        @if (cam.maintenanceEvents.length) {
+                        <span>{{ cam.maintenanceEvents.length }} events</span>
+                        }
+                    </div>
+                </a>
+            </li>
+            }
+        </ul>
+        }
+    </div>
+
+    @if (s.recoveryProcedure) {
+    <div class="mt-10 rounded-md border border-[var(--color-accent-200)] bg-[var(--color-accent-50)] p-5">
+        <h3 class="mb-2 text-sm font-semibold text-[var(--color-accent-700)]">
+            <mat-icon class="!text-base !w-4 !h-4 align-middle">restore</mat-icon>
+            Recovery Procedure
+        </h3>
+        <p class="whitespace-pre-wrap text-sm text-[var(--text-secondary)]">
+            {{ s.recoveryProcedure }}
+        </p>
+    </div>
+    }
+    } @else {
+    <div class="rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] p-12 text-center">
+        <p class="text-base text-[var(--text-secondary)]">Station not found.</p>
+    </div>
+    }
+</section>

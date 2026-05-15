@@ -1,0 +1,98 @@
+:host {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+}
+
+.pov-frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.pov-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  outline: none;
+}
+
+.pov-overlay {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  pointer-events: none;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+}
+
+.pov-coverage {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+
+  &--good { color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); }
+  &--warn { color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); }
+  &--bad  { color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); }
+}
+
+.pov-fov-info {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  color: #cbd5e1;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+// Crosshair centrale
+.pov-crosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 24px;
+  height: 24px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0.5;
+
+  &__h, &__v {
+    position: absolute;
+    background: #f8fafc;
+  }
+  &__h {
+    top: 50%; left: 0; right: 0;
+    height: 1px; transform: translateY(-50%);
+  }
+  &__v {
+    left: 50%; top: 0; bottom: 0;
+    width: 1px; transform: translateX(-50%);
+  }
+}
+
+// Regola dei terzi (linee guida 3×3)
+.pov-rule-of-thirds {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+
+  > div {
+    border-right: 1px dashed rgba(255, 255, 255, 0.08);
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+  }
+}

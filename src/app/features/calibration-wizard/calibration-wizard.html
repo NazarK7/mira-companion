@@ -1,0 +1,349 @@
+<section class="wizard-page">
+    <header class="wizard-hero">
+        <div class="wizard-hero-copy">
+            <p class="wizard-eyebrow">Pose Synthesis</p>
+            <h1 class="wizard-title">Calibration Wizard</h1>
+            <p class="wizard-subtitle">Generazione pose N-Body ottimizzate su cupola sferica con preview 3D e override
+                rapidi da controller.</p>
+        </div>
+
+        <div class="wizard-stats" aria-label="Current wizard settings">
+            <div class="wizard-stat-card">
+                <span class="wizard-stat-label">Controller</span>
+                <strong class="wizard-stat-value">{{ form.value.controller }}</strong>
+            </div>
+            <div class="wizard-stat-card">
+                <span class="wizard-stat-label">Work Dist.</span>
+                <strong class="wizard-stat-value">{{ form.value.workingDistance }} mm</strong>
+            </div>
+
+        </div>
+    </header>
+
+    <div class="wizard-shell">
+        <div class="wizard-sidebar custom-scrollbar">
+            <form [formGroup]="form" class="wizard-panel wizard-form-panel">
+                <div class="wizard-paste-box">
+                    <div class="wizard-paste-copy">
+                        <span class="wizard-paste-label">Smart Paste</span>
+                        <p>Incolla una riga `robtarget` ABB e riempi subito l'anchor pose.</p>
+                    </div>
+
+                    <mat-form-field appearance="outline" class="wizard-field">
+                        <mat-label>ABB robtarget</mat-label>
+                        <input matInput placeholder="Es: [[1227.5, 1502.7, ...]" (paste)="onPasteRawTarget($event)">
+                        <mat-icon matSuffix>content_paste</mat-icon>
+                    </mat-form-field>
+                </div>
+
+                <section class="wizard-form-section">
+                    <div class="wizard-section-heading">
+                        <p class="wizard-section-kicker">Hardware</p>
+                        <h3 class="wizard-section-title">Camera, lens & plate</h3>
+                    </div>
+
+                    <div class="wizard-grid wizard-grid-three">
+                        <mat-form-field appearance="outline" class="wizard-field">
+                            <mat-label>Camera</mat-label>
+                            <mat-select formControlName="cameraId">
+                                @for (cam of cameras; track cam.id) {
+                                <mat-option [value]="cam.id">{{ cam.label }}</mat-option>
+                                }
+                            </mat-select>
+                        </mat-form-field>
+                        <mat-form-field appearance="outline" class="wizard-field">
+                            <mat-label>Lens</mat-label>
+                            <mat-select formControlName="lensId">
+                                @for (lens of lenses; track lens.id) {
+                                <mat-option [value]="lens.id">{{ lens.label }}</mat-option>
+                                }
+                            </mat-select>
+                        </mat-form-field>
+                        <mat-form-field appearance="outline" class="wizard-field">
+                            <mat-label>Plate</mat-label>
+                            <mat-select formControlName="plateId">
+                                @for (plate of plates; track plate.id) {
+                                <mat-option [value]="plate.id">{{ plate.label }}</mat-option>
+                                }
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+
+                    @if (lensCompatibilityWarning() !== null) {
+                    <div
+                        class="bg-amber-500/15 border border-amber-500/50 text-amber-300 rounded-md p-2 mt-2 text-xs leading-snug">
+                        ⚠️ {{ lensCompatibilityWarning() }}
+                    </div>
+                    }
+                </section>
+
+                <section class="wizard-form-section">
+                    <div class="wizard-section-heading">
+                        <p class="wizard-section-kicker">Machine</p>
+                        <h3 class="wizard-section-title">Controller and optics</h3>
+                    </div>
+
+                    <div class="wizard-grid wizard-grid-four">
+                        <mat-form-field appearance="outline" class="wizard-field">
+                            <mat-label>Controller</mat-label>
+                            <mat-select formControlName="controller">
+                                @for (ctrl of controllers; track ctrl) {
+                                <mat-option [value]="ctrl">{{ ctrl }}</mat-option>
+                                }
+                            </mat-select>
+                        </mat-form-field>
+                        <mat-form-field appearance="outline" class="wizard-field">
+                            <mat-label>Work Dist. (mm)</mat-label>
+                            <input matInput type="number" formControlName="workingDistance">
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline" class="wizard-field">
+                            <mat-label>N. Pose</mat-label>
+                            <input matInput type="number" formControlName="nPoses" min="5" max="30">
+                        </mat-form-field>
+                    </div>
+
+                    <div class="wizard-grid wizard-grid-three">
+                        <mat-form-field appearance="outline" class="wizard-field">
+                            <mat-label>Min Traslazione (mm)</mat-label>
+                            <input matInput type="number" formControlName="minTrans">
+                        </mat-form-field>
+                        <mat-form-field appearance="outline" class="wizard-field">
+                            <mat-label>Min Rotazione (deg)</mat-label>
+                            <input matInput type="number" formControlName="minRot">
+                        </mat-form-field>
+                    </div>
+                </section>
+
+                <section class="wizard-form-section">
+                    <div class="wizard-section-heading">
+                        <p class="wizard-section-kicker">Anchor</p>
+                        <h3 class="wizard-section-title">Teach pendant pose</h3>
+                    </div>
+
+                    <div class="wizard-grid wizard-grid-three">
+                        <mat-form-field appearance="outline" class="wizard-field"><mat-label>X</mat-label><input
+                                matInput type="number" formControlName="x"></mat-form-field>
+                        <mat-form-field appearance="outline" class="wizard-field"><mat-label>Y</mat-label><input
+                                matInput type="number" formControlName="y"></mat-form-field>
+                        <mat-form-field appearance="outline" class="wizard-field"><mat-label>Z</mat-label><input
+                                matInput type="number" formControlName="z"></mat-form-field>
+                    </div>
+
+                    <div class="wizard-grid wizard-grid-three">
+                        <mat-form-field appearance="outline" class="wizard-field"><mat-label>Rx (deg)</mat-label><input
+                                matInput type="number" formControlName="rx"></mat-form-field>
+                        <mat-form-field appearance="outline" class="wizard-field"><mat-label>Ry (deg)</mat-label><input
+                                matInput type="number" formControlName="ry"></mat-form-field>
+                        <mat-form-field appearance="outline" class="wizard-field"><mat-label>Rz (deg)</mat-label><input
+                                matInput type="number" formControlName="rz"></mat-form-field>
+                    </div>
+                </section>
+
+                <button mat-flat-button color="primary" class="wizard-generate-button" [disabled]="form.invalid"
+                    (click)="generate()">
+                    <mat-icon>auto_awesome</mat-icon>
+                    Genera Cupola
+                </button>
+            </form>
+
+            @if (generatedPoses().length > 0) {
+            <section class="wizard-panel wizard-table-panel">
+                <div class="wizard-panel-header">
+                    <div>
+                        <p class="wizard-panel-kicker">Results</p>
+                        <h2 class="wizard-panel-title">Generated pose set</h2>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="wizard-panel-chip">{{ generatedPoses().length }} pose</span>
+                        <button mat-icon-button (click)="copyPosesToClipboard()" type="button"
+                            matTooltip="Copia pose negli appunti">
+                            <mat-icon>content_copy</mat-icon>
+                        </button>
+                        <button mat-icon-button (click)="toggleRotationDisplay()" type="button"
+                            matTooltip="showQuaternions() ? 'Mostra angoli Euler' : 'Mostra quaternioni'">
+                            <mat-icon>{{ showQuaternions() ? '3d_rotation' : 'sync_alt' }}</mat-icon>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="wizard-table-shell">
+                    <table mat-table [dataSource]="generatedPoses()" class="wizard-table">
+                        <ng-container matColumnDef="idx">
+                            <th mat-header-cell *matHeaderCellDef class="wizard-col-index">#</th>
+                            <td mat-cell *matCellDef="let el; let i = index" class="wizard-cell-index">P{{ i + 1 }}</td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="x">
+                            <th mat-header-cell *matHeaderCellDef>X</th>
+                            <td mat-cell *matCellDef="let el" class="wizard-mono-cell">{{ el.canonical.position[0] |
+                                number:'1.2-2' }}</td>
+                        </ng-container>
+                        <ng-container matColumnDef="y">
+                            <th mat-header-cell *matHeaderCellDef>Y</th>
+                            <td mat-cell *matCellDef="let el" class="wizard-mono-cell">{{ el.canonical.position[1] |
+                                number:'1.2-2' }}</td>
+                        </ng-container>
+                        <ng-container matColumnDef="z">
+                            <th mat-header-cell *matHeaderCellDef>Z</th>
+                            <td mat-cell *matCellDef="let el" class="wizard-mono-cell">{{ el.canonical.position[2] |
+                                number:'1.2-2' }}</td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="q1">
+                            <th mat-header-cell *matHeaderCellDef>Q1 (w)</th>
+                            <td mat-cell *matCellDef="let el" class="wizard-mono-cell">{{ el.canonical.quaternion[3] |
+                                number:'1.2-2' }}</td>
+                        </ng-container>
+                        <ng-container matColumnDef="q2">
+                            <th mat-header-cell *matHeaderCellDef>Q2 (x)</th>
+                            <td mat-cell *matCellDef="let el" class="wizard-mono-cell">{{ el.canonical.quaternion[0] |
+                                number:'1.2-2' }}</td>
+                        </ng-container>
+                        <ng-container matColumnDef="q3">
+                            <th mat-header-cell *matHeaderCellDef>Q3 (y)</th>
+                            <td mat-cell *matCellDef="let el" class="wizard-mono-cell">{{ el.canonical.quaternion[1] |
+                                number:'1.2-2' }}</td>
+                        </ng-container>
+                        <ng-container matColumnDef="q4">
+                            <th mat-header-cell *matHeaderCellDef>Q4 (z)</th>
+                            <td mat-cell *matCellDef="let el" class="wizard-mono-cell">{{ el.canonical.quaternion[2] |
+                                number:'1.2-2' }}</td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="rx">
+                            <th mat-header-cell *matHeaderCellDef>Rx</th>
+                            <td mat-cell *matCellDef="let el" class="wizard-mono-cell">{{
+                                getEulerDisplay(el.canonical.quaternion)[0] | number:'1.2-2' }}</td>
+                        </ng-container>
+                        <ng-container matColumnDef="ry">
+                            <th mat-header-cell *matHeaderCellDef>Ry</th>
+                            <td mat-cell *matCellDef="let el" class="wizard-mono-cell">{{
+                                getEulerDisplay(el.canonical.quaternion)[1] | number:'1.2-2' }}</td>
+                        </ng-container>
+                        <ng-container matColumnDef="rz">
+                            <th mat-header-cell *matHeaderCellDef>Rz</th>
+                            <td mat-cell *matCellDef="let el" class="wizard-mono-cell">{{
+                                getEulerDisplay(el.canonical.quaternion)[2] | number:'1.2-2' }}</td>
+                        </ng-container>
+
+
+
+                        <tr mat-header-row *matHeaderRowDef="displayColumns(); sticky: true"></tr>
+                        <tr mat-row *matRowDef="let row; columns: displayColumns(); let i = index;"
+                            [class.wizard-row-confirmed]="isPoseConfirmed(i)"></tr>
+                    </table>
+                </div>
+            </section>
+            }
+        </div>
+
+        <section class="wizard-stage-panel">
+            <div class="wizard-stage-header">
+                <div>
+                    <p class="wizard-panel-kicker">Preview</p>
+                    <h2 class="wizard-panel-title">3D dome scene</h2>
+                </div>
+                <span class="wizard-panel-chip">Live scene</span>
+            </div>
+
+            <div class="wizard-stage-frame">
+                @if (generatedPoses().length > 0) {
+                <app-three-viewer [poses]="canonicalPosesFor3D()" [plateSetup]="wizardPlateSetup()"
+                    [cameraHardware]="defaultCamera()" [selectedPoseIndex]="selectedIndex()"
+                    [conflictPoseIndex]="conflictWithAny()" (poseSelected)="onPoseSelectedFrom3D($event)" />
+
+                @if (selectedIndex() !== null) {
+                <div
+                    class="absolute top-4 right-4 z-10 bg-surface/90 backdrop-blur border border-primary-500 rounded-xl p-4 shadow-xl w-[420px] flex flex-col gap-3 animate-in fade-in slide-in-from-right-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="text-sm font-bold uppercase text-primary-500">Edit Posa {{ selectedIndex()! + 1 }}
+                        </h4>
+                        <button mat-icon-button (click)="discardEdit()" class="scale-75"
+                            matTooltip="Annulla e ripristina">
+                            <mat-icon>close</mat-icon>
+                        </button>
+                    </div>
+
+                    <!-- Camera POV viewer -->
+                    <div class="rounded-lg overflow-hidden border border-divider"
+                        [style.aspect-ratio]="selectedCamera().resolution_px.w + ' / ' + selectedCamera().resolution_px.h">
+                        <app-camera-pov-viewer [cameraPose]="canonicalPosesFor3D()[selectedIndex()!]"
+                            [plateSetup]="wizardPlateSetup()" [cameraSpec]="selectedCamera()"
+                            [lensSpec]="selectedLens()" [plateSpec]="selectedPlate()" />
+                    </div>
+
+                    @if (conflictWithAny() !== null) {
+                    <div
+                        class="bg-red-500/15 border border-red-500/50 text-red-300 rounded-md p-2 mb-3 text-xs leading-snug">
+                        ⚠️ <strong>Conflitto con Posa {{ conflictWithAny()! + 1 }}</strong><br>
+                        @switch (conflictReason()) {
+                        @case ('translation') {
+                        Distanza minima ({{ form.value.minTrans }} mm) non rispettata.
+                        }
+                        @case ('rotation') {
+                        Rotazione minima ({{ form.value.minRot }}°) non rispettata.
+                        }
+                        @case ('both') {
+                        Sia distanza ({{ form.value.minTrans }} mm) che rotazione ({{ form.value.minRot }}°) sotto
+                        soglia.
+                        }
+                        }
+                    </div>
+                    }
+
+                    <form [formGroup]="editForm" class="grid grid-cols-2 gap-3">
+                        <mat-form-field appearance="outline" class="col-span-1 dense-field">
+                            <mat-label>X</mat-label>
+                            <input matInput type="number" formControlName="x" (input)="updateSelectedPoseLive()">
+                        </mat-form-field>
+                        <mat-form-field appearance="outline" class="col-span-1 dense-field">
+                            <mat-label>Y</mat-label>
+                            <input matInput type="number" formControlName="y" (input)="updateSelectedPoseLive()">
+                        </mat-form-field>
+                        <mat-form-field appearance="outline" class="col-span-1 dense-field">
+                            <mat-label>Z</mat-label>
+                            <input matInput type="number" formControlName="z" (input)="updateSelectedPoseLive()">
+                        </mat-form-field>
+
+                        <div class="col-span-2 border-t border-divider my-1"></div>
+
+                        <mat-form-field appearance="outline" class="col-span-1 dense-field">
+                            <mat-label>Rx</mat-label>
+                            <input matInput type="number" formControlName="rx" (input)="updateSelectedPoseLive()">
+                        </mat-form-field>
+                        <mat-form-field appearance="outline" class="col-span-1 dense-field">
+                            <mat-label>Ry</mat-label>
+                            <input matInput type="number" formControlName="ry" (input)="updateSelectedPoseLive()">
+                        </mat-form-field>
+                        <mat-form-field appearance="outline" class="col-span-1 dense-field">
+                            <mat-label>Rz</mat-label>
+                            <input matInput type="number" formControlName="rz" (input)="updateSelectedPoseLive()">
+                        </mat-form-field>
+                    </form>
+
+                    <div class="flex gap-2 mt-3">
+                        <button mat-flat-button color="primary" class="flex-1" (click)="confirmEdit()">
+                            <mat-icon class="mr-1">check</mat-icon>Conferma
+                        </button>
+                        <button mat-stroked-button (click)="discardEdit()">Annulla</button>
+                    </div>
+
+                    <p class="text-[10px] text-text-tertiary mt-2 italic text-center">
+                        Anteprima in tempo reale. Conferma per applicare e ricalcolare le pose successive in conflitto.
+                    </p>
+                </div> }
+                } @else {
+                <div class="wizard-empty-state">
+                    <div class="wizard-empty-orb">
+                        <mat-icon>3d_rotation</mat-icon>
+                    </div>
+                    <h3>Scene ready for synthesis</h3>
+                    <p>Compila i dati dell'anchor, scegli la geometria ottica e genera la cupola per vedere subito il
+                        setup 3D.</p>
+                </div>
+                }
+            </div>
+        </section>
+    </div>
+</section>

@@ -1,0 +1,26 @@
+<div class="pov-frame">
+  <canvas #canvasEl class="pov-canvas"></canvas>
+
+  <div class="pov-overlay">
+    <span class="pov-coverage" [class.pov-coverage--good]="fovStatus() === 'in-fov'"
+                                 [class.pov-coverage--warn]="fovStatus() === 'partial'"
+                                 [class.pov-coverage--bad]="fovStatus() === 'out-of-fov'">
+      {{ coverageLabel() }}
+    </span>
+    <span class="pov-fov-info">
+      {{ cameraSpec().resolution_px.w }}×{{ cameraSpec().resolution_px.h }} · {{ lensSpec().focal_length_mm }}mm
+    </span>
+  </div>
+
+  <!-- crosshair centrale per riferimento visivo -->
+  <div class="pov-crosshair">
+    <div class="pov-crosshair__h"></div>
+    <div class="pov-crosshair__v"></div>
+  </div>
+
+  <!-- regola dei terzi -->
+  <div class="pov-rule-of-thirds">
+    <div></div><div></div>
+    <div></div><div></div>
+  </div>
+</div>

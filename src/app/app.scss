@@ -1,0 +1,152 @@
+// =============================================================================
+// AppComponent styles — usa esclusivamente i design tokens definiti in _tokens.scss
+// =============================================================================
+
+:host {
+  display: block;
+  height: 100vh;
+  height: 100dvh; // dynamic viewport (iOS/Android safari)
+}
+
+.app-container {
+  height: 100%;
+  background-color: var(--bg-app);
+}
+
+// ─── SIDENAV ─────────────────────────────────────────────────────────────────
+
+.app-sidenav {
+  width: 260px;
+  background-color: var(--bg-surface);
+  border-right: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+}
+
+.sidenav-brand {
+  padding: var(--space-6) var(--space-5) var(--space-5);
+  border-bottom: 1px solid var(--border-subtle);
+  background: linear-gradient(
+    180deg,
+    var(--bg-surface) 0%,
+    var(--bg-subtle) 100%
+  );
+}
+
+.brand-mark {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.02em;
+  color: var(--color-primary-600);
+  display: inline-flex;
+  align-items: baseline;
+  user-select: none;
+
+  :host-context(html.dark) & {
+    color: var(--color-primary-400);
+  }
+}
+
+.brand-bracket {
+  color: var(--color-accent-500);
+  font-weight: var(--font-weight-bold);
+}
+
+.brand-name {
+  margin: 0 2px;
+}
+
+.brand-subtitle {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  margin-top: var(--space-1);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+.sidenav-list {
+  flex: 1;
+  padding: var(--space-2) var(--space-2);
+  overflow-y: auto;
+}
+
+// Active nav item — styling via :ng-deep necessario per gli internals di mat-list-item
+:host ::ng-deep .mat-mdc-list-item {
+  &.nav-active {
+    background-color: var(--color-primary-50);
+
+    .mat-icon,
+    .mdc-list-item__primary-text {
+      color: var(--color-primary-700);
+      font-weight: var(--font-weight-medium);
+    }
+  }
+}
+
+:host-context(html.dark) ::ng-deep .mat-mdc-list-item {
+  &.nav-active {
+    background-color: rgba(77, 124, 224, 0.15);
+
+    .mat-icon,
+    .mdc-list-item__primary-text {
+      color: var(--color-primary-400);
+    }
+  }
+}
+
+.sidenav-footer {
+  margin-top: auto;
+  padding: var(--space-3) var(--space-5);
+  border-top: 1px solid var(--border-subtle);
+  background-color: var(--bg-subtle);
+}
+
+.version-tag {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  letter-spacing: 0.05em;
+}
+
+// ─── CONTENT (toolbar + main) ────────────────────────────────────────────────
+
+.app-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.app-toolbar {
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  height: 56px;
+  min-height: 56px;
+  padding: 0 var(--space-3);
+  flex-shrink: 0;
+}
+
+.toolbar-spacer {
+  flex: 1;
+}
+
+.theme-check {
+  margin-left: auto;
+  color: var(--color-success-500);
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.app-main {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-6);
+  background-color: var(--bg-app);
+
+  @media (max-width: 768px) {
+    padding: var(--space-4);
+  }
+}

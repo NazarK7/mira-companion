@@ -1,0 +1,230 @@
+// =============================================================================
+// MiRa Companion — Global Styles
+// Importa Tailwind v4 + design tokens + applica base typography al body.
+// =============================================================================
+
+// Design tokens (CSS variables + mixins)
+@use '@angular/material' as mat;
+@use "./app/styles/tokens" as tokens;
+
+@import "tailwindcss/index.css";
+
+
+
+
+@include mat.core();
+// Inter font (UI sans-serif)
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+// =============================================================================
+// RESET / BASE
+// =============================================================================
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  @include tokens.base-typography;
+  text-rendering: optimizeLegibility;
+}
+
+code,
+pre,
+kbd,
+samp,
+.mono {
+  @include tokens.code-typography;
+}
+
+// Headings
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  color: var(--text-primary);
+}
+
+h1 {
+  font-size: var(--text-3xl);
+}
+
+h2 {
+  font-size: var(--text-2xl);
+}
+
+h3 {
+  font-size: var(--text-xl);
+}
+
+h4 {
+  font-size: var(--text-lg);
+}
+
+h5 {
+  font-size: var(--text-base);
+}
+
+h6 {
+  font-size: var(--text-sm);
+}
+
+p {
+  margin: 0 0 var(--space-4);
+  color: var(--text-primary);
+}
+
+// Links
+a {
+  color: var(--color-primary-500);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--easing-default);
+
+  &:hover {
+    color: var(--color-primary-700);
+    text-decoration: underline;
+  }
+}
+
+// Selection
+::selection {
+  background-color: var(--color-primary-200);
+  color: var(--color-primary-900);
+}
+
+// Focus ring
+:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+// Scrollbar (webkit)
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-subtle);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-neutral-400);
+  border-radius: var(--radius-md);
+  border: 3px solid var(--bg-subtle);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-neutral-500);
+}
+
+
+
+$mira-theme: mat.define-theme((color: (theme-type: dark,
+        primary: mat.$blue-palette,
+        tertiary: mat.$orange-palette,
+      ),
+      typography: (plain-family: 'Inter, system-ui, -apple-system, sans-serif',
+        brand-family: 'Inter, system-ui, -apple-system, sans-serif',
+      ),
+      density: (scale: -1,
+      ),
+    ));
+
+html {
+  // Theme + typography
+  @include mat.all-component-themes($mira-theme);
+  @include mat.typography-hierarchy($mira-theme);
+
+  // Tokens override per coerenza col design system Comau
+  --mat-sys-surface-container: var(--bg-elevated, #1c212b);
+  --mat-sys-on-surface: var(--text-primary, #eceff4);
+  --mat-sys-outline: var(--color-neutral-700, #2c3340);
+}
+
+// =============================================================================
+// CDK OVERLAY — z-index e sfondo opaco dei panel dropdown
+// =============================================================================
+.cdk-overlay-container {
+  z-index: 9999 !important;
+}
+
+.mat-mdc-select-panel,
+.mat-mdc-autocomplete-panel {
+  background: var(--bg-elevated, #1c212b) !important;
+  border: 1px solid var(--color-neutral-700, #2c3340) !important;
+  border-radius: var(--radius-md, 6px) !important;
+}
+
+// =============================================================================
+// FIX TAILWIND PREFLIGHT che spegne input/textarea dentro mat-form-field
+// =============================================================================
+.mat-mdc-text-field-wrapper {
+  background: var(--bg-elevated, #1c212b) !important;
+
+  input.mat-mdc-input-element,
+  input.mdc-text-field__input,
+  textarea.mat-mdc-input-element {
+    color: var(--text-primary, #eceff4) !important;
+    caret-color: var(--color-primary-500, #1a52d4) !important;
+    font: inherit !important;
+    background: transparent !important;
+    padding-block: 8px !important;
+  }
+}
+
+// Label floating del mat-form-field outline
+.mdc-floating-label {
+  color: var(--text-secondary, #b8c1cf) !important;
+}
+
+.mdc-text-field--focused .mdc-floating-label {
+  color: var(--color-primary-500, #1a52d4) !important;
+}
+
+// Bordo outline (idle + focused)
+.mdc-notched-outline__leading,
+.mdc-notched-outline__notch,
+.mdc-notched-outline__trailing {
+  border-color: var(--color-neutral-700, #2c3340) !important;
+}
+
+.mdc-text-field--focused {
+
+  .mdc-notched-outline__leading,
+  .mdc-notched-outline__notch,
+  .mdc-notched-outline__trailing {
+    border-color: var(--color-primary-500, #1a52d4) !important;
+    border-width: 2px !important;
+  }
+}
+
+// Mat option (item nella dropdown)
+.mat-mdc-option {
+  color: var(--text-primary, #eceff4) !important;
+
+  &:hover {
+    background: var(--bg-hover, rgba(255, 255, 255, 0.05)) !important;
+  }
+
+  &.mat-mdc-option-active,
+  &.mdc-list-item--selected {
+    background: var(--color-primary-900, #001853) !important;
+    color: var(--color-primary-200, #9eb8f0) !important;
+  }
+}

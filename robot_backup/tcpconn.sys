@@ -1,0 +1,224 @@
+MODULE tcpconn(SYSMODULE,NOSTEPIN,VIEWONLY)
+    !
+    !***********************************************************
+    !
+    ! Module:  tcpconn
+    !
+    ! Description:
+    !   Mira Platform
+    !   Library to Manage the TCP Connection
+    !
+    ! Version: 1.0.4
+    !
+    !***********************************************************
+    !
+    PROC rs_start_connection(
+        string as_host,
+        num ai_port)
+        !
+        VAR num err_counter;
+        !
+        !###########################################
+        !Create Socket and connect
+        !###########################################
+        !
+        vb_MiraReconnection:=TRUE;
+        %"rs_Log"%TRUE,"INFO",6;
+        err_counter:=0;
+        SocketCreate MiraVis_socket;
+        SocketConnect MiraVis_socket,as_host,ai_port\Time:=5;
+        !
+        %"rs_analyze_Received_Data"%(TRUE);
+        !
+    ERROR
+        IF ERRNO=ERR_SOCK_TIMEOUT AND err_counter<vi_Mira_n_Attempt THEN
+            %"rs_Log"%TRUE,"INFO",28;
+            err_counter:=err_counter+1;
+            WaitTime 2;
+            RETRY;
+        ELSE
+            %"rs_Log"%TRUE,"ERROR",8;
+            RAISE ;
+        ENDIF
+        !
+    ENDPROC
+
+    !
+    PROC rs_close_connection()
+        !
+        !###########################################
+        !Close connection
+        !###########################################
+        !
+        SocketClose MiraVis_socket;
+        !
+        %"rs_Log"%TRUE,"INFO",5;
+        !
+    ENDPROC
+
+    !
+    FUNC bool rs_connection_status_check()
+        !
+        VAR bool abReturnState;
+        VAR socketstatus viSocket_status;
+        !
+        !###########################################
+        !Check if the socket is already connected
+        !###########################################
+        !
+        viSocket_status:=SocketGetStatus(MiraVis_socket);
+        !
+        IF viSocket_status=SOCKET_CONNECTED THEN
+            abReturnState:=True;
+        ELSE
+            abReturnState:=FALSE;
+        ENDIF
+        !
+        RETURN abReturnState;
+        !
+    ENDFUNC
+
+    !
+    PROC rs_reconnection()
+        !
+        !###########################################
+        !Reconnection
+        !###########################################
+        !
+        %"Load_Dictionary"%;
+        %"rs_resetRecords"%;
+        rs_close_connection;
+        rs_start_connection MiraConfigParameter.vs_ip_address,MiraConfigParameter.vi_port;
+        !
+    ENDPROC
+
+    !
+    PROC rs_write_into_socket()
+        !
+        !###########################################
+        !Write command into Socket
+        !###########################################
+        !
+        VAR rawbytes raw_data_Send;
+        !
+        ClearRawBytes raw_data_Send;
+        !
+        PackRawBytes MiraSendData.CW,raw_data_Send,1\IntX:=UINT;
+        PackRawBytes MiraSendData.ID,raw_data_Send,(RawBytesLen(raw_data_Send)+1),\IntX:=UINT;
+        PackRawBytes MiraSendData.X,raw_data_Send,(RawBytesLen(raw_data_Send)+1),\IntX:=DINT;
+        PackRawBytes MiraSendData.Y,raw_data_Send,(RawBytesLen(raw_data_Send)+1),\IntX:=DINT;
+        PackRawBytes MiraSendData.Z,raw_data_Send,(RawBytesLen(raw_data_Send)+1),\IntX:=DINT;
+        PackRawBytes MiraSendData.rX,raw_data_Send,(RawBytesLen(raw_data_Send)+1),\IntX:=DINT;
+        PackRawBytes MiraSendData.rY,raw_data_Send,(RawBytesLen(raw_data_Send)+1),\IntX:=DINT;
+        PackRawBytes MiraSendData.rZ,raw_data_Send,(RawBytesLen(raw_data_Send)+1),\IntX:=DINT;
+        PackRawBytes MiraSendData.Payload,raw_data_Send,(RawBytesLen(raw_data_Send)+1),\IntX:=DINT;
+        !
+        SocketSend MiraVis_socket,\RawData:=raw_data_Send;
+        !
+        ClkReset MiraClock;
+        ClkStart MiraClock;
+        !
+    ERROR
+        IF ERRNO=ERR_SOCK_CLOSED THEN
+            %"rs_Log"%TRUE,"ERROR",29;
+        ENDIF
+    ENDPROC
+
+    !
+    FUNC num rs_read_from_socket()
+        !
+        VAR num Alarm;
+        VAR rawbytes raw_data_Received;
+        !
+        !###########################################
+        !Read response from Socket
+        !###########################################
+        !
+        WaitTime 0.5;
+        !
+        Alarm:=KI_DATA_OK;
+        !
+        ClearRawBytes raw_data_Received;
+        !
+        SocketReceive MiraVis_socket,\RawData:=raw_data_Received,\Time:=40;
+        !
+        clkstop MiraClock;
+        vi_MiraTime:=ClkRead(MiraClock);
+        !
+        UnpackRawBytes raw_data_Received,1,MiraReceiveData.CW,\IntX:=UINT;
+        IF BitCheckDnum(NumToDnum(MiraReceiveData.CW),KI_DIN_SYSTEM_ERROR) THEN
+            Alarm:=KI_MIRA_SYSTEM_ERROR;
+            vb_MiraSystErr:=TRUE;
+        ENDIF
+        !
+        UnpackRawBytes raw_data_Received,3,MiraReceiveData.ID,\IntX:=UINT;
+        IF MiraReceiveData.ID<>MiraSendData.ID AND BitCheckDnum(NumToDnum(MiraSendData.CW),KI_DOUT_START_ACQ) AND Alarm=KI_DATA_OK THEN
+            Alarm:=KI_ID_ERROR;
+        ENDIF
+        !
+        UnpackRawBytes raw_data_Received,5,MiraReceiveData.AcqErr,\IntX:=UINT;
+        IF MiraReceiveData.AcqErr<>0 AND Alarm=KI_DATA_OK THEN
+            Alarm:=KI_ACQ_ERROR;
+            vb_MiraAcqErr:=TRUE;
+        ENDIF
+        !
+        UnpackRawBytes raw_data_Received,7,MiraReceiveData.PayloadSize,\IntX:=UINT;
+        TEST MiraReceiveData.PayloadSize
+        CASE 2:
+            !
+            UnpackRawBytes raw_data_Received,9,MiraReceiveData.Term,\ASCII:=2;
+            IF MiraReceiveData.Term<>"%%" AND Alarm=KI_DATA_OK THEN
+                Alarm:=KI_TERM_ERROR;
+            ENDIF
+            !
+            %"rs_Debug"%("Mira to Rbt No Correction");
+            !
+        CASE 6:
+            !
+            UnpackRawBytes raw_data_Received,9,MiraReceiveData.Result,\IntX:=UDINT;
+            IF MiraReceiveData.Result<>1 AND Alarm=KI_DATA_OK THEN
+                Alarm:=KI_OUTOFBOUND_MIRA_ERROR;
+            ENDIF
+            !
+            UnpackRawBytes raw_data_Received,13,MiraReceiveData.Term,\ASCII:=2;
+            IF MiraReceiveData.Term<>"%%" AND Alarm=KI_DATA_OK THEN
+                Alarm:=KI_TERM_ERROR;
+            ENDIF
+            !
+            %"rs_Debug"%("Mira to Rbt No Correction");
+            !
+        CASE 30:
+            !
+            UnpackRawBytes raw_data_Received,9,MiraReceiveData.Result,\IntX:=UDINT;
+            IF MiraReceiveData.Result<>1 AND Alarm=KI_DATA_OK THEN
+                Alarm:=KI_NOTFOUND_ERROR;
+            ENDIF
+            !
+            UnpackRawBytes raw_data_Received,13,MiraReceiveData.X,\IntX:=DINT;
+            UnpackRawBytes raw_data_Received,17,MiraReceiveData.Y,\IntX:=DINT;
+            UnpackRawBytes raw_data_Received,21,MiraReceiveData.Z,\IntX:=DINT;
+            UnpackRawBytes raw_data_Received,25,MiraReceiveData.rX,\IntX:=DINT;
+            UnpackRawBytes raw_data_Received,29,MiraReceiveData.rY,\IntX:=DINT;
+            UnpackRawBytes raw_data_Received,33,MiraReceiveData.rZ,\IntX:=DINT;
+            !
+            UnpackRawBytes raw_data_Received,37,MiraReceiveData.Term,\ASCII:=2;
+            IF MiraReceiveData.Term<>"%%" AND Alarm=KI_DATA_OK THEN
+                Alarm:=KI_TERM_ERROR;
+            ENDIF
+            !
+            %"rs_Debug"%("Mira to Rbt");
+            !
+        DEFAULT:
+            !
+            IF Alarm=KI_DATA_OK THEN
+                Alarm:=KI_PAY_SIZE_ERROR;
+            ENDIF
+            !
+        ENDTEST
+        !
+        RETURN Alarm;
+        !
+    ENDFUNC
+
+    !
+ENDMODULE

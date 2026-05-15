@@ -1,0 +1,52 @@
+<canvas #canvasEl class="three-viewer__canvas absolute inset-0 z-0"></canvas>
+
+<!-- Scala di riferimento (bottom-left, sempre presente) -->
+<div class="absolute bottom-3 left-3 pointer-events-none select-none z-40
+            px-2 py-1 rounded bg-black/30 backdrop-blur-sm border border-white/5
+            flex items-center gap-2">
+  <div [style.width.px]="scaleWidthPx() || 50"
+       class="border-x border-b border-white/70 h-1.5 transition-all duration-100">
+  </div>
+  <span class="text-white/70 text-[10px] font-mono">{{ scaleLabel() }}</span>
+</div>
+
+<!-- Pannello info pose (bottom-right, contestuale alla selezione) -->
+@if (selectedPoseInfo(); as info) {
+  <div class="absolute bottom-3 right-3 pointer-events-none select-none z-50
+              p-3 rounded-lg bg-black/45 backdrop-blur-md
+              border border-primary-500/40 shadow-xl min-w-[210px]
+              animate-in fade-in slide-in-from-right-2">
+    <div class="flex items-center justify-between mb-2 pb-2 border-b border-white/10">
+      <span class="text-primary-400 text-[10px] font-bold uppercase tracking-wider">
+        Posa selezionata
+      </span>
+      <span class="text-white text-sm font-mono font-bold">
+        P{{ info.index + 1 }}
+      </span>
+    </div>
+    <div class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[11px] font-mono">
+      <span class="text-white/50">X</span>
+      <span class="text-white text-right">{{ info.position[0] | number:'1.1-1' }} mm</span>
+      <span class="text-white/50">Y</span>
+      <span class="text-white text-right">{{ info.position[1] | number:'1.1-1' }} mm</span>
+      <span class="text-white/50">Z</span>
+      <span class="text-white text-right">{{ info.position[2] | number:'1.1-1' }} mm</span>
+      <span class="text-white/50 mt-1 pt-1 border-t border-white/10">D. anchor</span>
+      <span class="text-white text-right mt-1 pt-1 border-t border-white/10">
+        {{ info.distanceFromAnchor | number:'1.0-0' }} mm
+      </span>
+    </div>
+  </div>
+}
+
+<!-- Pannello info scena (bottom-right quando NON c'è selezione) -->
+@if (!selectedPoseInfo() && poses().length > 0) {
+  <div class="absolute bottom-3 right-3 pointer-events-none select-none z-40
+              px-3 py-2 rounded-lg bg-black/30 backdrop-blur-sm border border-white/5
+              flex items-center gap-3 text-[11px] font-mono">
+    <span class="text-white/50">Pose</span>
+    <span class="text-white font-bold">{{ poses().length }}</span>
+    <span class="text-white/30">·</span>
+    <span class="text-white/50">Click su un frustum per dettagli</span>
+  </div>
+}

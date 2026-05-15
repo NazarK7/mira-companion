@@ -1,0 +1,96 @@
+<mat-sidenav-container class="app-container" [hasBackdrop]="isMobile()">
+  <!-- ─── SIDENAV ─────────────────────────────────────────────────────────── -->
+  <mat-sidenav
+    #sidenav
+    class="app-sidenav"
+    [mode]="isMobile() ? 'over' : 'side'"
+    [opened]="!isMobile() && sidenavOpen()"
+    [fixedInViewport]="isMobile()">
+
+    <!-- Brand header -->
+    <div class="sidenav-brand">
+      <div class="brand-mark">
+        <span class="brand-bracket">&lt;</span><span
+          class="brand-name"
+        >mi_ra</span><span class="brand-bracket">&gt;</span>
+      </div>
+      <div class="brand-subtitle">companion</div>
+    </div>
+
+    <!-- Nav -->
+    <mat-nav-list class="sidenav-list">
+      @for (item of navItems; track item.route) {
+        <a
+          mat-list-item
+          [routerLink]="item.route"
+          routerLinkActive="nav-active"
+          (click)="isMobile() && sidenav.close()">
+          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+          <span matListItemTitle>{{ item.label }}</span>
+        </a>
+      }
+    </mat-nav-list>
+
+    <!-- Footer -->
+    <div class="sidenav-footer">
+      <span class="version-tag">v0.1.0-dev</span>
+    </div>
+  </mat-sidenav>
+
+  <!-- ─── MAIN CONTENT ──────────────────────────────────────────────────── -->
+  <mat-sidenav-content class="app-content">
+    <!-- Toolbar -->
+    <mat-toolbar class="app-toolbar">
+      <button
+        mat-icon-button
+        (click)="isMobile() ? sidenav.toggle() : toggleSidenav()"
+        matTooltip="Toggle sidebar"
+        aria-label="Toggle sidebar">
+        <mat-icon>menu</mat-icon>
+      </button>
+
+      <span class="toolbar-spacer"></span>
+
+      <!-- Theme menu -->
+      <button
+        mat-icon-button
+        [matTooltip]="'Tema: ' + themeService.theme()"
+        [matMenuTriggerFor]="themeMenu"
+        aria-label="Theme menu">
+        @if (themeService.resolvedTheme() === 'dark') {
+          <mat-icon>dark_mode</mat-icon>
+        } @else {
+          <mat-icon>light_mode</mat-icon>
+        }
+      </button>
+      <mat-menu #themeMenu="matMenu">
+        <button mat-menu-item (click)="setTheme('light')">
+          <mat-icon>light_mode</mat-icon>
+          <span>Light</span>
+          @if (themeService.theme() === 'light') {
+            <mat-icon class="theme-check">check</mat-icon>
+          }
+        </button>
+        <button mat-menu-item (click)="setTheme('dark')">
+          <mat-icon>dark_mode</mat-icon>
+          <span>Dark</span>
+          @if (themeService.theme() === 'dark') {
+            <mat-icon class="theme-check">check</mat-icon>
+          }
+        </button>
+        <button mat-menu-item (click)="setTheme('auto')">
+          <mat-icon>brightness_auto</mat-icon>
+          <span>Auto (sistema)</span>
+          @if (themeService.theme() === 'auto') {
+            <mat-icon class="theme-check">check</mat-icon>
+          }
+        </button>
+      </mat-menu>
+    </mat-toolbar>
+
+    <!-- Routed view -->
+    <main class="app-main">
+      <router-outlet />
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>

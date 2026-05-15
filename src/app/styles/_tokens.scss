@@ -1,0 +1,250 @@
+// =============================================================================
+// MiRa Companion — Design Tokens
+// Stile Comau-inspired: blu cobalto + accenti arancio industriali.
+// CSS variables dual-mode (light/dark), spacing scale Tailwind-compatible.
+// =============================================================================
+
+// Sorgenti del sistema cromatico:
+// - Primary blue: ispirato al "Comau blue" (#0033A0, navy industriale)
+// - Accent orange: industriale, segnale (warning, evidenziazioni)
+// - Neutri: grayscale freddo per look tecnico
+// - Semantici: success/warning/danger consistent con Material design
+
+:root {
+  // ---------------------------------------------------------------------------
+  // PRIMARY — Comau blue scale
+  // ---------------------------------------------------------------------------
+  --color-primary-50:  #eaf0fc;
+  --color-primary-100: #cfdcf8;
+  --color-primary-200: #9eb8f0;
+  --color-primary-300: #6e94e8;
+  --color-primary-400: #3d70e0;
+  --color-primary-500: #1a52d4;   // primary main, link, focus
+  --color-primary-600: #0033a0;   // Comau blue canonical
+  --color-primary-700: #002b87;
+  --color-primary-800: #00226d;
+  --color-primary-900: #001853;
+
+  // ---------------------------------------------------------------------------
+  // ACCENT — orange industriale (warning, hot zones, evidenziazione)
+  // ---------------------------------------------------------------------------
+  --color-accent-50:  #fff4e6;
+  --color-accent-100: #ffe0b8;
+  --color-accent-200: #ffc88a;
+  --color-accent-300: #ffaf5c;
+  --color-accent-400: #ff962e;
+  --color-accent-500: #ff6600;   // accent main
+  --color-accent-600: #cc5200;
+  --color-accent-700: #993e00;
+  --color-accent-800: #662900;
+  --color-accent-900: #331500;
+
+  // ---------------------------------------------------------------------------
+  // NEUTRI — grayscale freddo
+  // ---------------------------------------------------------------------------
+  --color-neutral-0:    #ffffff;
+  --color-neutral-50:   #f7f8fa;
+  --color-neutral-100:  #eceff4;
+  --color-neutral-200:  #d8dee8;
+  --color-neutral-300:  #b8c1cf;
+  --color-neutral-400:  #8a95a8;
+  --color-neutral-500:  #5b6677;
+  --color-neutral-600:  #404a5c;
+  --color-neutral-700:  #2c3340;
+  --color-neutral-800:  #1c212b;
+  --color-neutral-900:  #11141c;
+  --color-neutral-950:  #07090f;
+
+  // ---------------------------------------------------------------------------
+  // SEMANTICI
+  // ---------------------------------------------------------------------------
+  --color-success-50:  #e8f5e9;
+  --color-success-500: #2e7d32;   // OK pose, calibration success
+  --color-success-700: #1b5e20;
+
+  --color-warning-50:  #fff8e1;
+  --color-warning-500: #f9a825;   // pose con coverage borderline, soglie incoerenti
+  --color-warning-700: #f57f17;
+
+  --color-danger-50:   #ffebee;
+  --color-danger-500:  #c62828;   // KO pose, errori, soglie disallineate
+  --color-danger-700:  #b71c1c;
+
+  --color-info-50:     #e3f2fd;
+  --color-info-500:    #1976d2;   // info, hint, suggerimenti
+  --color-info-700:    #0d47a1;
+
+  // ---------------------------------------------------------------------------
+  // SUPERFICI — light mode default
+  // ---------------------------------------------------------------------------
+  --bg-app:        var(--color-neutral-50);    // sfondo app
+  --bg-surface:    var(--color-neutral-0);     // card, panel
+  --bg-elevated:   var(--color-neutral-0);     // dialog, menu
+  --bg-subtle:     var(--color-neutral-100);   // bg input, hover row
+  --bg-strong:     var(--color-neutral-200);   // hover button secondary
+
+  --border-subtle:  var(--color-neutral-200);
+  --border-default: var(--color-neutral-300);
+  --border-strong:  var(--color-neutral-400);
+
+  --text-primary:    var(--color-neutral-900);
+  --text-secondary:  var(--color-neutral-600);
+  --text-tertiary:   var(--color-neutral-500);
+  --text-disabled:   var(--color-neutral-400);
+  --text-on-primary: var(--color-neutral-0);
+  --text-on-accent:  var(--color-neutral-0);
+
+  // ---------------------------------------------------------------------------
+  // POSE STATUS COLORS — usati nel 3D viewer e nelle timeline
+  // ---------------------------------------------------------------------------
+  --status-planned:          var(--color-neutral-400);
+  --status-in-progress:      var(--color-accent-500);
+  --status-ok:               var(--color-success-500);
+  --status-ok-with-override: var(--color-info-500);
+  --status-ko-unreachable:   var(--color-danger-500);
+  --status-ko-not-recognized: #ad1457;   // magenta scuro per distinguere da unreachable
+  --status-skipped:          var(--color-neutral-300);
+
+  // ---------------------------------------------------------------------------
+  // TIPOGRAFIA
+  // ---------------------------------------------------------------------------
+  --font-sans:  'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono:  'JetBrains Mono', ui-monospace, 'Cascadia Code', 'Fira Code', monospace;
+
+  --text-xs:   0.75rem;     // 12px — caption, helper text
+  --text-sm:   0.875rem;    // 14px — body small, table cell
+  --text-base: 1rem;        // 16px — body
+  --text-lg:   1.125rem;    // 18px — section title
+  --text-xl:   1.25rem;     // 20px — card header
+  --text-2xl:  1.5rem;      // 24px — page title
+  --text-3xl:  1.875rem;    // 30px — h1
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --line-height-tight:   1.25;
+  --line-height-normal:  1.5;
+  --line-height-relaxed: 1.75;
+
+  // ---------------------------------------------------------------------------
+  // SPACING — Tailwind-compatible scale (multipli di 4px)
+  // ---------------------------------------------------------------------------
+  --space-0:  0;
+  --space-1:  0.25rem;   // 4px
+  --space-2:  0.5rem;    // 8px
+  --space-3:  0.75rem;   // 12px
+  --space-4:  1rem;      // 16px
+  --space-5:  1.25rem;   // 20px
+  --space-6:  1.5rem;    // 24px
+  --space-8:  2rem;      // 32px
+  --space-10: 2.5rem;    // 40px
+  --space-12: 3rem;      // 48px
+  --space-16: 4rem;      // 64px
+
+  // ---------------------------------------------------------------------------
+  // RADII — angoli arrotondati misurati, niente eccessi
+  // ---------------------------------------------------------------------------
+  --radius-none: 0;
+  --radius-sm:   0.25rem;  // 4px — input, small button
+  --radius-md:   0.5rem;   // 8px — card, panel
+  --radius-lg:   0.75rem;  // 12px — dialog, large card
+  --radius-xl:   1rem;     // 16px — hero card
+  --radius-full: 9999px;   // pill, avatar
+
+  // ---------------------------------------------------------------------------
+  // SHADOWS — usate con parsimonia, look industriale prevede meno depth visiva
+  // ---------------------------------------------------------------------------
+  --shadow-sm: 0 1px 2px rgba(7, 9, 15, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(7, 9, 15, 0.07), 0 2px 4px -1px rgba(7, 9, 15, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(7, 9, 15, 0.08), 0 4px 6px -2px rgba(7, 9, 15, 0.04);
+  --shadow-xl: 0 20px 25px -5px rgba(7, 9, 15, 0.1), 0 10px 10px -5px rgba(7, 9, 15, 0.04);
+
+  // ---------------------------------------------------------------------------
+  // MOTION
+  // ---------------------------------------------------------------------------
+  --duration-fast:    150ms;
+  --duration-normal:  250ms;
+  --duration-slow:    400ms;
+  --easing-default:  cubic-bezier(0.4, 0, 0.2, 1);
+  --easing-emphasis: cubic-bezier(0.2, 0, 0, 1);
+
+  // ---------------------------------------------------------------------------
+  // Z-INDEX SCALE
+  // ---------------------------------------------------------------------------
+  --z-base:     0;
+  --z-dropdown: 100;
+  --z-sticky:   200;
+  --z-overlay:  300;
+  --z-modal:    400;
+  --z-popover:  500;
+  --z-tooltip:  600;
+  --z-toast:    700;
+}
+
+// =============================================================================
+// DARK MODE
+// =============================================================================
+
+@mixin dark-theme-vars {
+  --bg-app:        var(--color-neutral-950);
+  --bg-surface:    var(--color-neutral-900);
+  --bg-elevated:   var(--color-neutral-800);
+  --bg-subtle:     var(--color-neutral-800);
+  --bg-strong:     var(--color-neutral-700);
+
+  --border-subtle:  var(--color-neutral-800);
+  --border-default: var(--color-neutral-700);
+  --border-strong:  var(--color-neutral-600);
+
+  --text-primary:    var(--color-neutral-50);
+  --text-secondary:  var(--color-neutral-300);
+  --text-tertiary:   var(--color-neutral-400);
+  --text-disabled:   var(--color-neutral-600);
+
+  // In dark mode, primary va alleggerito per leggibilità su sfondo scuro
+  --color-primary-500: #4d7ce0;
+
+  // Shadows più forti su sfondo dark per essere percepibili
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+}
+
+:root.dark,
+:root[data-theme='dark'] {
+  @include dark-theme-vars;
+}
+
+// =============================================================================
+// AUTO MODE — segue preferenza sistema
+// =============================================================================
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='auto'] {
+    @include dark-theme-vars;
+  }
+}
+
+// =============================================================================
+// BASE TYPOGRAPHY (applicato a body via styles.scss)
+// =============================================================================
+
+@mixin base-typography {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--line-height-normal);
+  color: var(--text-primary);
+  background-color: var(--bg-app);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+@mixin code-typography {
+  font-family: var(--font-mono);
+  font-feature-settings: 'liga' 0, 'calt' 0;
+  font-size: 0.95em;
+}

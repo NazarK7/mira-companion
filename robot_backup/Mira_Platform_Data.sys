@@ -1,0 +1,250 @@
+MODULE Mira_Platform_Data(SYSMODULE,NOSTEPIN)
+  !
+  !***********************************************************
+  !
+  ! Module:  Mira_Platform_Data
+  !
+  ! Description:
+  !   Mira Platform
+  !   Main Data
+  !
+  ! Version: 1.0.6
+  !
+  !***********************************************************
+  !
+  !----------------------------------
+  !Record
+  !----------------------------------
+  !
+  RECORD recMiraConfig_Parameter
+    string vs_ip_address;
+    num vi_port;
+    num lenguage_selected;
+  ENDRECORD
+
+  !
+  RECORD recMiraSendData
+    num CW;
+    num ID;
+    num X;
+    num Y;
+    num Z;
+    num rX;
+    num rY;
+    num rZ;
+    num Payload;
+  ENDRECORD
+
+  !
+  RECORD recMiraReceiveData
+    num CW;
+    num ID;
+    num AcqErr;
+    num PayloadSize;
+    num Result;
+    num X;
+    num Y;
+    num Z;
+    num rX;
+    num rY;
+    num rZ;
+    string Term;
+  ENDRECORD
+
+  !
+  !----------------------------------
+  !User Variables
+  !----------------------------------
+  !
+  PERS bool vb_MiraRetrySingleMeas;
+  PERS num vi_Mira_Act_Attempt;
+  PERS num vi_Mira_Act_Iteration;
+  PERS num vi_Mira_n_Attempt;
+  PERS num vi_Mira_n_Iteration;
+  PERS bool vb_MiraReconnection;
+  PERS bool vb_take_with_vision;
+  PERS bool vb_nullOffset;
+  PERS bool vb_MiraAcqErr;
+  PERS bool vb_MiraSystErr;
+  !
+  !Lights Management
+  VAR bool robot_light_management;
+  VAR bool vb_MiraRetryLight;
+  VAR bool b_result;
+  !
+  !Position
+  PERS speeddata MiravPh;
+  VAR robtarget MiraActPosToSend;
+  PERS tooldata MiraVisionTool:=[TRUE,[[-200.137,2047.09,1159.98],[0.676053,-0.168937,0.211696,-0.685271]],[229.5,[-95.9,-171.1,243.7],[1,0,0,0],86.974,18.266,112.835]];
+  PERS tooldata MiraVisionMasterTool:=[TRUE,[[-530.163,18.6214,335.565],[0.693107,-0.111135,0.110226,-0.703634]],[0.001,[0,0,0.001],[1,0,0,0],0,0,0]];
+  PERS wobjdata MiraVisionwobj:=[FALSE,TRUE,"",[[-1346.5,2099.98,2773.13],[0.557835,-0.829764,-0.00569924,-0.0167312]],[[-3.285,-3.546,-12.708],[0.999999,0,0,-0.00129154]]];
+  PERS num vi_MiraXTool;
+  PERS num vi_MiraYTool;
+  PERS num vi_MiraZTool;
+  PERS num vi_MirarZ1Tool;
+  PERS num vi_MirarYTool;
+  PERS num vi_MirarZ2Tool;
+  !Euler ZYX
+  PERS num MiraZYX_rZ;
+  PERS num MiraZYX_rY;
+  PERS num MiraZYX_rX;
+  !
+  !Corrections
+  PERS num vi_MiratempAngleX;
+  PERS num vi_MiratempAngleY;
+  PERS num vi_MiratempAngleZ;
+  PERS bool vb_MiraCorr_X;
+  PERS bool vb_MiraCorr_Y;
+  PERS bool vb_MiraCorr_Z;
+  PERS bool vb_MiraCorr_rX;
+  PERS bool vb_MiraCorr_rY;
+  PERS bool vb_MiraCorr_rZ;
+  PERS num vi_MiraTh_Dx;
+  PERS num vi_MiraTh_Dy;
+  PERS num vi_MiraTh_Dz;
+  PERS num vi_MiraTh_Rx;
+  PERS num vi_MiraTh_Ry;
+  PERS num vi_MiraTh_Rz;
+  PERS num vi_MiraLim_Dx;
+  PERS num vi_MiraLim_Dy;
+  PERS num vi_MiraLim_Dz;
+  PERS num vi_MiraLim_Rx;
+  PERS num vi_MiraLim_Ry;
+  PERS num vi_MiraLim_Rz;
+  PERS num vi_Mira_Max_Dz;
+  PERS num vi_Mira_Last_X_Received:=-1.28;
+  PERS num vi_Mira_Last_Y_Received:=8.444;
+  PERS num vi_Mira_Last_Z_Received:=-14.537;
+  PERS num vi_Mira_Last_rX_Received:=0.191;
+  PERS num vi_Mira_Last_rY_Received:=-0.917;
+  PERS num vi_Mira_Last_rZ_Received:=0.181;
+  !
+  !TCP Connection
+  PERS recMiraConfig_Parameter MiraConfigParameter:=["10.200.43.128",1024,0];
+  PERS recMiraSendData MiraSendData;
+  VAR recMiraReceiveData MiraReceiveData;
+  VAR socketdev MiraVis_socket;
+  !
+  !Log
+  VAR iodev MiraFile;
+  PERS string MiraDictionary{85}:=[
+        "Dictionary Loaded",
+        "Installation Completed",
+        "Payload dimension error",
+        "TCP_IP started",
+        "Connection closed",
+        "Try connection...",
+        "Connection established",
+        "Connection not established",
+        "Acquisition started",
+        "Result OK",
+        "Object not found",
+        "Image too dark",
+        "Feedback over threshold",
+        "Feedback not ok",
+        "Acquisition Time",
+        "free",
+        "Restart camera",
+        "free",
+        "X,Y,Z or Rx,Ry,Rz out of bounds",
+        "Camera not ready",
+        "Mira_platform acq_err: Camera Error",
+        "Mira_platform acq_err: Job ID not correct",
+        "Mira_platform acq_err: Job ID acquisition running",
+        "Mira_platform Error acquisition",
+        "free",
+        "free",
+        "free",
+        "Mira_platform Timeout",
+        "Mira_platform not connected",
+        "Mira 3D critical system error",
+        "Error code not recognize or multiple errors",
+        "free",
+        "JOB ID NOT CORRECT",
+        "free",
+        "free",
+        "free",
+        "free",
+        "free",
+        "free",
+        "Termination error",
+        "free",
+        "free",
+        "free",
+        "free",
+        "free",
+        "free",
+        "free",
+        "free",
+        "AUTOMATIC REPETITION: try number:",
+        "free",
+        "free",
+        "User decision: IGNORE",
+        "User decision: REPEAT THE MEASURE",
+        "free",
+        "free",
+        "free",
+        "free",
+        "free",
+        "free",
+        "Start measurement cycle",
+        "Lights error, repeat?",
+        "Turning off the lights",
+        "Repeat the measure",
+        "free",
+        "calculate the frame of the vision system",
+        "free",
+        "the current tool has been updated",
+        "the current frame has been updated",
+        "free",
+        "maximum iteration number reached",
+        "End of measurement cycle",
+        "True",
+        "Calibration finished",
+        "Measure out of bound Mira",
+        "Repeat lights command",
+        "user ignore the problem with the lights",
+        "Measure failed. RISK OF CRASH if ignore",
+        "User ignore: correction applied with NULL OFFSET",
+        "Applied a correction with NULL OFFSET",
+        "Meas out of bounds. RISK OF CRASH if user ignore",
+        "Offset out of bounds. RISK OF CRASH if user ignore",
+        "RETRY to redo the measurement or IGNORE to collect with NULL OFFSET",
+        "Payload reading Error",
+        "Error in loading parameters from file",
+        "/"];
+  PERS bool MiraConfigParameterLoaded;
+  VAR btnres MiraAnswer;
+  VAR clock MiraClock;
+  PERS num vi_MiraTime;
+  !
+  !----------------------------------
+  !Constants
+  !----------------------------------
+  !
+  !CW Send
+  CONST num KI_DOUT_START_ACQ:=2;
+  CONST num KI_DOUT_LIGHT_TRIGGER:=4;
+  CONST num KI_DOUT_ROBOT_ERROR:=5;
+  CONST num KI_DOUT_RESET_ACQ_ERR:=7;
+  CONST num KI_DOUT_RESET:=8;
+  CONST num KI_DOUT_RESTART_CAMERA:=9;
+  !
+  !CW Received
+  CONST num KI_DIN_READY:=1;
+  CONST num KI_DIN_ACQUISITION_RUNNING:=2;
+  CONST num KI_DIN_LIGHT_TRIGGERED:=4;
+  CONST num KI_DIN_SYSTEM_ERROR:=6;
+  !
+  !Receive data errors
+  CONST num KI_DATA_OK:=1000;
+  CONST num KI_ID_ERROR:=1002;
+  CONST num KI_ACQ_ERROR:=1003;
+  CONST num KI_PAY_SIZE_ERROR:=1004;
+  CONST num KI_NOTFOUND_ERROR:=1005;
+  CONST num KI_TERM_ERROR:=1006;
+  CONST num KI_OUTOFBOUND_MIRA_ERROR:=1007;
+  CONST num KI_MIRA_SYSTEM_ERROR:=1008;
+  CONST num KI_MIRA_CONNECTION_TIMEOUT:=1009;
+  !
+ENDMODULE

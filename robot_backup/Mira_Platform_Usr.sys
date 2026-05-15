@@ -1,0 +1,258 @@
+MODULE Mira_Platform_Usr(SYSMODULE)
+  !
+  !***********************************************************
+  !
+  ! Module:  Mira_Platform_Usr
+  !
+  ! Description:
+  !   Mira Platform
+  !   Library to Manage the User Routine
+  !
+  ! Version: 1.0.6
+  !
+  !***********************************************************
+  !
+PROC ru_Light_Management(dionum state,num ModelCode)
+        !
+        !###########################################
+        !User Routine for Manage the Lights
+        !###########################################
+        !
+        VAR bool b_result:=FALSE;
+        VAR NUM err_counter;
+        err_counter:=0;
+        while b_result=FALSE AND err_counter<3 DO
+        IF robot_light_management THEN
+            !
+            !Uncomment here if the robot manage the lights
+            !setdo dout1_lights,state;
+            !setdo dout2_lights,state;
+            !
+            RETURN;
+        ELSE
+            !
+            L_Retry:
+            !
+            IF state=1 THEN
+                rsSetDataToSend KI_DOUT_LIGHT_TRIGGER,ModelCode,255;
+            ELSE
+                rs_Log TRUE,"INFO",62;
+                rsSetDataToSend KI_DOUT_LIGHT_TRIGGER,ModelCode,0;
+            ENDIF
+            !
+            rs_write_into_socket;
+            !
+            rs_analyze_Received_Data(TRUE);
+            !
+            IF vb_MiraRetryLight THEN
+                GOTO L_Retry;
+            ENDIF
+            !
+            rsSetDataToSend 0,ModelCode,0;
+            !
+            rs_write_into_socket;
+            !
+            WaitTime 0.5;
+            !
+        ENDIF
+        !
+         err_counter:=err_counter+1;
+        endwhile
+    ENDPROC
+
+  PROC ru_setVariables(num ModelCode)
+    !
+    !###########################################
+    !User Routine for set the model variables
+    !###########################################
+    !
+    !type D930 / V90
+    IF ModelCode=1 THEN
+      !
+      !Threshold to exit the iterative loop
+      !
+      ! Threshold for movements in Dx (mm)
+      vi_MiraTh_Dx:=1.5;
+      ! Threshold for movements in Dy (mm)
+      vi_MiraTh_Dy:=1.5;
+      ! Threshold for movements in Dz (mm)
+      vi_MiraTh_Dz:=1.5;
+      ! Threshold for rotations in Rx (degrees)
+      vi_MiraTh_Rx:=0.1;
+      ! Threshold for rotations in Ry (degrees)
+      vi_MiraTh_Ry:=0.1;
+      ! Threshold for rotations in Rz (degrees)
+      vi_MiraTh_Rz:=0.1;
+      !
+      !Limits for accepted fixes
+      !
+      ! limits for movements in Dx (mm)
+      vi_MiraLim_Dx:=50;
+      ! limits for movements in Dy (mm)
+      vi_MiraLim_Dy:=50;
+      ! limits for movements in Dz (mm)
+      vi_MiraLim_Dz:=50;
+      ! limits for rotations in Rx (degrees)
+      vi_MiraLim_Rx:=1;
+      ! limits for rotations in Ry (degrees)
+      vi_MiraLim_Ry:=1;
+      ! limits for rotations in Rz (degrees)
+      vi_MiraLim_Rz:=2;
+      ! Max movement in Dz (mm)
+      vi_Mira_Max_Dz:=50;
+      !
+      !Exclude corrections
+      !
+      ! includes fixes in Dx (mm)
+      vb_MiraCorr_X:=true;
+      ! includes fixes in Dy (mm)
+      vb_MiraCorr_Y:=true;
+      ! includes fixes in Dz (mm)
+      vb_MiraCorr_Z:=true;
+      ! includes fixes in Rx (degrees)
+      vb_MiraCorr_rX:=false;
+      ! includes fixes in Ry (degrees)
+      vb_MiraCorr_rY:=false;
+      ! includes fixes in Rz (degrees)
+      vb_MiraCorr_rZ:=true;
+      !
+      !automatic repetition number in case of measurement error
+      vi_Mira_n_Attempt:=3;
+      !automatic repetition number in case of out of threshold
+      vi_Mira_n_Iteration:=10;
+      !
+      robot_light_management:=false;
+      !
+      !measurement and taking speed
+      MiravPh:=v200;
+      !
+    ENDIF
+    !
+    !type B940 / XC90
+    IF ModelCode=2 THEN
+      !
+      !Threshold to exit the iterative loop
+      !
+      ! Threshold for movements in Dx (mm)
+      vi_MiraTh_Dx:=1.5;
+      ! Threshold for movements in Dy (mm)
+      vi_MiraTh_Dy:=1.5;
+      ! Threshold for movements in Dz (mm)
+      vi_MiraTh_Dz:=1.5;
+      ! Threshold for rotations in Rx (degrees)
+      vi_MiraTh_Rx:=0.1;
+      ! Threshold for rotations in Ry (degrees)
+      vi_MiraTh_Ry:=0.1;
+      ! Threshold for rotations in Rz (degrees)
+      vi_MiraTh_Rz:=0.1;
+      !
+      !Limits for accepted fixes
+      !
+      ! limits for movements in Dx (mm)
+      vi_MiraLim_Dx:=50;
+      ! limits for movements in Dy (mm)
+      vi_MiraLim_Dy:=50;
+      ! limits for movements in Dz (mm)
+      vi_MiraLim_Dz:=50;
+      ! limits for rotations in Rx (degrees)
+      vi_MiraLim_Rx:=1;
+      ! limits for rotations in Ry (degrees)
+      vi_MiraLim_Ry:=1;
+      ! limits for rotations in Rz (degrees)
+      vi_MiraLim_Rz:=2;
+      ! Max movement in Dz (mm)
+      vi_Mira_Max_Dz:=50;
+      !
+      !Exclude corrections
+      !
+      ! includes fixes in Dx (mm)
+      vb_MiraCorr_X:=true;
+      ! includes fixes in Dy (mm)
+      vb_MiraCorr_Y:=true;
+      ! includes fixes in Dz (mm)
+      vb_MiraCorr_Z:=true;
+      ! includes fixes in Rx (degrees)
+      vb_MiraCorr_rX:=false;
+      ! includes fixes in Ry (degrees)
+      vb_MiraCorr_rY:=false;
+      ! includes fixes in Rz (degrees)
+      vb_MiraCorr_rZ:=true;
+      !
+      !automatic repetition number in case of measurement error
+      vi_Mira_n_Attempt:=3;
+      !automatic repetition number in case of out of threshold
+      vi_Mira_n_Iteration:=10;
+      !
+      robot_light_management:=false;
+      !
+      !measurement and taking speed
+      MiravPh:=v200;
+      !
+    ENDIF
+    !
+    !type C0300 / EH60
+    IF ModelCode=3 THEN
+      !
+      !Threshold to exit the iterative loop
+      !
+      ! Threshold for movements in Dx (mm)
+      vi_MiraTh_Dx:=1.5;
+      ! Threshold for movements in Dy (mm)
+      vi_MiraTh_Dy:=1.5;
+      ! Threshold for movements in Dz (mm)
+      vi_MiraTh_Dz:=1.5;
+      ! Threshold for rotations in Rx (degrees)
+      vi_MiraTh_Rx:=0.1;
+      ! Threshold for rotations in Ry (degrees)
+      vi_MiraTh_Ry:=0.1;
+      ! Threshold for rotations in Rz (degrees)
+      vi_MiraTh_Rz:=0.1;
+      !
+      !Limits for accepted fixes
+      !
+      ! limits for movements in Dx (mm)
+      vi_MiraLim_Dx:=50;
+      ! limits for movements in Dy (mm)
+      vi_MiraLim_Dy:=50;
+      ! limits for movements in Dz (mm)
+      vi_MiraLim_Dz:=50;
+      ! limits for rotations in Rx (degrees)
+      vi_MiraLim_Rx:=1;
+      ! limits for rotations in Ry (degrees)
+      vi_MiraLim_Ry:=1;
+      ! limits for rotations in Rz (degrees)
+      vi_MiraLim_Rz:=2;
+      ! Max movement in Dz (mm)
+      vi_Mira_Max_Dz:=50;
+      !
+      !Exclude corrections
+      !
+      ! includes fixes in Dx (mm)
+      vb_MiraCorr_X:=true;
+      ! includes fixes in Dy (mm)
+      vb_MiraCorr_Y:=true;
+      ! includes fixes in Dz (mm)
+      vb_MiraCorr_Z:=true;
+      ! includes fixes in Rx (degrees)
+      vb_MiraCorr_rX:=false;
+      ! includes fixes in Ry (degrees)
+      vb_MiraCorr_rY:=false;
+      ! includes fixes in Rz (degrees)
+      vb_MiraCorr_rZ:=true;
+      !
+      !automatic repetition number in case of measurement error
+      vi_Mira_n_Attempt:=3;
+      !automatic repetition number in case of out of threshold
+      vi_Mira_n_Iteration:=10;
+      !
+      robot_light_management:=false;
+      !
+      !measurement and taking speed
+      MiravPh:=v200;
+      !
+    ENDIF
+    !
+  ENDPROC
+
+  !
+ENDMODULE

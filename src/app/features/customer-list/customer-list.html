@@ -1,0 +1,109 @@
+<section class="mx-auto max-w-7xl px-6 py-8">
+      <header class="mb-8 flex items-end justify-between gap-4">
+        <div>
+          <h1 class="text-3xl font-semibold text-[var(--text-primary)]">Customers</h1>
+          <p class="mt-1 text-sm text-[var(--text-secondary)]">
+            {{ filtered().length }} of {{ all().length }} OEM/Tier-1
+          </p>
+        </div>
+        <a
+          mat-flat-button
+          color="primary"
+          routerLink="/customers/new"
+          class="!bg-[var(--color-primary-600)]"
+        >
+          <mat-icon>add</mat-icon>
+          New Customer
+        </a>
+      </header>
+
+      <div class="mb-6">
+        <mat-form-field appearance="outline" class="w-full max-w-md">
+          <mat-label>Search</mat-label>
+          <input
+            matInput
+            type="search"
+            [value]="query()"
+            (input)="onSearch($event)"
+            placeholder="Volvo, Stellantis, BMW…"
+          />
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+      </div>
+
+      @if (filtered().length === 0) {
+        <div
+          class="rounded-lg border border-dashed border-[var(--border-default)] bg-[var(--bg-subtle)] p-12 text-center"
+        >
+          <mat-icon class="!text-5xl !w-12 !h-12 text-[var(--text-tertiary)]">domain</mat-icon>
+          <p class="mt-3 text-base text-[var(--text-secondary)]">
+            @if (query()) {
+              No customer matches "{{ query() }}".
+            } @else {
+              No customers yet. Start by creating one.
+            }
+          </p>
+        </div>
+      } @else {
+        <ul
+          class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+          role="list"
+        >
+          @for (c of filtered(); track c.id) {
+            <li>
+              <a
+                [routerLink]="['/customers', c.slug]"
+                class="block h-full rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] transition hover:border-[var(--color-primary-500)] hover:shadow-[var(--shadow-md)]"
+              >
+                <div class="flex items-start justify-between gap-3">
+                  <div class="min-w-0 flex-1">
+                    <h2
+                      class="truncate text-lg font-semibold text-[var(--text-primary)]"
+                    >
+                      {{ c.name }}
+                    </h2>
+                    @if (c.shortName && c.shortName !== c.name) {
+                      <p class="text-xs text-[var(--text-tertiary)]">{{ c.shortName }}</p>
+                    }
+                  </div>
+                  <span
+                    class="inline-flex items-center rounded-full bg-[var(--color-primary-50)] px-2 py-0.5 text-xs font-medium text-[var(--color-primary-700)]"
+                  >
+                    {{ c.plants.length }} plant{{ c.plants.length === 1 ? '' : 's' }}
+                  </span>
+                </div>
+
+                <dl class="mt-4 grid grid-cols-3 gap-3 text-center">
+                  <div>
+                    <dt class="text-xs text-[var(--text-tertiary)]">Stations</dt>
+                    <dd class="text-base font-semibold text-[var(--text-primary)]">
+                      {{ stationsCount(c.id) }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-xs text-[var(--text-tertiary)]">Cameras</dt>
+                    <dd class="text-base font-semibold text-[var(--text-primary)]">
+                      {{ camerasCount(c.id) }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-xs text-[var(--text-tertiary)]">Contacts</dt>
+                    <dd class="text-base font-semibold text-[var(--text-primary)]">
+                      {{ c.contacts.length }}
+                    </dd>
+                  </div>
+                </dl>
+
+                @if (c.notes) {
+                  <p
+                    class="mt-4 line-clamp-2 text-sm text-[var(--text-secondary)]"
+                  >
+                    {{ c.notes }}
+                  </p>
+                }
+              </a>
+            </li>
+          }
+        </ul>
+      }
+    </section>
