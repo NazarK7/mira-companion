@@ -20,7 +20,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 
-import { ArchiveService } from '../../core/services/archive.service';
+import { ArchiveDataService } from '../../core/services/archive-data.service';
 import { ThemeService } from '../../core/services/theme.service';
 import { RouterLink } from '@angular/router';
 
@@ -39,6 +39,6 @@ import { RouterLink } from '@angular/router';
   styleUrls: ['./dashboard.scss'],
 })
 export class DashboardComponent {
-  protected readonly archive = inject(ArchiveService);
+  protected readonly archive = inject(ArchiveDataService);
   protected readonly themeService = inject(ThemeService);
 }

@@ -1,0 +1,150 @@
+<section class="mx-auto max-w-7xl px-6 py-8">
+  <!-- Breadcrumb -->
+  <nav class="mb-4 text-sm text-[var(--text-tertiary)]" aria-label="Breadcrumb">
+    <a routerLink="/customers" class="hover:text-[var(--color-primary-600)]">Customers</a>
+    <span class="mx-2">/</span>
+    @if (customer(); as c) {
+      <a [routerLink]="['/customers', c.slug]" class="hover:text-[var(--color-primary-600)]">{{ c.name }}</a>
+      <span class="mx-2">/</span>
+    }
+    @if (plant(); as p) {
+      <a
+        [routerLink]="['/customers', customer()!.slug, 'plants', p.id]"
+        class="hover:text-[var(--color-primary-600)]"
+      >{{ p.name }}</a>
+      <span class="mx-2">/</span>
+    }
+    @if (station(); as s) {S
+      <a
+        [routerLink]="[
+          '/customers', customer()!.slug, 'plants', plant()!.id, 'stations', s.id
+        ]"
+        class="hover:text-[var(--color-primary-600)]"
+      >{{ s.name }}</a>
+      <span class="mx-2">/</span>
+    }
+    <span class="text-[var(--text-primary)]">{{ camera()?.name ?? '—' }}</span>
+  </nav>
+
+  @if (camera(); as cam) {
+    <!-- ─────────────── HEADER ─────────────── -->
+    <header class="mb-8 flex items-start justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-3">
+          <h1 class="text-3xl font-semibold text-[var(--text-primary)]">{{ cam.name }}</h1>
+          <span
+            class="inline-flex items-center rounded px-2 py-0.5 font-mono text-xs font-bold uppercase tracking-wider"
+            [class]="typeBadgeClass(cam.type)"
+          >
+            {{ typeLabel(cam.type) }}
+          </span>
+        </div>
+        @if (cam.notes) {
+          <p class="mt-2 max-w-2xl text-sm text-[var(--text-secondary)]">{{ cam.notes }}</p>
+        }
+      </div>
+      <button mat-stroked-button>
+        <mat-icon>edit</mat-icon>
+        Edit
+      </button>
+    </header>
+
+    <!-- ─────────────── HARDWARE SPECS ─────────────── -->
+    <section class="mb-6 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
+      <h2 class="mb-4 text-sm font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
+        <mat-icon class="!h-4 !w-4 !text-base align-middle">videocam</mat-icon>
+        Hardware
+      </h2>
+      <dl class="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-3 lg:grid-cols-6">
+        <div>
+          <dt class="text-xs text-[var(--text-tertiary)]">Model</dt>
+          <dd class="font-mono text-sm text-[var(--text-primary)]">{{ cam.cameraModel || '—' }}</dd>
+        </div>
+        <div>
+          <dt class="text-xs text-[var(--text-tertiary)]">Lens focal</dt>
+          <dd class="font-mono text-sm text-[var(--text-primary)]">
+            {{ cam.lensFocalMm ? cam.lensFocalMm + ' mm' : '—' }}
+          </dd>
+        </div>
+        <div>
+          <dt class="text-xs text-[var(--text-tertiary)]">Firmware</dt>
+          <dd class="font-mono text-sm text-[var(--text-primary)]">{{ cam.firmware || '—' }}</dd>
+        </div>
+        <div>
+          <dt class="text-xs text-[var(--text-tertiary)]">IP address</dt>
+          <dd class="font-mono text-sm text-[var(--text-primary)]">{{ cam.ipAddress || '—' }}</dd>
+        </div>
+        <div>
+          <dt class="text-xs text-[var(--text-tertiary)]">Serial</dt>
+          <dd class="font-mono text-sm text-[var(--text-primary)]">{{ cam.serialNumber || '—' }}</dd>
+        </div>
+        <div>
+          <dt class="text-xs text-[var(--text-tertiary)]">MAC</dt>
+          <dd class="font-mono text-sm text-[var(--text-primary)]">{{ cam.macAddress || '—' }}</dd>
+        </div>
+        @if (isMira3D() && cam.controllerType) {
+          <div>
+            <dt class="text-xs text-[var(--text-tertiary)]">Robot controller</dt>
+            <dd class="font-mono text-sm text-[var(--text-primary)]">{{ cam.controllerType }}</dd>
+          </div>
+        }
+      </dl>
+    </section>
+
+    <!-- ─────────────── PLC NOTES ─────────────── -->
+    @if (cam.plcNotes) {
+      <section class="mb-6 rounded-lg border border-[var(--color-accent-200)] bg-[var(--color-accent-50)] p-5">
+        <h2 class="mb-2 text-sm font-semibold uppercase tracking-wider text-[var(--color-accent-700)]">
+          <mat-icon class="!h-4 !w-4 !text-base align-middle">memory</mat-icon>
+          PLC / Trigger Notes
+        </h2>
+        <p class="whitespace-pre-wrap text-sm text-[var(--text-secondary)]">{{ cam.plcNotes }}</p>
+      </section>
+    }
+
+    <!-- ─────────────── JOBS ─────────────── -->
+    <section class="mb-10">
+      <div class="mb-4 flex items-end justify-between">
+        <h2 class="text-xl font-semibold text-[var(--text-primary)]">
+          Jobs
+          <span class="ml-2 text-sm font-normal text-[var(--text-tertiary)]">
+            ({{ cam.jobs.length }})
+          </span>
+        </h2>
+        <button mat-flat-button class="!bg-[var(--color-primary-600)]">
+          <mat-icon>add</mat-icon>
+          New Job
+        </button>
+      </div>
+
+      @if (cam.jobs.length === 0) {
+        <div
+          class="rounded-lg border border-dashed border-[var(--border-default)] bg-[var(--bg-subtle)] p-8 text-center text-sm text-[var(--text-secondary)]"
+        >
+          No jobs configured for this camera yet.
+        </div>
+      } @else {
+        <div class="space-y-4">
+          @for (job of cam.jobs; track job.id) {
+            <app-job-card [job]="job" [cameraType]="cam.type" />
+          }
+        </div>
+      }
+    </section>
+
+    <!-- ─────────────── ASSET PANEL ─────────────── -->
+    <section>
+      <h2 class="mb-4 text-xl font-semibold text-[var(--text-primary)]">Assets & History</h2>
+      <app-asset-panel
+        [licenses]="cam.halconLicenses"
+        [robotBackups]="cam.robotBackups"
+        [maintenanceEvents]="cam.maintenanceEvents"
+        [showHalconAndRobot]="isMira3D()"
+      />
+    </section>
+  } @else {
+    <div class="rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] p-12 text-center">
+      <p class="text-base text-[var(--text-secondary)]">Camera not found.</p>
+    </div>
+  }
+</section>

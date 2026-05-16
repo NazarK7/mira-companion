@@ -1,0 +1,134 @@
+<article
+  class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] shadow-[var(--shadow-sm)]"
+>
+  <!-- Header -->
+  <header class="flex items-start justify-between gap-3 border-b border-[var(--border-subtle)] p-5">
+    <div class="min-w-0 flex-1">
+      <div class="flex items-center gap-2">
+        <h3 class="truncate text-lg font-semibold text-[var(--text-primary)]">
+          {{ job().name }}
+        </h3>
+        @if (job().visionToolSlot != null) {
+          <span
+            class="inline-flex shrink-0 items-center rounded bg-[var(--color-primary-50)] px-1.5 py-0.5 font-mono text-[10px] font-bold text-[var(--color-primary-700)]"
+            [title]="'Vision Tool Slot ' + job().visionToolSlot"
+          >
+            VT{{ job().visionToolSlot }}
+          </span>
+        }
+      </div>
+      @if (job().description) {
+        <p class="mt-1 text-sm text-[var(--text-secondary)]">{{ job().description }}</p>
+      }
+    </div>
+    <span class="shrink-0 font-mono text-xs text-[var(--text-tertiary)]">
+      {{ sortedBackups().length }} version{{ sortedBackups().length === 1 ? '' : 's' }}
+    </span>
+  </header>
+
+  <!-- Latest backup (prominente) -->
+  @if (latestBackup(); as latest) {
+    <div class="p-5">
+      <div class="mb-3 flex items-center gap-2">
+        <mat-icon class="!h-4 !w-4 !text-base text-[var(--color-success-500)]">
+          fiber_manual_record
+        </mat-icon>
+        <span class="text-xs font-medium uppercase tracking-wider text-[var(--text-tertiary)]">
+          Latest backup
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <!-- Date -->
+        <div>
+          <p class="text-xs text-[var(--text-tertiary)]">Created</p>
+          <p class="text-base font-semibold text-[var(--text-primary)]">
+            {{ formatDate(latest.createdAt) }}
+          </p>
+          <p class="text-xs text-[var(--text-secondary)]">{{ relativeTime(latest.createdAt) }}</p>
+        </div>
+
+        <!-- File -->
+        <div>
+          <p class="text-xs text-[var(--text-tertiary)]">File size</p>
+          <p class="font-mono text-base font-semibold text-[var(--text-primary)]">
+            {{ formatFileSize(latest.fileSize) }}
+          </p>
+          @if (latest.filePath) {
+            <p class="truncate font-mono text-[11px] text-[var(--text-tertiary)]" [title]="latest.filePath">
+              {{ latest.filePath }}
+            </p>
+          }
+        </div>
+
+        <!-- Master image (solo Cognex) -->
+        @if (isCognex() && latest.masterImagePath) {
+          <div>
+            <p class="text-xs text-[var(--text-tertiary)]">Master image</p>
+            <p class="truncate font-mono text-[11px] text-[var(--text-primary)]" [title]="latest.masterImagePath">
+              {{ latest.masterImagePath }}
+            </p>
+            <p class="mt-0.5 text-xs text-[var(--text-secondary)]">
+              {{ latest.testImages.length }} test image{{ latest.testImages.length === 1 ? '' : 's' }}
+            </p>
+          </div>
+        }
+      </div>
+
+      @if (latest.notes) {
+        <div class="mt-3 rounded border-l-2 border-[var(--color-primary-300)] bg-[var(--color-primary-50)] px-3 py-2">
+          <p class="text-sm text-[var(--text-secondary)]">{{ latest.notes }}</p>
+          @if (latest.createdBy) {
+            <p class="mt-1 text-xs text-[var(--text-tertiary)]">— {{ latest.createdBy }}</p>
+          }
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="p-5 text-center text-sm text-[var(--text-tertiary)]">No backups yet for this job.</div>
+  }
+
+  <!-- Cronologia espandibile -->
+  @if (previousBackups().length > 0) {
+    <div class="border-t border-[var(--border-subtle)]">
+      <button
+        type="button"
+        (click)="toggleExpand()"
+        class="flex w-full items-center justify-between gap-2 px-5 py-3 text-sm font-medium text-[var(--text-secondary)] transition hover:bg-[var(--bg-subtle)]"
+      >
+        <span>
+          <mat-icon class="!h-4 !w-4 !text-base align-middle">history</mat-icon>
+          Previous versions ({{ previousBackups().length }})
+        </span>
+        <mat-icon class="!h-5 !w-5 !text-xl transition-transform" [class.rotate-180]="expanded()">
+          expand_more
+        </mat-icon>
+      </button>
+
+      @if (expanded()) {
+        <ul class="divide-y divide-[var(--border-subtle)] border-t border-[var(--border-subtle)] bg-[var(--bg-subtle)]">
+          @for (b of previousBackups(); track b.id) {
+            <li class="px-5 py-3">
+              <div class="flex items-baseline justify-between gap-3">
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm font-medium text-[var(--text-primary)]">
+                    {{ formatDate(b.createdAt) }}
+                    <span class="ml-2 text-xs font-normal text-[var(--text-tertiary)]">
+                      {{ relativeTime(b.createdAt) }}
+                    </span>
+                  </p>
+                  @if (b.notes) {
+                    <p class="mt-0.5 text-xs text-[var(--text-secondary)]">{{ b.notes }}</p>
+                  }
+                </div>
+                <span class="shrink-0 font-mono text-xs text-[var(--text-tertiary)]">
+                  {{ formatFileSize(b.fileSize) }}
+                </span>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  }
+</article>

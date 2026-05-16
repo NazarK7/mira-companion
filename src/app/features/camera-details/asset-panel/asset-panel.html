@@ -1,0 +1,161 @@
+<div
+  class="grid grid-cols-1 gap-6"
+  [class.lg:grid-cols-3]="showHalconAndRobot()"
+  [class.lg:grid-cols-1]="!showHalconAndRobot()"
+>
+  <!-- ───────────────────────── HALCON LICENSES ───────────────────────── -->
+  @if (showHalconAndRobot()) {
+    <section class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
+      <header class="mb-4 flex items-baseline justify-between gap-2">
+        <h3 class="text-sm font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
+          <mat-icon class="!h-4 !w-4 !text-base align-middle">verified_user</mat-icon>
+          Halcon Licenses
+        </h3>
+        <span class="font-mono text-xs text-[var(--text-tertiary)]">
+          {{ sortedLicenses().length }}
+        </span>
+      </header>
+
+      @if (sortedLicenses().length === 0) {
+        <p class="text-sm text-[var(--text-tertiary)]">No licenses uploaded.</p>
+      } @else {
+        @if (latestLicense(); as latest) {
+          <div class="mb-4 rounded border border-[var(--border-default)] bg-[var(--bg-subtle)] p-3">
+            <div class="mb-2 flex items-baseline justify-between gap-2">
+              <span class="text-xs font-medium uppercase tracking-wider text-[var(--text-tertiary)]">
+                Active
+              </span>
+              <span
+                class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider"
+                [class]="licenseStatusClass(latest.expiryDate)"
+              >
+                {{ licenseStatusLabel(latest.expiryDate) }}
+              </span>
+            </div>
+            @if (latest.version) {
+              <p class="font-mono text-sm font-semibold text-[var(--text-primary)]">
+                v{{ latest.version }}
+              </p>
+            }
+            @if (latest.expiryDate) {
+              <p class="text-xs text-[var(--text-secondary)]">
+                Expires {{ formatDate(latest.expiryDate) }}
+              </p>
+            }
+            @if (latest.notes) {
+              <p class="mt-1 text-xs text-[var(--text-tertiary)]">{{ latest.notes }}</p>
+            }
+          </div>
+        }
+
+        @if (sortedLicenses().length > 1) {
+          <p class="mb-2 text-xs font-medium uppercase tracking-wider text-[var(--text-tertiary)]">
+            History
+          </p>
+          <ul class="space-y-1">
+            @for (lic of sortedLicenses().slice(1); track lic.id) {
+              <li class="flex items-baseline justify-between gap-2 text-xs">
+                <span class="font-mono text-[var(--text-secondary)]">
+                  {{ lic.version || '—' }}
+                </span>
+                <span class="text-[var(--text-tertiary)]">
+                  {{ formatDate(lic.createdAt) }}
+                </span>
+              </li>
+            }
+          </ul>
+        }
+      }
+    </section>
+  }
+
+  <!-- ───────────────────────── ROBOT BACKUPS ───────────────────────── -->
+  @if (showHalconAndRobot()) {
+    <section class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
+      <header class="mb-4 flex items-baseline justify-between gap-2">
+        <h3 class="text-sm font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
+          <mat-icon class="!h-4 !w-4 !text-base align-middle">smart_toy</mat-icon>
+          Robot Backups
+        </h3>
+        <span class="font-mono text-xs text-[var(--text-tertiary)]">
+          {{ sortedRobotBackups().length }}
+        </span>
+      </header>
+
+      @if (sortedRobotBackups().length === 0) {
+        <p class="text-sm text-[var(--text-tertiary)]">No robot backups yet.</p>
+      } @else {
+        <ul class="space-y-3">
+          @for (rb of sortedRobotBackups(); track rb.id; let i = $index) {
+            <li
+              class="rounded border p-3"
+              [class.border-default]="i === 0"
+              [class.bg-subtle]="i === 0"
+              [class.border-subtle]="i > 0"
+            >
+              <div class="flex items-baseline justify-between gap-2">
+                <p class="text-sm font-medium text-[var(--text-primary)]">
+                  {{ formatDate(rb.createdAt) }}
+                </p>
+                <span class="font-mono text-xs text-[var(--text-tertiary)]">
+                  {{ formatFileSize(rb.fileSize) }}
+                </span>
+              </div>
+              <p class="text-xs text-[var(--text-tertiary)]">{{ relativeTime(rb.createdAt) }}</p>
+              @if (rb.robotController || rb.controllerVersion) {
+                <p class="mt-1 font-mono text-[11px] text-[var(--text-secondary)]">
+                  {{ rb.robotController }}{{ rb.controllerVersion ? ' · ' + rb.controllerVersion : '' }}
+                </p>
+              }
+              @if (rb.notes) {
+                <p class="mt-1 text-xs text-[var(--text-secondary)]">{{ rb.notes }}</p>
+              }
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  }
+
+  <!-- ───────────────────────── MAINTENANCE TIMELINE ───────────────────────── -->
+  <section class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
+    <header class="mb-4 flex items-baseline justify-between gap-2">
+      <h3 class="text-sm font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
+        <mat-icon class="!h-4 !w-4 !text-base align-middle">timeline</mat-icon>
+        Maintenance Events
+      </h3>
+      <span class="font-mono text-xs text-[var(--text-tertiary)]">
+        {{ sortedMaintenance().length }}
+      </span>
+    </header>
+
+    @if (sortedMaintenance().length === 0) {
+      <p class="text-sm text-[var(--text-tertiary)]">No events recorded.</p>
+    } @else {
+      <ol class="relative space-y-4 border-l-2 border-[var(--border-subtle)] pl-4">
+        @for (ev of sortedMaintenance(); track ev.id) {
+          <li class="relative">
+            <span
+              class="absolute -left-[1.4rem] flex h-7 w-7 items-center justify-center rounded-full ring-2 ring-[var(--bg-surface)]"
+              [class]="maintenanceColor(ev.category)"
+            >
+              <mat-icon class="!h-4 !w-4 !text-base">{{ maintenanceIcon(ev.category) }}</mat-icon>
+            </span>
+            <div class="ml-4">
+              <p class="text-sm font-medium text-[var(--text-primary)]">{{ ev.title }}</p>
+              <p class="text-xs text-[var(--text-tertiary)]">
+                {{ formatDate(ev.occurredAt) }} · {{ relativeTime(ev.occurredAt) }}
+                @if (ev.performedBy) {
+                  · {{ ev.performedBy }}
+                }
+              </p>
+              @if (ev.description) {
+                <p class="mt-1 text-sm text-[var(--text-secondary)]">{{ ev.description }}</p>
+              }
+            </div>
+          </li>
+        }
+      </ol>
+    }
+  </section>
+</div>

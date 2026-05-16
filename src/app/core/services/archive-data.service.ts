@@ -13,6 +13,46 @@ import { SEED_CUSTOMERS } from '../data/seed-data';
 export class ArchiveDataService {
   readonly customers = signal<Customer[]>(SEED_CUSTOMERS);
 
+  // ─── Counter (reactive, calcolati on-demand) ──────────────────────────────
+  readonly countCustomers = computed(() => this.customers().length);
+
+  readonly countPlants = computed(() =>
+    this.customers().reduce((sum, c) => sum + c.plants.length, 0),
+  );
+
+  readonly countStations = computed(() =>
+    this.customers().reduce(
+      (sum, c) => sum + c.plants.reduce((s, p) => s + p.stations.length, 0),
+      0,
+    ),
+  );
+
+  readonly countCameras = computed(() =>
+    this.customers().reduce(
+      (sum, c) =>
+        sum +
+        c.plants.reduce(
+          (s, p) => s + p.stations.reduce((ss, st) => ss + st.cameras.length, 0),
+          0,
+        ),
+      0,
+    ),
+  );
+
+  // ─── Stato I/O (placeholder, vero quando arriva il backend) ───────────────
+  // Per il mock in-memory questi sono SEMPRE stabili: nessun load asincrono,
+  // nessuna persistenza, nessun errore di rete. Quando arriverà l'HttpClient
+  // verso il backend NestJS, diventeranno signal reali.
+  private readonly _isLoading = signal(false);
+  private readonly _isSaving = signal(false);
+  private readonly _error = signal<string | null>(null);
+  private readonly _lastSavedAt = signal<string | null>(null);
+
+  readonly isLoading = this._isLoading.asReadonly();
+  readonly isSaving = this._isSaving.asReadonly();
+  readonly error = this._error.asReadonly();
+  readonly lastSavedAt = this._lastSavedAt.asReadonly();
+
   customerBySlug(slug: string) {
     return computed(() => this.customers().find(c => c.slug === slug) ?? null);
   }
