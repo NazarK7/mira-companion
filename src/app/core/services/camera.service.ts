@@ -1,0 +1,88 @@
+// src/app/core/services/camera.service.ts
+import { Injectable, inject, signal } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, tap } from 'rxjs';
+import { API_URL } from '../config/api.config';
+import { Camera } from '../models/domain.model'; 
+
+@Injectable({
+  providedIn: 'root'
+})
+export class CameraService {
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = inject(API_URL);
+  private readonly endpoint = `${this.apiUrl}/cameras`;
+
+  // --- SIGNALS DI STATO ---
+  // Utili per bindare direttamente le UI (es. liste) senza pipe async
+  readonly cameras = signal<Camera[]>([]);
+  readonly loading = signal<boolean>(false);
+  readonly error = signal<string | null>(null);
+
+  // --- LETTURE (Queries) ---
+
+  /**
+   * Carica le camere nello stato del Signal.
+   * Da invocare ad esempio nel ngOnInit di una lista camere.
+   */
+  loadCameras(stationId?: string): void {
+    this.loading.set(true);
+    this.error.set(null);
+
+    let params = new HttpParams();
+    if (stationId) {
+      params = params.set('stationId', stationId);
+    }
+
+    this.http.get<Camera[]>(this.endpoint, { params }).subscribe({
+      next: (data) => {
+        this.cameras.set(data);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('Errore fetch cameras:', err);
+        this.error.set('Impossibile caricare le camere.');
+        this.loading.set(false);
+      }
+    });
+  }
+
+  /**
+   * Recupera il dettaglio di una singola camera (con relazioni parziali).
+   * Restituisce un Observable per essere gestito via toSignal() o async pipe nel componente di dettaglio.
+   */
+  getById(id: string): Observable<Camera> {
+    return this.http.get<Camera>(`${this.endpoint}/${id}`);
+  }
+
+  // --- SCRITTURE (Mutations) ---
+
+  create(camera: Partial<Camera>): Observable<Camera> {
+    return this.http.post<Camera>(this.endpoint, camera).pipe(
+      tap(() => this.reloadIfStationMatches(camera.stationId))
+    );
+  }
+
+  update(id: string, changes: Partial<Camera>): Observable<Camera> {
+    return this.http.patch<Camera>(`${this.endpoint}/${id}`, changes).pipe(
+      tap(() => this.reloadIfStationMatches(changes.stationId))
+    );
+  }
+
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.endpoint}/${id}`).pipe(
+      tap(() => {
+        // Aggiornamento ottimistico dello stato locale
+        this.cameras.update(list => list.filter(c => c.id !== id));
+      })
+    );
+  }
+
+  // --- UTILS ---
+
+  private reloadIfStationMatches(stationId?: string): void {
+    // Ricarica la lista solo se stiamo guardando una specifica stazione
+    // (Oppure forza sempre un ricaricamento globale se preferisci)
+    this.loadCameras(stationId);
+  }
+}
