@@ -1,5 +1,4 @@
 <section class="mx-auto max-w-7xl px-6 py-8">
-  <!-- Breadcrumb -->
   <nav class="mb-4 text-sm text-[var(--text-tertiary)]" aria-label="Breadcrumb">
     <a routerLink="/customers" class="hover:text-[var(--color-primary-600)]">Customers</a>
     <span class="mx-2">/</span>
@@ -7,30 +6,18 @@
   </nav>
 
   @if (customer(); as c) {
-  <header class="mb-8 flex items-start justify-between gap-4">
-    <div>
-      <h1 class="text-3xl font-semibold text-[var(--text-primary)]">{{ c.name }}</h1>
-      @if (c.notes) {
-      <p class="mt-2 max-w-2xl text-sm text-[var(--text-secondary)]">{{ c.notes }}</p>
-      }
-    </div>
-    <div class="flex gap-2">
-      <button mat-stroked-button color="warn" (click)="deleteCustomer(c.id, c.name)">
-        <mat-icon>delete</mat-icon>
-        Delete
-      </button>
-      <a mat-stroked-button [routerLink]="['/customers', c.slug, 'edit']">
-        <mat-icon>edit</mat-icon>
-        Edit
-      </a>
-    </div>
+  <header class="mb-8">
+    <h1 class="text-3xl font-semibold text-[var(--text-primary)]">{{ c.name }}</h1>
+    @if (c.notes) {
+    <p class="mt-2 max-w-2xl text-sm text-[var(--text-secondary)]">{{ c.notes }}</p>
+    }
   </header>
 
-  <!-- Plants section -->
   <div class="mb-10">
     <div class="mb-4 flex items-end justify-between">
       <h2 class="text-xl font-semibold text-[var(--text-primary)]">Plants</h2>
-      <a mat-flat-button [routerLink]="['/customers', c.slug, 'plants', 'new']" class="!bg-[var(--color-primary-600)]">
+      <a mat-flat-button [routerLink]="['/customers', c.slug, 'plants', 'new']"
+        class="!bg-[var(--color-primary-600)] !text-white">
         <mat-icon>add</mat-icon>
         New Plant
       </a>
@@ -44,18 +31,14 @@
     } @else {
     <ul class="grid grid-cols-1 gap-4 md:grid-cols-2" role="list">
       @for (p of c.plants; track p.id) {
-      <li>
+      <li class="relative group">
         <a [routerLink]="['/customers', c.slug, 'plants', p.id]"
           class="block rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] transition hover:border-[var(--color-primary-500)] hover:shadow-[var(--shadow-md)]">
-          <div class="flex items-start justify-between gap-3">
+          <div class="flex items-start justify-between gap-3 pr-16">
             <div class="min-w-0 flex-1">
-              <h3 class="truncate text-lg font-semibold text-[var(--text-primary)]">
-                {{ p.name }}
-              </h3>
+              <h3 class="truncate text-lg font-semibold text-[var(--text-primary)]">{{ p.name }}</h3>
               @if (p.location) {
-              <p class="mt-0.5 truncate text-xs text-[var(--text-tertiary)]">
-                {{ p.location }}
-              </p>
+              <p class="mt-0.5 truncate text-xs text-[var(--text-tertiary)]">{{ p.location }}</p>
               }
             </div>
             <span
@@ -70,24 +53,30 @@
           </p>
           }
         </a>
+
+        <div class="absolute top-2 right-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+          <button mat-icon-button (click)="editPlant($event, p.id)" title="Edit Plant">
+            <mat-icon class="!text-[var(--text-tertiary)] hover:!text-[var(--color-primary-600)]">edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="deletePlant($event, p.id, p.name)" title="Delete Plant">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
       </li>
       }
     </ul>
     }
   </div>
 
-  <!-- Contacts section -->
   <div>
     <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-semibold text-[var(--text-primary)]">
-        Contacts
-        <span class="ml-2 text-sm font-normal text-[var(--text-tertiary)]">
-          ({{ c.contacts.length }})
-        </span>
+        Customer Contacts
+        <span class="ml-2 text-sm font-normal text-[var(--text-tertiary)]">({{ c.contacts.length }})</span>
       </h2>
-      <a mat-button color="primary" [routerLink]="['/customers', c.slug, 'edit']">
+      <button mat-button color="primary" (click)="openContactDialog()">
         <mat-icon>add</mat-icon> Add Contact
-      </a>
+      </button>
     </div>
 
     @if (c.contacts.length === 0) {
@@ -95,13 +84,17 @@
     } @else {
     <ul class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3" role="list">
       @for (ct of c.contacts; track ct.id) {
-      <li class="relative rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 pr-12 group">
+      <li class="relative rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 pr-16 group">
 
-        <a [routerLink]="['/customers', c.slug, 'edit']"
-          class="absolute right-2 top-2 text-[var(--text-tertiary)] opacity-0 transition-opacity hover:text-[var(--color-primary-600)] group-hover:opacity-100"
-          title="Edit contacts">
-          <mat-icon class="!w-5 !h-5 !text-xl">edit</mat-icon>
-        </a>
+        <div class="absolute right-2 top-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+          <button mat-icon-button (click)="openContactDialog(ct)" title="Edit contact">
+            <mat-icon
+              class="!w-5 !h-5 text-[var(--text-tertiary)] hover:text-[var(--color-primary-600)]">edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="deleteContact(ct)" title="Delete contact">
+            <mat-icon class="!w-5 !h-5">delete</mat-icon>
+          </button>
+        </div>
 
         <p class="font-medium text-[var(--text-primary)]">{{ ct.name }}</p>
         @if (ct.role) {
@@ -109,9 +102,7 @@
         }
         @if (ct.email) {
         <p class="mt-2 truncate text-sm">
-          <a [href]="'mailto:' + ct.email" class="text-[var(--color-primary-600)] hover:underline">
-            {{ ct.email }}
-          </a>
+          <a [href]="'mailto:' + ct.email" class="text-[var(--color-primary-600)] hover:underline">{{ ct.email }}</a>
         </p>
         }
         @if (ct.phone) {

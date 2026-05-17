@@ -30,7 +30,7 @@ export class CustomerEditorComponent implements OnInit {
 
   readonly isSubmitting = signal(false);
   readonly isEditMode = signal(false);
-  
+
   private customerId = '';
   private customerSlug = '';
 
@@ -52,7 +52,7 @@ export class CustomerEditorComponent implements OnInit {
       this.customerService.getBySlug(this.customerSlug).subscribe({
         next: (customer) => {
           this.customerId = customer.id;
-          
+
           this.form.patchValue({
             name: customer.name,
             shortName: customer.shortName || '',
@@ -86,18 +86,18 @@ export class CustomerEditorComponent implements OnInit {
   onSubmit(): void {
     if (this.form.invalid) return;
     this.isSubmitting.set(true);
-    
+
     // Cast esplicito per TypeScript
     const payload = this.form.getRawValue() as Partial<Customer>;
-    
+
     const req$ = this.isEditMode()
       ? this.customerService.update(this.customerId, payload)
       : this.customerService.create(payload);
 
     req$.subscribe({
-      next: (updatedCustomer) => {
+      next: () => {
         this.isSubmitting.set(false);
-        this.router.navigate(['/customers', updatedCustomer.slug]);
+        this.router.navigate(['/customers']);
       },
       error: (err) => {
         console.error('Salvataggio fallito:', err);
@@ -107,10 +107,6 @@ export class CustomerEditorComponent implements OnInit {
   }
 
   cancel(): void {
-    if (this.isEditMode()) {
-      this.router.navigate(['/customers', this.customerSlug]);
-    } else {
-      this.router.navigate(['/customers']);
-    }
+    this.router.navigate(['/customers']);
   }
 }

@@ -1,7 +1,7 @@
 @use '@angular/material' as mat;
 @use "./app/styles/tokens" as tokens;
 
-@import "tailwindcss";
+@use "tailwindcss";
 
 // 2. Iniezione del tema in Tailwind v4
 @theme {
