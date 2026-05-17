@@ -1,48 +1,67 @@
 // src/app/features/plant-detail/plant-detail.ts
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { switchMap, filter } from 'rxjs/operators';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatDialog } from '@angular/material/dialog';
 import { CustomerService } from '../../core/services/customer.service';
-import { switchMap, filter } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { PlantService } from '../../core/services/plant.service';
+import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog';
 
 @Component({
   selector: 'app-plant-detail',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, MatButtonModule, MatIconModule],
-  // ... (Il template HTML rimane identico, tranne forse la rimozione della porzione isEditMode se non supportata in questo template inline)
-  templateUrl: './plant-detail.html', // Assicurati di puntare al tuo file HTML che hai incollato
+  templateUrl: './plant-detail.html',
 })
 export class PlantDetailComponent {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly customerService = inject(CustomerService);
+  private readonly plantService = inject(PlantService);
+  private readonly dialog = inject(MatDialog);
 
-  private readonly slug$ = this.route.paramMap.pipe(
-    filter(params => params.has('slug'))
-  );
+  private readonly slug$ = this.route.paramMap.pipe(filter(params => params.has('slug')));
 
-  private readonly plantId$ = this.route.paramMap.pipe(
-    filter(params => params.has('plantId'))
-  );
-
-  // 1. Carica il customer dal backend (NestJS restituisce l'albero Eager-loaded coi plants)
   readonly customer = toSignal(
-    this.slug$.pipe(
-      switchMap(params => this.customerService.getBySlug(params.get('slug')!))
-    )
+    this.slug$.pipe(switchMap(params => this.customerService.getBySlug(params.get('slug')!)))
   );
 
-  // 2. Filtra il plant specifico dall'albero del customer
   readonly plant = computed(() => {
     const cust = this.customer();
-    const id = this.route.snapshot.paramMap.get('plantId'); // Sincrono perché la rotta è caricata
-
+    const id = this.route.snapshot.paramMap.get('plantId');
     if (!cust || !id) return null;
     return cust.plants.find((p: any) => p.id === id) ?? null;
   });
+
+  // METODO PER ELIMINARE IL PLANT
+  deletePlant(id: string, name: string): void {
+    const cust = this.customer();
+    if (!cust) return;
+
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Elimina Plant',
+        message: `Sei sicuro di voler eliminare ${name}?\n\nATTENZIONE: Questa azione eliminerà a cascata tutte le Station, Camere e Job associati a questo Plant. L'azione è irreversibile.`,
+        confirmText: 'Elimina',
+        isDestructive: true
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.plantService.delete(id).subscribe({
+          // Se va a buon fine, torna alla pagina del Customer
+          next: () => this.router.navigate(['/customers', cust.slug]),
+          error: (err) => console.error('Errore durante eliminazione plant:', err)
+        });
+      }
+    });
+  }
 
   statusBadgeClass(status: string): string {
     switch (status?.toLowerCase()) {

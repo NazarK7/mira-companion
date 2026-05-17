@@ -1,45 +1,88 @@
-<section class="mx-auto max-w-3xl px-6 py-8">
+<section class="mx-auto max-w-5xl px-6 py-8">
   <header class="mb-8 flex items-center gap-4">
-    <a mat-icon-button routerLink="/customers" aria-label="Back to customers">
+    <button mat-icon-button type="button" (click)="cancel()" aria-label="Back">
       <mat-icon>arrow_back</mat-icon>
-    </a>
+    </button>
     <div>
       <h1 class="text-3xl font-semibold text-[var(--text-primary)]">
         {{ isEditMode() ? 'Edit Customer' : 'New Customer' }}
       </h1>
       <p class="mt-1 text-sm text-[var(--text-secondary)]">
-        {{ isEditMode() ? 'Update customer settings' : 'Create a new OEM or Tier-1 entry' }}
+        {{ isEditMode() ? 'Update customer settings and contacts' : 'Create a new OEM or Tier-1 entry' }}
       </p>
     </div>
   </header>
 
-  <form [formGroup]="form" (ngSubmit)="onSubmit()"
-    class="flex flex-col gap-6 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6 shadow-[var(--shadow-sm)]">
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-8">
+    
+    <div class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6 shadow-[var(--shadow-sm)] grid grid-cols-2 gap-6">
+      <mat-form-field appearance="outline" class="col-span-2">
+        <mat-label>Customer Name</mat-label>
+        <input matInput formControlName="name" placeholder="e.g., Volvo Cars" required />
+      </mat-form-field>
 
-    <mat-form-field appearance="outline" class="w-full">
-      <mat-label>Customer Name</mat-label>
-      <input matInput formControlName="name" placeholder="e.g., Volvo Cars" required />
-      @if (form.controls.name.hasError('required')) {
-      <mat-error>Name is required</mat-error>
-      }
-    </mat-form-field>
+      <mat-form-field appearance="outline" class="col-span-2 md:col-span-1">
+        <mat-label>Short Name (Optional)</mat-label>
+        <input matInput formControlName="shortName" placeholder="e.g., Volvo" />
+      </mat-form-field>
 
-    <mat-form-field appearance="outline" class="w-full">
-      <mat-label>Short Name (Optional)</mat-label>
-      <input matInput formControlName="shortName" placeholder="e.g., Volvo" />
-    </mat-form-field>
+      <mat-form-field appearance="outline" class="col-span-2">
+        <mat-label>Notes (Optional)</mat-label>
+        <textarea matInput formControlName="notes" rows="3" placeholder="Platform notes, general info..."></textarea>
+      </mat-form-field>
+    </div>
 
-    <mat-form-field appearance="outline" class="w-full">
-      <mat-label>Notes (Optional)</mat-label>
-      <textarea matInput formControlName="notes" rows="4" placeholder="Platform notes, general info..."></textarea>
-    </mat-form-field>
+    <div class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6 shadow-[var(--shadow-sm)]">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-medium text-[var(--text-primary)]">Customer Contacts</h3>
+        <button type="button" mat-stroked-button (click)="addContact()">
+          <mat-icon>add</mat-icon> Add Contact
+        </button>
+      </div>
 
-    <div class="mt-4 flex justify-end gap-3">
-      <a mat-button routerLink="/customers" [disabled]="isSubmitting()">Cancel</a>
-      <button mat-flat-button color="primary" type="submit" class="!bg-[var(--color-primary-600)]"
-        [disabled]="form.invalid || isSubmitting()">
+      <div formArrayName="contacts" class="flex flex-col gap-4">
+        @for (contactCtrl of contactsFormArray.controls; track $index) {
+          <div [formGroupName]="$index" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-start p-4 border border-[var(--border-default)] rounded-lg bg-[var(--bg-subtle)]">
+            
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Name</mat-label>
+              <input matInput formControlName="name" required>
+            </mat-form-field>
+            
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Role</mat-label>
+              <input matInput formControlName="role">
+            </mat-form-field>
+            
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Email</mat-label>
+              <input matInput formControlName="email" type="email">
+            </mat-form-field>
+            
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Phone</mat-label>
+              <input matInput formControlName="phone">
+            </mat-form-field>
+            
+            <div class="flex justify-end md:mt-2">
+              <button type="button" mat-icon-button color="warn" (click)="removeContact($index)" title="Remove contact">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </div>
+        }
+        
+        @if (contactsFormArray.length === 0) {
+          <p class="text-sm text-[var(--text-secondary)] text-center py-6">No contacts yet. Click "Add Contact" to start.</p>
+        }
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-3">
+      <button mat-button type="button" (click)="cancel()" [disabled]="isSubmitting()">Cancel</button>
+      <button mat-flat-button color="primary" type="submit" class="!bg-[var(--color-primary-600)]" [disabled]="form.invalid || isSubmitting()">
         <mat-icon>save</mat-icon>
-        {{ isSubmitting() ? 'Saving...' : 'Create Customer' }}
+        {{ isSubmitting() ? 'Saving...' : (isEditMode() ? 'Update Customer' : 'Create Customer') }}
       </button>
     </div>
   </form>

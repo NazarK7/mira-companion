@@ -21,4 +21,10 @@ export class PlantService {
   update(id: string, plant: Partial<Plant>): Observable<Plant> {
     return this.http.patch<Plant>(`${this.endpoint}/${id}`, plant);
   }
+
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.endpoint}/${id}`);
+  }
+
+  
 }

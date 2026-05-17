@@ -53,4 +53,10 @@ export class CustomerService {
       tap(() => this.loadAll())
     );
   }
+
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.endpoint}/${id}`).pipe(
+      tap(() => this.loadAll())
+    );
+  }
 }

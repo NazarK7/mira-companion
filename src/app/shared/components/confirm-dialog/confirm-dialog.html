@@ -1,0 +1,10 @@
+<h2 mat-dialog-title class="text-xl font-bold text-[var(--text-primary)]">{{ data.title }}</h2>
+    <mat-dialog-content>
+      <p class="text-[var(--text-secondary)] whitespace-pre-wrap">{{ data.message }}</p>
+    </mat-dialog-content>
+    <mat-dialog-actions align="end" class="!pb-4 !pr-4">
+      <button mat-button mat-dialog-close>{{ data.cancelText || 'Annulla' }}</button>
+      <button mat-flat-button [color]="data.isDestructive ? 'warn' : 'primary'" [mat-dialog-close]="true">
+        {{ data.confirmText || 'Conferma' }}
+      </button>
+    </mat-dialog-actions>

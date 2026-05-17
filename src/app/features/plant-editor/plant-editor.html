@@ -1,14 +1,20 @@
-<section class="max-w-4xl mx-auto py-8 px-4">
+<section class="max-w-5xl mx-auto py-8 px-4">
       <header class="flex justify-between items-center mb-8">
-        <div>
-          <h1 class="text-3xl font-bold text-[var(--text-primary)]">
-            {{ isEditMode() ? 'Edit Plant' : 'New Plant' }}
-          </h1>
-          <p class="text-[var(--text-secondary)] mt-1">Configure manufacturing site</p>
+        <div class="flex items-center gap-4">
+          <button mat-icon-button type="button" (click)="cancel()" aria-label="Back">
+            <mat-icon>arrow_back</mat-icon>
+          </button>
+          <div>
+            <h1 class="text-3xl font-bold text-[var(--text-primary)]">
+              {{ isEditMode() ? 'Edit Plant' : 'New Plant' }}
+            </h1>
+            <p class="text-[var(--text-secondary)] mt-1">Configure manufacturing site and contacts</p>
+          </div>
         </div>
       </header>
 
       <form [formGroup]="form" (ngSubmit)="save()" class="flex flex-col gap-8">
+        
         <div class="p-6 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl grid grid-cols-2 gap-6 shadow-sm">
           <mat-form-field appearance="outline" class="col-span-2">
             <mat-label>Plant Name</mat-label>
@@ -31,9 +37,57 @@
           </mat-form-field>
         </div>
 
+        <div class="p-6 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl shadow-sm">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-medium text-[var(--text-primary)]">Plant Contacts</h3>
+            <button type="button" mat-stroked-button (click)="addContact()">
+              <mat-icon>add</mat-icon> Add Contact
+            </button>
+          </div>
+
+          <div formArrayName="contacts" class="flex flex-col gap-4">
+            @for (contactCtrl of contactsFormArray.controls; track $index) {
+              <div [formGroupName]="$index" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-start p-4 border border-[var(--border-default)] rounded-lg bg-[var(--bg-subtle)]">
+                
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Name</mat-label>
+                  <input matInput formControlName="name" required>
+                </mat-form-field>
+                
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Role</mat-label>
+                  <input matInput formControlName="role">
+                </mat-form-field>
+                
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Email</mat-label>
+                  <input matInput formControlName="email" type="email">
+                </mat-form-field>
+                
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Phone</mat-label>
+                  <input matInput formControlName="phone">
+                </mat-form-field>
+                
+                <div class="flex justify-end md:mt-2">
+                  <button type="button" mat-icon-button color="warn" (click)="removeContact($index)" title="Remove contact">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+                
+              </div>
+            }
+            
+            @if (contactsFormArray.length === 0) {
+              <p class="text-sm text-[var(--text-secondary)] text-center py-6">Nessun contatto associato. Clicca su "Add Contact" per inserirne uno.</p>
+            }
+          </div>
+        </div>
+
         <div class="flex justify-end gap-4">
-          <button type="button" mat-stroked-button (click)="cancel()" [disabled]="isSubmitting()">Cancel</button>
+          <button type="button" mat-button (click)="cancel()" [disabled]="isSubmitting()">Cancel</button>
           <button type="submit" mat-flat-button color="primary" class="!bg-[var(--color-primary-600)]" [disabled]="form.invalid || isSubmitting()">
+            <mat-icon>save</mat-icon>
             {{ isSubmitting() ? 'Saving...' : (isEditMode() ? 'Update Plant' : 'Create Plant') }}
           </button>
         </div>

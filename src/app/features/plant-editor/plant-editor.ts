@@ -1,18 +1,20 @@
 // src/app/features/plant-editor/plant-editor.ts
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { NonNullableFormBuilder, ReactiveFormsModule, Validators, FormArray } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatIconModule } from '@angular/material/icon';
 import { CustomerService } from '../../core/services/customer.service';
 import { PlantService } from '../../core/services/plant.service';
+import { Plant } from '../../core/models/domain.model';
 
 @Component({
   selector: 'app-plant-editor',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, RouterLink, MatButtonModule, MatFormFieldModule, MatInputModule],
+  imports: [ReactiveFormsModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatIconModule],
   templateUrl: './plant-editor.html',
 })
 export class PlantEditorComponent implements OnInit {
@@ -25,7 +27,6 @@ export class PlantEditorComponent implements OnInit {
   readonly isSubmitting = signal(false);
   readonly isEditMode = signal(false);
   
-  // Parametri URL salvati nello stato
   private customerId = '';
   private customerSlug = '';
   private plantId = '';
@@ -34,42 +35,77 @@ export class PlantEditorComponent implements OnInit {
     name: ['', Validators.required],
     location: [''],
     address: [''],
-    notes: ['']
+    notes: [''],
+    contacts: this.fb.array([]) // Inizializza il FormArray vuoto
   });
+
+  // Getter per accedere facilmente al FormArray nell'HTML
+  get contactsFormArray() {
+    return this.form.get('contacts') as FormArray;
+  }
 
   ngOnInit(): void {
     this.customerSlug = this.route.snapshot.paramMap.get('slug') || '';
     this.plantId = this.route.snapshot.paramMap.get('plantId') || '';
     
-    if (this.plantId) {
-      this.isEditMode.set(true);
-      // Carica i dati per l'edit
-      this.plantService.getById(this.plantId).subscribe(p => {
-        this.form.patchValue(p);
-      });
-    }
-
-    // Ci serve l'ID del customer (UUID) per creare il plant, lo recuperiamo tramite lo slug
+    // Recupera Customer ID (indispensabile per creare un Plant)
     this.customerService.getBySlug(this.customerSlug).subscribe(c => {
       this.customerId = c.id;
     });
+
+    if (this.plantId) {
+      this.isEditMode.set(true);
+      // Carica il Plant per l'edit
+      this.plantService.getById(this.plantId).subscribe(p => {
+        // Popola i campi testuali di base
+        this.form.patchValue({
+          name: p.name,
+          location: p.location || '',
+          address: p.address || '',
+          notes: p.notes || ''
+        });
+
+        // Popola il FormArray per ogni contatto esistente nel DB
+        if (p.contacts && p.contacts.length > 0) {
+          p.contacts.forEach((contact: any) => this.addContact(contact));
+        }
+      });
+    }
   }
 
-  save(): void {
+  // Aggiunge un nuovo FormGroup all'Array (usato dal bottone e dal caricamento DB)
+  addContact(contact?: any): void {
+    const contactForm = this.fb.group({
+      name: [contact?.name || '', Validators.required],
+      role: [contact?.role || ''],
+      email: [contact?.email || ''],
+      phone: [contact?.phone || '']
+    });
+    this.contactsFormArray.push(contactForm);
+  }
+
+  // Rimuove un FormGroup dall'Array
+  removeContact(index: number): void {
+    this.contactsFormArray.removeAt(index);
+  }
+
+save(): void {
     if (this.form.invalid || !this.customerId) return;
     this.isSubmitting.set(true);
 
+    // Eseguiamo il cast per rassicurare TypeScript sui tipi del FormArray
+    const formPayload = this.form.getRawValue() as Partial<Plant>;
+
     const req$ = this.isEditMode()
-      ? this.plantService.update(this.plantId, this.form.getRawValue())
-      : this.plantService.create({ ...this.form.getRawValue(), customerId: this.customerId });
+      ? this.plantService.update(this.plantId, formPayload)
+      : this.plantService.create({ ...formPayload, customerId: this.customerId });
 
     req$.subscribe({
-      next: (savedPlant) => {
-        // Torna al dettaglio del customer o del plant aggiornato
+      next: () => {
         this.router.navigate(['/customers', this.customerSlug]);
       },
       error: (err) => {
-        console.error(err);
+        console.error('Errore durante il salvataggio:', err);
         this.isSubmitting.set(false);
       }
     });
