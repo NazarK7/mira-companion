@@ -33,16 +33,24 @@ export class CustomerService {
     return this.http.get<Customer>(`${this.endpoint}/slug/${slug}`);
   }
 
-  // --- NUOVO METODO ---
   create(customer: Partial<Customer>): Observable<Customer> {
-    // Autogenera lo slug se non fornito (es. "Volvo Cars" -> "volvo-cars")
     const payload = {
       ...customer,
       slug: customer.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
     };
-    
     return this.http.post<Customer>(this.endpoint, payload).pipe(
-      tap(() => this.loadAll()) // Forza il refresh della lista post-creazione
+      tap(() => this.loadAll())
+    );
+  }
+
+  // --- NUOVO METODO PER LA MODIFICA ---
+  update(id: string, changes: Partial<Customer>): Observable<Customer> {
+    const payload = {
+      ...changes,
+      slug: changes.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
+    };
+    return this.http.patch<Customer>(`${this.endpoint}/${id}`, payload).pipe(
+      tap(() => this.loadAll())
     );
   }
 }

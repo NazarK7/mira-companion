@@ -1,10 +1,14 @@
+// src/app/features/station-detail/station-detail.ts
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { switchMap, filter } from 'rxjs/operators';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { ArchiveDataService } from '../../core/services/archive-data.service';
-import type { CameraType } from '../../core/models/domain.model';
+import { CustomerService } from '../../core/services/customer.service';
+
+// Definiamo un tipo locale compatibile con l'enum di Prisma se il tuo domain.model non è allineato
+type CameraType = 'COGNEX_INSIGHT' | 'COGNEX_DATAMAN' | 'MIRA_3D';
 
 @Component({
   selector: 'app-station-detail',
@@ -15,25 +19,33 @@ import type { CameraType } from '../../core/models/domain.model';
 })
 export class StationDetailComponent {
   private readonly route = inject(ActivatedRoute);
-  private readonly archive = inject(ArchiveDataService);
+  private readonly customerService = inject(CustomerService);
 
-  readonly params = toSignal(this.route.paramMap, { requireSync: true });
+  private readonly slug$ = this.route.paramMap.pipe(
+    filter(params => params.has('slug'))
+  );
 
-  readonly customer = computed(() => {
-    const slug = this.params().get('slug');
-    return slug ? this.archive.customers().find(c => c.slug === slug) ?? null : null;
-  });
+  // 1. Carica l'albero Eager-loaded dal backend tramite CustomerService
+  readonly customer = toSignal(
+    this.slug$.pipe(
+      switchMap(params => this.customerService.getBySlug(params.get('slug')!))
+    )
+  );
 
+  // 2. Filtra il plant specifico
   readonly plant = computed(() => {
-    const c = this.customer();
-    const id = this.params().get('plantId');
-    return c && id ? c.plants.find(p => p.id === id) ?? null : null;
+    const cust = this.customer();
+    const id = this.route.snapshot.paramMap.get('plantId');
+    if (!cust || !id) return null;
+    return cust.plants.find((p: any) => p.id === id) ?? null;
   });
 
+  // 3. Filtra la station specifica dal plant
   readonly station = computed(() => {
     const p = this.plant();
-    const id = this.params().get('stationId');
-    return p && id ? p.stations.find(s => s.id === id) ?? null : null;
+    const id = this.route.snapshot.paramMap.get('stationId');
+    if (!p || !id) return null;
+    return p.stations.find((s: any) => s.id === id) ?? null;
   });
 
   typeLabel(t: CameraType): string {
@@ -44,6 +56,8 @@ export class StationDetailComponent {
         return 'DataMan';
       case 'MIRA_3D':
         return 'MiRa 3D';
+      default:
+        return 'Unknown';
     }
   }
 
@@ -55,11 +69,13 @@ export class StationDetailComponent {
         return 'bg-[var(--color-accent-50)] text-[var(--color-accent-700)]';
       case 'COGNEX_DATAMAN':
         return 'bg-[var(--color-info-50)] text-[var(--color-info-700)]';
+      default:
+        return 'bg-gray-100 text-gray-700';
     }
   }
 
   statusBadgeClass(status: string): string {
-    switch (status) {
+    switch (status?.toLowerCase()) {
       case 'production':
         return 'bg-[var(--color-success-50)] text-[var(--color-success-700)]';
       case 'maintenance':

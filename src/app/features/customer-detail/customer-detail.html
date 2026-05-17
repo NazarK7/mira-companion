@@ -1,134 +1,116 @@
-<p>customer-detail works!</p>
 <section class="mx-auto max-w-7xl px-6 py-8">
-      <!-- Breadcrumb -->
-      <nav class="mb-4 text-sm text-[var(--text-tertiary)]" aria-label="Breadcrumb">
-        <a routerLink="/customers" class="hover:text-[var(--color-primary-600)]">Customers</a>
-        <span class="mx-2">/</span>
-        <span class="text-[var(--text-primary)]">{{ customer()?.name ?? '—' }}</span>
-      </nav>
+  <!-- Breadcrumb -->
+  <nav class="mb-4 text-sm text-[var(--text-tertiary)]" aria-label="Breadcrumb">
+    <a routerLink="/customers" class="hover:text-[var(--color-primary-600)]">Customers</a>
+    <span class="mx-2">/</span>
+    <span class="text-[var(--text-primary)]">{{ customer()?.name ?? '—' }}</span>
+  </nav>
 
-      @if (customer(); as c) {
-        <header class="mb-8 flex items-start justify-between gap-4">
-          <div>
-            <h1 class="text-3xl font-semibold text-[var(--text-primary)]">{{ c.name }}</h1>
-            @if (c.notes) {
-              <p class="mt-2 max-w-2xl text-sm text-[var(--text-secondary)]">{{ c.notes }}</p>
-            }
-          </div>
-          <div class="flex gap-2">
-            <button mat-stroked-button>
-              <mat-icon>edit</mat-icon>
-              Edit
-            </button>
-          </div>
-        </header>
-
-        <!-- Plants section -->
-        <div class="mb-10">
-          <div class="mb-4 flex items-end justify-between">
-            <h2 class="text-xl font-semibold text-[var(--text-primary)]">Plants</h2>
-            <a
-              mat-flat-button
-              [routerLink]="['/customers', c.slug, 'plants', 'new']"
-              class="!bg-[var(--color-primary-600)]"
-            >
-              <mat-icon>add</mat-icon>
-              New Plant
-            </a>
-          </div>
-
-          @if (c.plants.length === 0) {
-            <div
-              class="rounded-lg border border-dashed border-[var(--border-default)] bg-[var(--bg-subtle)] p-8 text-center text-sm text-[var(--text-secondary)]"
-            >
-              No plants registered for this customer yet.
-            </div>
-          } @else {
-            <ul class="grid grid-cols-1 gap-4 md:grid-cols-2" role="list">
-              @for (p of c.plants; track p.id) {
-                <li>
-                  <a
-                    [routerLink]="['/customers', c.slug, 'plants', p.id]"
-                    class="block rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] transition hover:border-[var(--color-primary-500)] hover:shadow-[var(--shadow-md)]"
-                  >
-                    <div class="flex items-start justify-between gap-3">
-                      <div class="min-w-0 flex-1">
-                        <h3
-                          class="truncate text-lg font-semibold text-[var(--text-primary)]"
-                        >
-                          {{ p.name }}
-                        </h3>
-                        @if (p.location) {
-                          <p
-                            class="mt-0.5 truncate text-xs text-[var(--text-tertiary)]"
-                          >
-                            {{ p.location }}
-                          </p>
-                        }
-                      </div>
-                      <span
-                        class="inline-flex items-center rounded-full bg-[var(--color-primary-50)] px-2 py-0.5 text-xs font-medium text-[var(--color-primary-700)]"
-                      >
-                        {{ p.stations.length }} stations
-                      </span>
-                    </div>
-                    @if (p.contacts.length) {
-                      <p class="mt-3 text-xs text-[var(--text-tertiary)]">
-                        <mat-icon class="!text-base !w-4 !h-4 align-middle">person</mat-icon>
-                        {{ p.contacts.length }} contact{{ p.contacts.length === 1 ? '' : 's' }}
-                      </p>
-                    }
-                  </a>
-                </li>
-              }
-            </ul>
-          }
-        </div>
-
-        <!-- Contacts section -->
-        <div>
-          <h2 class="mb-4 text-xl font-semibold text-[var(--text-primary)]">
-            Contacts
-            <span class="ml-2 text-sm font-normal text-[var(--text-tertiary)]">
-              ({{ c.contacts.length }})
-            </span>
-          </h2>
-          @if (c.contacts.length === 0) {
-            <p class="text-sm text-[var(--text-tertiary)]">No contacts yet.</p>
-          } @else {
-            <ul class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3" role="list">
-              @for (ct of c.contacts; track ct.id) {
-                <li
-                  class="rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4"
-                >
-                  <p class="font-medium text-[var(--text-primary)]">{{ ct.name }}</p>
-                  @if (ct.role) {
-                    <p class="text-xs text-[var(--text-tertiary)]">{{ ct.role }}</p>
-                  }
-                  @if (ct.email) {
-                    <p class="mt-2 truncate text-sm">
-                      <a
-                        [href]="'mailto:' + ct.email"
-                        class="text-[var(--color-primary-600)] hover:underline"
-                      >
-                        {{ ct.email }}
-                      </a>
-                    </p>
-                  }
-                  @if (ct.phone) {
-                    <p class="text-sm text-[var(--text-secondary)]">{{ ct.phone }}</p>
-                  }
-                </li>
-              }
-            </ul>
-          }
-        </div>
-      } @else {
-        <div class="rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] p-12 text-center">
-          <p class="text-base text-[var(--text-secondary)]">Customer not found.</p>
-          <a routerLink="/customers" class="mt-3 inline-block text-sm text-[var(--color-primary-600)] hover:underline">
-            Back to customers
-          </a>
-        </div>
+  @if (customer(); as c) {
+  <header class="mb-8 flex items-start justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-semibold text-[var(--text-primary)]">{{ c.name }}</h1>
+      @if (c.notes) {
+      <p class="mt-2 max-w-2xl text-sm text-[var(--text-secondary)]">{{ c.notes }}</p>
       }
-    </section>
+    </div>
+    <div class="flex gap-2">
+      <a mat-stroked-button [routerLink]="['/customers', c.slug, 'edit']">
+        <mat-icon>edit</mat-icon>
+        Edit
+      </a>
+    </div>
+  </header>
+
+  <!-- Plants section -->
+  <div class="mb-10">
+    <div class="mb-4 flex items-end justify-between">
+      <h2 class="text-xl font-semibold text-[var(--text-primary)]">Plants</h2>
+      <a mat-flat-button [routerLink]="['/customers', c.slug, 'plants', 'new']" class="!bg-[var(--color-primary-600)]">
+        <mat-icon>add</mat-icon>
+        New Plant
+      </a>
+    </div>
+
+    @if (c.plants.length === 0) {
+    <div
+      class="rounded-lg border border-dashed border-[var(--border-default)] bg-[var(--bg-subtle)] p-8 text-center text-sm text-[var(--text-secondary)]">
+      No plants registered for this customer yet.
+    </div>
+    } @else {
+    <ul class="grid grid-cols-1 gap-4 md:grid-cols-2" role="list">
+      @for (p of c.plants; track p.id) {
+      <li>
+        <a [routerLink]="['/customers', c.slug, 'plants', p.id]"
+          class="block rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] transition hover:border-[var(--color-primary-500)] hover:shadow-[var(--shadow-md)]">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0 flex-1">
+              <h3 class="truncate text-lg font-semibold text-[var(--text-primary)]">
+                {{ p.name }}
+              </h3>
+              @if (p.location) {
+              <p class="mt-0.5 truncate text-xs text-[var(--text-tertiary)]">
+                {{ p.location }}
+              </p>
+              }
+            </div>
+            <span
+              class="inline-flex items-center rounded-full bg-[var(--color-primary-50)] px-2 py-0.5 text-xs font-medium text-[var(--color-primary-700)]">
+              {{ p.stations.length }} stations
+            </span>
+          </div>
+          @if (p.contacts.length) {
+          <p class="mt-3 text-xs text-[var(--text-tertiary)]">
+            <mat-icon class="!text-base !w-4 !h-4 align-middle">person</mat-icon>
+            {{ p.contacts.length }} contact{{ p.contacts.length === 1 ? '' : 's' }}
+          </p>
+          }
+        </a>
+      </li>
+      }
+    </ul>
+    }
+  </div>
+
+  <!-- Contacts section -->
+  <div>
+    <h2 class="mb-4 text-xl font-semibold text-[var(--text-primary)]">
+      Contacts
+      <span class="ml-2 text-sm font-normal text-[var(--text-tertiary)]">
+        ({{ c.contacts.length }})
+      </span>
+    </h2>
+    @if (c.contacts.length === 0) {
+    <p class="text-sm text-[var(--text-tertiary)]">No contacts yet.</p>
+    } @else {
+    <ul class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3" role="list">
+      @for (ct of c.contacts; track ct.id) {
+      <li class="rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">
+        <p class="font-medium text-[var(--text-primary)]">{{ ct.name }}</p>
+        @if (ct.role) {
+        <p class="text-xs text-[var(--text-tertiary)]">{{ ct.role }}</p>
+        }
+        @if (ct.email) {
+        <p class="mt-2 truncate text-sm">
+          <a [href]="'mailto:' + ct.email" class="text-[var(--color-primary-600)] hover:underline">
+            {{ ct.email }}
+          </a>
+        </p>
+        }
+        @if (ct.phone) {
+        <p class="text-sm text-[var(--text-secondary)]">{{ ct.phone }}</p>
+        }
+      </li>
+      }
+    </ul>
+    }
+  </div>
+  } @else {
+  <div class="rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] p-12 text-center">
+    <p class="text-base text-[var(--text-secondary)]">Customer not found.</p>
+    <a routerLink="/customers" class="mt-3 inline-block text-sm text-[var(--color-primary-600)] hover:underline">
+      Back to customers
+    </a>
+  </div>
+  }
+</section>

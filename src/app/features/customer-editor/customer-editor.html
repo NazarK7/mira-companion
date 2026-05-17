@@ -4,18 +4,23 @@
       <mat-icon>arrow_back</mat-icon>
     </a>
     <div>
-      <h1 class="text-3xl font-semibold text-[var(--text-primary)]">New Customer</h1>
-      <p class="mt-1 text-sm text-[var(--text-secondary)]">Create a new OEM or Tier-1 entry</p>
+      <h1 class="text-3xl font-semibold text-[var(--text-primary)]">
+        {{ isEditMode() ? 'Edit Customer' : 'New Customer' }}
+      </h1>
+      <p class="mt-1 text-sm text-[var(--text-secondary)]">
+        {{ isEditMode() ? 'Update customer settings' : 'Create a new OEM or Tier-1 entry' }}
+      </p>
     </div>
   </header>
 
-  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-6 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6 shadow-[var(--shadow-sm)]">
-    
+  <form [formGroup]="form" (ngSubmit)="onSubmit()"
+    class="flex flex-col gap-6 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6 shadow-[var(--shadow-sm)]">
+
     <mat-form-field appearance="outline" class="w-full">
       <mat-label>Customer Name</mat-label>
       <input matInput formControlName="name" placeholder="e.g., Volvo Cars" required />
       @if (form.controls.name.hasError('required')) {
-        <mat-error>Name is required</mat-error>
+      <mat-error>Name is required</mat-error>
       }
     </mat-form-field>
 
@@ -31,7 +36,8 @@
 
     <div class="mt-4 flex justify-end gap-3">
       <a mat-button routerLink="/customers" [disabled]="isSubmitting()">Cancel</a>
-      <button mat-flat-button color="primary" type="submit" class="!bg-[var(--color-primary-600)]" [disabled]="form.invalid || isSubmitting()">
+      <button mat-flat-button color="primary" type="submit" class="!bg-[var(--color-primary-600)]"
+        [disabled]="form.invalid || isSubmitting()">
         <mat-icon>save</mat-icon>
         {{ isSubmitting() ? 'Saving...' : 'Create Customer' }}
       </button>

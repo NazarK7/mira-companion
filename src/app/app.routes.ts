@@ -23,7 +23,7 @@ export const routes: Routes = [
   },
 
   // ─── Archive routes (nested) ─────────────────────────────────────────────
-  
+
   // 1. Lista Customers
   {
     path: 'customers',
@@ -36,19 +36,39 @@ export const routes: Routes = [
     loadComponent: () => import('./features/customer-editor/customer-editor').then(m => m.CustomerEditorComponent),
     title: 'New Customer — MiRa Companion',
   },
+  {
+    path: 'customers/:slug/edit',
+    loadComponent: () => import('./features/customer-editor/customer-editor').then(m => m.CustomerEditorComponent),
+    title: 'Edit Customer — MiRa Companion',
+  },
+  {
+    path: 'customers/:slug',
+    loadComponent: () => import('./features/customer-detail/customer-detail').then(m => m.CustomerDetailComponent),
+    title: 'Customer — MiRa Companion',
+  },
   // 3. Detail Customer
   {
     path: 'customers/:slug',
     loadComponent: () => import('./features/customer-detail/customer-detail').then(m => m.CustomerDetailComponent),
     title: 'Customer — MiRa Companion',
-  }, 
+  },
 
   // --- Piante, Stazioni e Camere ---
   {
     path: 'customers/:slug/plants/new',
-    loadComponent: () => import('./features/plant-detail/plant-detail').then(m => m.PlantDetailComponent),
-    data: { mode: 'create' },
+    loadComponent: () => import('./features/plant-editor/plant-editor').then(m => m.PlantEditorComponent),
     title: 'New Plant — MiRa Companion',
+  },
+  {
+    path: 'customers/:slug/plants/:plantId/edit',
+    loadComponent: () => import('./features/plant-editor/plant-editor').then(m => m.PlantEditorComponent),
+    title: 'Edit Plant — MiRa Companion',
+  },
+  // PLANT DETAIL
+  {
+    path: 'customers/:slug/plants/:plantId',
+    loadComponent: () => import('./features/plant-detail/plant-detail').then(m => m.PlantDetailComponent),
+    title: 'Plant — MiRa Companion',
   },
   {
     path: 'customers/:slug/plants/:plantId',
@@ -76,7 +96,7 @@ export const routes: Routes = [
     path: 'customers/:slug/plants/:plantId/stations/:stationId/cameras/:cameraId',
     loadComponent: () => import('./features/camera-details/camera-details').then(m => m.CameraDetailsComponent),
     title: 'Camera — MiRa Companion',
-  },  
+  },
 
   // ─── Placeholder (Fase futura) ───────────────────────────────────────────
   {

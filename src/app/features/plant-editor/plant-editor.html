@@ -1,0 +1,41 @@
+<section class="max-w-4xl mx-auto py-8 px-4">
+      <header class="flex justify-between items-center mb-8">
+        <div>
+          <h1 class="text-3xl font-bold text-[var(--text-primary)]">
+            {{ isEditMode() ? 'Edit Plant' : 'New Plant' }}
+          </h1>
+          <p class="text-[var(--text-secondary)] mt-1">Configure manufacturing site</p>
+        </div>
+      </header>
+
+      <form [formGroup]="form" (ngSubmit)="save()" class="flex flex-col gap-8">
+        <div class="p-6 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl grid grid-cols-2 gap-6 shadow-sm">
+          <mat-form-field appearance="outline" class="col-span-2">
+            <mat-label>Plant Name</mat-label>
+            <input matInput formControlName="name" placeholder="e.g. Torslanda Plant" required>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>City / Location</mat-label>
+            <input matInput formControlName="location">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Address</mat-label>
+            <input matInput formControlName="address">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="col-span-2">
+            <mat-label>Notes</mat-label>
+            <textarea matInput formControlName="notes" rows="3"></textarea>
+          </mat-form-field>
+        </div>
+
+        <div class="flex justify-end gap-4">
+          <button type="button" mat-stroked-button (click)="cancel()" [disabled]="isSubmitting()">Cancel</button>
+          <button type="submit" mat-flat-button color="primary" class="!bg-[var(--color-primary-600)]" [disabled]="form.invalid || isSubmitting()">
+            {{ isSubmitting() ? 'Saving...' : (isEditMode() ? 'Update Plant' : 'Create Plant') }}
+          </button>
+        </div>
+      </form>
+    </section>
