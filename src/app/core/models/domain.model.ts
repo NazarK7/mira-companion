@@ -300,7 +300,7 @@ export interface Job {
   visionToolSlot?: number;
   backups: JobBackup[];
   createdAt: string;
-  modifiedAt: string;
+  updatedAt: string;
 }
 
 // =============================================================================
@@ -463,6 +463,7 @@ export interface HalconLicenseRecord {
   fileSize?: number;
   /** Data di rilascio/caricamento del record. */
   createdAt: string;
+  updatedAt: string;
   notes?: string;
 }
 
@@ -537,9 +538,17 @@ export interface Camera {
   robotBackups: RobotBackupRecord[];
   maintenanceEvents: MaintenanceEvent[];
 
+  // ─── Prisma Aggregates (Aggiunto per supportare la UI Piatta) ─────────────
+  _count?: {
+    jobs?: number;
+    robotBackups?: number;
+    halconLicenses?: number;
+    maintenanceEvents?: number;
+  };
+
   // ─── Audit ────────────────────────────────────────────────────────────────
-  createdAt: string;
-  modifiedAt: string;
+  createdAt: string; // <-- CAMBIATO: era modifiedAt
+  modifiedAt: string; // <-- MANTENUTO per compatibilità, ma da deprecare in futuro
 }
 
 /**

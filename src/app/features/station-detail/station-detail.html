@@ -19,45 +19,67 @@
     </nav>
 
     @if (station(); as s) {
-    <header class="mb-8 flex items-start justify-between gap-4">
-        <div>
-            @if (s.code) {
-            <p class="font-mono text-sm text-[var(--text-tertiary)]">{{ s.code }}</p>
-            }
-            <h1 class="text-3xl font-semibold text-[var(--text-primary)]">{{ s.name }}</h1>
-            <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-                @if (s.line) {
-                <span class="text-[var(--text-secondary)]">
-                    <mat-icon class="!text-base !w-4 !h-4 align-middle">linear_scale</mat-icon>
-                    {{ s.line }}
-                </span>
+    <header class="mb-8">
+        <div class="flex items-start justify-between gap-4">
+            <div>
+                @if (s.code) {
+                <p class="font-mono text-sm text-[var(--text-tertiary)]">{{ s.code }}</p>
                 }
-                @if (s.installDate) {
-                <span class="text-[var(--text-secondary)]">
-                    <mat-icon class="!text-base !w-4 !h-4 align-middle">event</mat-icon>
-                    Installed {{ s.installDate }}
-                </span>
-                }
-                @if (s.status) {
-                <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
-                    [class]="statusBadgeClass(s.status)">
-                    {{ s.status }}
-                </span>
+                <h1 class="text-3xl font-semibold text-[var(--text-primary)]">{{ s.name }}</h1>
+                <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                    @if (s.line) {
+                    <span class="text-[var(--text-secondary)]">
+                        <mat-icon class="!text-base !w-4 !h-4 align-middle">linear_scale</mat-icon>
+                        {{ s.line }}
+                    </span>
+                    }
+                    @if (s.installDate) {
+                    <span class="text-[var(--text-secondary)]">
+                        <mat-icon class="!text-base !w-4 !h-4 align-middle">event</mat-icon>
+                        Installed {{ s.installDate }}
+                    </span>
+                    }
+                    @if (s.status) {
+                    <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                        [class]="statusBadgeClass(s.status)">
+                        {{ s.status }}
+                    </span>
+                    }
+                </div>
+                @if (s.description) {
+                <p class="mt-3 max-w-2xl text-sm text-[var(--text-secondary)]">{{ s.description }}</p>
                 }
             </div>
-            @if (s.description) {
-            <p class="mt-3 max-w-2xl text-sm text-[var(--text-secondary)]">{{ s.description }}</p>
+        </div>
+
+        @if (s.recoveryProcedure || s.notes) {
+        <div class="mt-6 flex flex-col gap-4 border-t border-[var(--border-subtle)] pt-6">
+            @if (s.recoveryProcedure) {
+            <div>
+                <h3 class="flex items-center gap-2 text-sm font-semibold text-[var(--color-accent-400)]">
+                    <mat-icon class="!text-base !w-4 !h-4">restore</mat-icon>
+                    Recovery Procedure
+                </h3>
+                <p class="mt-1 whitespace-pre-wrap text-sm text-[var(--text-secondary)]">{{ s.recoveryProcedure }}</p>
+            </div>
+            }
+            @if (s.notes) {
+            <div>
+                <h3 class="flex items-center gap-2 text-sm font-semibold text-[var(--color-warning-400)]">
+                    <mat-icon class="!text-base !w-4 !h-4">note</mat-icon>
+                    Internal Notes
+                </h3>
+                <p class="mt-1 whitespace-pre-wrap text-sm text-[var(--text-secondary)]">{{ s.notes }}</p>
+            </div>
             }
         </div>
-        <button mat-stroked-button [routerLink]="['/customers', customer()!.slug, 'plants', plant()!.id, 'stations', s.id, 'edit']">
-            <mat-icon>edit</mat-icon>
-            Edit
-        </button>
+        }
     </header>
 
     <div>
         <div class="mb-4 flex items-end justify-between">
             <h2 class="text-xl font-semibold text-[var(--text-primary)]">Cameras</h2>
+
             <a mat-flat-button [routerLink]="[
                 '/customers',
                 customer()!.slug,
@@ -74,7 +96,8 @@
         </div>
 
         @if (s.cameras.length === 0) {
-        <div class="rounded-lg border border-dashed border-[var(--border-default)] bg-[var(--bg-subtle)] p-8 text-center text-sm text-[var(--text-secondary)]">
+        <div
+            class="rounded-lg border border-dashed border-[var(--border-default)] bg-[var(--bg-subtle)] p-8 text-center text-sm text-[var(--text-secondary)]">
             No cameras registered in this station yet.
         </div>
         } @else {
@@ -82,10 +105,25 @@
             @for (cam of s.cameras; track cam.id) {
             <li>
                 <a [routerLink]="['/customers', customer()!.slug, 'plants', plant()!.id, 'stations', s.id, 'cameras', cam.id]"
-                    class="block h-full rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] transition hover:border-[var(--color-primary-500)] hover:shadow-[var(--shadow-md)]">
-                    <div class="mb-3 flex items-start justify-between gap-3">
+                    class="group relative block h-full rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] transition hover:border-[var(--color-primary-500)] hover:shadow-[var(--shadow-md)]">
+
+                    <div
+                        class="absolute top-2 right-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 z-10">
+                        <button mat-icon-button (click)="editCamera($event, cam.id)" title="Edit Camera">
+                            <mat-icon
+                                class="!text-[var(--text-tertiary)] hover:!text-[var(--color-primary-600)]">edit</mat-icon>
+                        </button>
+                        <button mat-icon-button color="warn" (click)="deleteCamera($event, cam.id, cam.name)"
+                            title="Delete Camera">
+                            <mat-icon>delete</mat-icon>
+                        </button>
+                    </div>
+
+                    <div class="mb-3 pr-16 flex flex-col items-start gap-1">
                         <h3 class="truncate text-base font-semibold text-[var(--text-primary)]">{{ cam.name }}</h3>
-                        <span class="inline-flex shrink-0 items-center rounded px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider" [class]="typeBadgeClass(cam.type)">
+                        <span
+                            class="inline-flex shrink-0 items-center rounded px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider"
+                            [class]="typeBadgeClass(cam.type)">
                             {{ typeLabel(cam.type) }}
                         </span>
                     </div>
@@ -110,34 +148,6 @@
         </ul>
         }
     </div>
-
-    @if (s.recoveryProcedure || s.notes) {
-    <div class="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2">
-        @if (s.recoveryProcedure) {
-        <div class="rounded-md border border-[var(--color-accent-200)] bg-[var(--color-accent-50)] p-5">
-            <h3 class="mb-2 text-sm font-semibold text-[var(--color-accent-700)]">
-                <mat-icon class="!text-base !w-4 !h-4 align-middle">restore</mat-icon>
-                Recovery Procedure
-            </h3>
-            <p class="whitespace-pre-wrap text-sm text-[var(--text-secondary)]">
-                {{ s.recoveryProcedure }}
-            </p>
-        </div>
-        }
-        @if (s.notes) {
-        <div class="rounded-md border border-[var(--color-warning-200)] bg-[var(--color-warning-50)] p-5">
-            <h3 class="mb-2 text-sm font-semibold text-[var(--color-warning-700)]">
-                <mat-icon class="!text-base !w-4 !h-4 align-middle">note</mat-icon>
-                Internal Notes
-            </h3>
-            <p class="whitespace-pre-wrap text-sm text-[var(--text-secondary)]">
-                {{ s.notes }}
-            </p>
-        </div>
-        }
-    </div>
-    }
-
     } @else {
     <div class="rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] p-12 text-center">
         <p class="text-base text-[var(--text-secondary)]">Station not found.</p>

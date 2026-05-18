@@ -1,0 +1,94 @@
+<section class="mx-auto max-w-5xl px-6 py-8">
+  <header class="mb-8 flex items-center gap-4">
+    <button mat-icon-button type="button" (click)="cancel()" aria-label="Back">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <div>
+      <h1 class="text-3xl font-semibold text-[var(--text-primary)]">
+        {{ isEditMode() ? 'Edit Camera' : 'New Camera' }}
+      </h1>
+      <p class="mt-1 text-sm text-[var(--text-secondary)]">
+        Configure hardware and network parameters for the vision system
+      </p>
+    </div>
+  </header>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-8">
+    
+    <div class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6 shadow-[var(--shadow-sm)] grid grid-cols-2 gap-6">
+      
+      <mat-form-field appearance="outline" class="col-span-2 md:col-span-1">
+        <mat-label>Camera Name</mat-label>
+        <input matInput formControlName="name" placeholder="e.g., Right Side Pallet" required />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="col-span-2 md:col-span-1">
+        <mat-label>Type</mat-label>
+        <mat-select formControlName="type" required>
+          <mat-option value="MIRA_3D">MiRa 3D (Robot Guidance)</mat-option>
+          <mat-option value="COGNEX_INSIGHT">Cognex In-Sight</mat-option>
+          <mat-option value="COGNEX_DATAMAN">Cognex DataMan</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="col-span-2 md:col-span-1">
+        <mat-label>Hardware Model</mat-label>
+        <input matInput formControlName="cameraModel" placeholder="e.g., Matrox Iris GTR" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="col-span-2 md:col-span-1">
+        <mat-label>Lens Focal (mm)</mat-label>
+        <input matInput type="number" formControlName="lensFocalMm" placeholder="e.g., 12.5" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="col-span-2 md:col-span-1">
+        <mat-label>IP Address</mat-label>
+        <input matInput formControlName="ipAddress" placeholder="e.g., 192.168.1.100" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="col-span-2 md:col-span-1">
+        <mat-label>Firmware Version</mat-label>
+        <input matInput formControlName="firmware" placeholder="e.g., 23.2.1" />
+      </mat-form-field>
+    </div>
+
+    <div class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6 shadow-[var(--shadow-sm)] grid grid-cols-2 gap-6">
+      
+      <div class="col-span-2 flex items-center gap-2 mb-2">
+        <mat-icon class="text-[var(--text-tertiary)]">settings_ethernet</mat-icon>
+        <h3 class="text-lg font-medium text-[var(--text-primary)]">Integration & Control</h3>
+      </div>
+
+      @if (form.get('type')?.value === 'MIRA_3D') {
+        <mat-form-field appearance="outline" class="col-span-2 md:col-span-1">
+          <mat-label>Robot Controller Type</mat-label>
+          <mat-select formControlName="controllerType">
+            <mat-option [value]="null">Nessuno / Da definire</mat-option>
+            <mat-option value="ABB">ABB (Quaternions)</mat-option>
+            <mat-option value="COMAU">Comau (Euler ZYZ Intrinsic)</mat-option>
+            <mat-option value="FANUC">Fanuc (Euler XYZ Extrinsic)</mat-option>
+            <mat-option value="KUKA">Kuka (Euler ZYX Intrinsic)</mat-option>
+          </mat-select>
+        </mat-form-field>
+      }
+
+      <mat-form-field appearance="outline" class="col-span-2">
+        <mat-label>PLC / Trigger Notes</mat-label>
+        <textarea matInput formControlName="plcNotes" rows="2" placeholder="e.g., Triggered by PLC over PROFINET, Station 10..."></textarea>
+      </mat-form-field>
+      
+      <mat-form-field appearance="outline" class="col-span-2">
+        <mat-label>General Notes</mat-label>
+        <textarea matInput formControlName="notes" rows="2" placeholder="Anomalies, specific setup instructions..."></textarea>
+      </mat-form-field>
+    </div>
+
+    <div class="flex justify-end gap-3">
+      <button mat-button type="button" (click)="cancel()" [disabled]="isSubmitting()">Cancel</button>
+      <button mat-flat-button color="primary" type="submit" class="!bg-[var(--color-primary-600)]" [disabled]="form.invalid || isSubmitting()">
+        <mat-icon>save</mat-icon>
+        {{ isSubmitting() ? 'Saving...' : (isEditMode() ? 'Update Camera' : 'Create Camera') }}
+      </button>
+    </div>
+  </form>
+</section>

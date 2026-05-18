@@ -81,15 +81,19 @@ export const routes: Routes = [
     loadComponent: () => import('./features/station-detail/station-detail').then(m => m.StationDetailComponent),
     title: 'Station — MiRa Companion',
   },
-  
+
   // NEW CAMERA
   {
     path: 'customers/:slug/plants/:plantId/stations/:stationId/cameras/new',
-    loadComponent: () => import('./features/camera-details/camera-details').then(m => m.CameraDetailsComponent),
-    data: { mode: 'create' },
+    loadComponent: () => import('./features/camera-editor/camera-editor').then(m => m.CameraEditorComponent),
     title: 'New Camera — MiRa Companion',
   },
-  // CAMERA DETAIL
+  {
+    path: 'customers/:slug/plants/:plantId/stations/:stationId/cameras/:cameraId/edit',
+    loadComponent: () => import('./features/camera-editor/camera-editor').then(m => m.CameraEditorComponent),
+    title: 'Edit Camera — MiRa Companion',
+  },
+  // CAMERA DETAIL (mantiene il puntamento a CameraDetailsComponent)
   {
     path: 'customers/:slug/plants/:plantId/stations/:stationId/cameras/:cameraId',
     loadComponent: () => import('./features/camera-details/camera-details').then(m => m.CameraDetailsComponent),

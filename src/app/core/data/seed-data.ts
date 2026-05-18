@@ -91,7 +91,7 @@ export const SEED_CUSTOMERS: Customer[] = [
                       },
                     ],
                     createdAt: '2026-02-08T11:00:00.000Z',
-                    modifiedAt: '2026-04-20T14:30:00.000Z',
+                    updatedAt: '2026-04-20T14:30:00.000Z',
                   },
                 ],
                 halconLicenses: [
@@ -102,6 +102,7 @@ export const SEED_CUSTOMERS: Customer[] = [
                     expiryDate: '2027-03-31',
                     filePath: 'volvo/torslanda/175420/cam_rs/licenses/halcon_23_11.dat',
                     createdAt: '2026-03-15T09:00:00.000Z',
+                    updatedAt: '2026-03-15T09:00:00.000Z',
                   },
                 ],
                 robotBackups: [
@@ -214,7 +215,7 @@ export const SEED_CUSTOMERS: Customer[] = [
                       },
                     ],
                     createdAt: '2026-05-10T09:15:00.000Z',
-                    modifiedAt: '2026-05-10T09:15:00.000Z',
+                    updatedAt: '2026-05-10T09:15:00.000Z',
                   },
                 ],
                 halconLicenses: [],
