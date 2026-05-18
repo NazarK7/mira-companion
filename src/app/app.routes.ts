@@ -24,13 +24,11 @@ export const routes: Routes = [
 
   // ─── Archive routes (nested) ─────────────────────────────────────────────
 
-  // 1. Lista Customers
   {
     path: 'customers',
     loadComponent: () => import('./features/customer-list/customer-list').then(m => m.CustomerListComponent),
     title: 'Customers — MiRa Companion',
   },
-  // 2. Editor Customer (DEVE stare prima di :slug)
   {
     path: 'customers/new',
     loadComponent: () => import('./features/customer-editor/customer-editor').then(m => m.CustomerEditorComponent),
@@ -41,12 +39,6 @@ export const routes: Routes = [
     loadComponent: () => import('./features/customer-editor/customer-editor').then(m => m.CustomerEditorComponent),
     title: 'Edit Customer — MiRa Companion',
   },
-  {
-    path: 'customers/:slug',
-    loadComponent: () => import('./features/customer-detail/customer-detail').then(m => m.CustomerDetailComponent),
-    title: 'Customer — MiRa Companion',
-  },
-  // 3. Detail Customer
   {
     path: 'customers/:slug',
     loadComponent: () => import('./features/customer-detail/customer-detail').then(m => m.CustomerDetailComponent),
@@ -70,28 +62,34 @@ export const routes: Routes = [
     loadComponent: () => import('./features/plant-detail/plant-detail').then(m => m.PlantDetailComponent),
     title: 'Plant — MiRa Companion',
   },
-  {
-    path: 'customers/:slug/plants/:plantId',
-    loadComponent: () => import('./features/plant-detail/plant-detail').then(m => m.PlantDetailComponent),
-    title: 'Plant — MiRa Companion',
-  },
+
+  // NEW STATION
   {
     path: 'customers/:slug/plants/:plantId/stations/new',
-    loadComponent: () => import('./features/station-detail/station-detail').then(m => m.StationDetailComponent),
-    data: { mode: 'create' },
+    loadComponent: () => import('./features/station-editor/station-editor').then(m => m.StationEditorComponent),
     title: 'New Station — MiRa Companion',
   },
+  // EDIT STATION
+  {
+    path: 'customers/:slug/plants/:plantId/stations/:stationId/edit',
+    loadComponent: () => import('./features/station-editor/station-editor').then(m => m.StationEditorComponent),
+    title: 'Edit Station — MiRa Companion',
+  },
+  // STATION DETAIL
   {
     path: 'customers/:slug/plants/:plantId/stations/:stationId',
     loadComponent: () => import('./features/station-detail/station-detail').then(m => m.StationDetailComponent),
     title: 'Station — MiRa Companion',
   },
+  
+  // NEW CAMERA
   {
     path: 'customers/:slug/plants/:plantId/stations/:stationId/cameras/new',
     loadComponent: () => import('./features/camera-details/camera-details').then(m => m.CameraDetailsComponent),
     data: { mode: 'create' },
     title: 'New Camera — MiRa Companion',
   },
+  // CAMERA DETAIL
   {
     path: 'customers/:slug/plants/:plantId/stations/:stationId/cameras/:cameraId',
     loadComponent: () => import('./features/camera-details/camera-details').then(m => m.CameraDetailsComponent),
@@ -108,25 +106,6 @@ export const routes: Routes = [
     path: 'settings',
     loadComponent: () => import('./features/dashboard/dashboard').then(m => m.DashboardComponent),
     title: 'Settings — MiRa Companion',
-  },
-
-  // NEW STATION
-  {
-    path: 'customers/:slug/plants/:plantId/stations/new',
-    loadComponent: () => import('./features/station-editor/station-editor').then(m => m.StationEditorComponent),
-    title: 'New Station — MiRa Companion',
-  },
-  // EDIT STATION (Deve stare prima del detail generico)
-  {
-    path: 'customers/:slug/plants/:plantId/stations/:stationId/edit',
-    loadComponent: () => import('./features/station-editor/station-editor').then(m => m.StationEditorComponent),
-    title: 'Edit Station — MiRa Companion',
-  },
-  // STATION DETAIL
-  {
-    path: 'customers/:slug/plants/:plantId/stations/:stationId',
-    loadComponent: () => import('./features/station-detail/station-detail').then(m => m.StationDetailComponent),
-    title: 'Station — MiRa Companion',
   },
 
   { path: '**', redirectTo: 'dashboard' },

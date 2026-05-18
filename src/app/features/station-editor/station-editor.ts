@@ -1,7 +1,7 @@
 // src/app/features/station-editor/station-editor.ts
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -14,7 +14,7 @@ import { Station } from '../../core/models/domain.model';
   selector: 'app-station-editor',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, RouterLink, MatButtonModule, MatFormFieldModule, MatInputModule, MatIconModule, MatSelectModule],
+  imports: [ReactiveFormsModule,  MatButtonModule, MatFormFieldModule, MatInputModule, MatIconModule, MatSelectModule],
   templateUrl: './station-editor.html',
 
 })
