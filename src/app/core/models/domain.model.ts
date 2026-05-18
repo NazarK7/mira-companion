@@ -441,12 +441,12 @@ export interface Issue {
 export type CameraType = 'COGNEX_INSIGHT' | 'COGNEX_DATAMAN' | 'MIRA_3D';
 
 export type CameraStatus =
-  | 'planning'
-  | 'calibrating'
-  | 'job-creation'
-  | 'production'
-  | 'maintenance'
-  | 'archived';
+  | 'PLANNING'
+  | 'CALIBRATING'
+  | 'JOB_CREATION'
+  | 'PRODUCTION'
+  | 'MAINTENANCE'
+  | 'ARCHIVED';
 
 /**
  * Snapshot versionato della licenza Halcon (rinnovi nel tempo).

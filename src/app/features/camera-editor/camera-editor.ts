@@ -7,7 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { CameraService } from '../../core/services/camera.service';
-import { Camera } from '../../core/models/domain.model';
+import { Camera, CameraStatus } from '../../core/models/domain.model';
 
 @Component({
   selector: 'app-camera-editor',
@@ -40,6 +40,7 @@ export class CameraEditorComponent implements OnInit {
   readonly form = this.fb.group({
     name: ['', Validators.required],
     type: ['MIRA_3D', Validators.required],
+    status: [null as CameraStatus | null],
     cameraModel: [''],
     lensFocalMm: [null as number | null],
     ipAddress: [''],
@@ -67,6 +68,7 @@ export class CameraEditorComponent implements OnInit {
           this.form.patchValue({
             name: camera.name,
             type: camera.type,
+            status: camera.status || null,
             cameraModel: camera.cameraModel || '',
             lensFocalMm: camera.lensFocalMm || null,
             ipAddress: camera.ipAddress || '',

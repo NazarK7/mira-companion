@@ -14,9 +14,10 @@
   </header>
 
   <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-8">
-    
-    <div class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6 shadow-[var(--shadow-sm)] grid grid-cols-2 gap-6">
-      
+
+    <div
+      class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6 shadow-[var(--shadow-sm)] grid grid-cols-2 md:grid-cols-3 gap-6">
+
       <mat-form-field appearance="outline" class="col-span-2 md:col-span-1">
         <mat-label>Camera Name</mat-label>
         <input matInput formControlName="name" placeholder="e.g., Right Side Pallet" required />
@@ -32,6 +33,19 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="col-span-2 md:col-span-1">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="status">
+          <mat-option [value]="null">Nessuno / Da definire</mat-option>
+          <mat-option value="PLANNING">Planning</mat-option>
+          <mat-option value="CALIBRATING">Calibrating</mat-option>
+          <mat-option value="JOB_CREATION">Job Creation</mat-option>
+          <mat-option value="PRODUCTION">Production</mat-option>
+          <mat-option value="MAINTENANCE">Maintenance</mat-option>
+          <mat-option value="ARCHIVED">Archived</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="col-span-2 md:col-span-1">
         <mat-label>Hardware Model</mat-label>
         <input matInput formControlName="cameraModel" placeholder="e.g., Matrox Iris GTR" />
       </mat-form-field>
@@ -42,50 +56,64 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="col-span-2 md:col-span-1">
+        <mat-label>Firmware Version</mat-label>
+        <input matInput formControlName="firmware" placeholder="e.g., 23.2.1" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="col-span-2 md:col-span-1">
         <mat-label>IP Address</mat-label>
         <input matInput formControlName="ipAddress" placeholder="e.g., 192.168.1.100" />
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="col-span-2 md:col-span-1">
-        <mat-label>Firmware Version</mat-label>
-        <input matInput formControlName="firmware" placeholder="e.g., 23.2.1" />
+        <mat-label>Serial Number</mat-label>
+        <input matInput formControlName="serialNumber" placeholder="e.g., IGTR12M-2024-0042" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="col-span-2 md:col-span-1">
+        <mat-label>MAC Address</mat-label>
+        <input matInput formControlName="macAddress" placeholder="e.g., 00:1A:2B:3C:4D" />
       </mat-form-field>
     </div>
 
-    <div class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6 shadow-[var(--shadow-sm)] grid grid-cols-2 gap-6">
-      
+    <div
+      class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6 shadow-[var(--shadow-sm)] grid grid-cols-2 gap-6">
+
       <div class="col-span-2 flex items-center gap-2 mb-2">
         <mat-icon class="text-[var(--text-tertiary)]">settings_ethernet</mat-icon>
         <h3 class="text-lg font-medium text-[var(--text-primary)]">Integration & Control</h3>
       </div>
 
       @if (form.get('type')?.value === 'MIRA_3D') {
-        <mat-form-field appearance="outline" class="col-span-2 md:col-span-1">
-          <mat-label>Robot Controller Type</mat-label>
-          <mat-select formControlName="controllerType">
-            <mat-option [value]="null">Nessuno / Da definire</mat-option>
-            <mat-option value="ABB">ABB (Quaternions)</mat-option>
-            <mat-option value="COMAU">Comau (Euler ZYZ Intrinsic)</mat-option>
-            <mat-option value="FANUC">Fanuc (Euler XYZ Extrinsic)</mat-option>
-            <mat-option value="KUKA">Kuka (Euler ZYX Intrinsic)</mat-option>
-          </mat-select>
-        </mat-form-field>
+      <mat-form-field appearance="outline" class="col-span-2 md:col-span-1">
+        <mat-label>Robot Controller Type</mat-label>
+        <mat-select formControlName="controllerType">
+          <mat-option [value]="null">Nessuno / Da definire</mat-option>
+          <mat-option value="ABB">ABB (Quaternions)</mat-option>
+          <mat-option value="COMAU">Comau (Euler ZYZ Intrinsic)</mat-option>
+          <mat-option value="FANUC">Fanuc (Euler XYZ Extrinsic)</mat-option>
+          <mat-option value="KUKA">Kuka (Euler ZYX Intrinsic)</mat-option>
+        </mat-select>
+      </mat-form-field>
       }
 
       <mat-form-field appearance="outline" class="col-span-2">
         <mat-label>PLC / Trigger Notes</mat-label>
-        <textarea matInput formControlName="plcNotes" rows="2" placeholder="e.g., Triggered by PLC over PROFINET, Station 10..."></textarea>
+        <textarea matInput formControlName="plcNotes" rows="2"
+          placeholder="e.g., Triggered by PLC over PROFINET, Station 10..."></textarea>
       </mat-form-field>
-      
+
       <mat-form-field appearance="outline" class="col-span-2">
         <mat-label>General Notes</mat-label>
-        <textarea matInput formControlName="notes" rows="2" placeholder="Anomalies, specific setup instructions..."></textarea>
+        <textarea matInput formControlName="notes" rows="2"
+          placeholder="Anomalies, specific setup instructions..."></textarea>
       </mat-form-field>
     </div>
 
     <div class="flex justify-end gap-3">
       <button mat-button type="button" (click)="cancel()" [disabled]="isSubmitting()">Cancel</button>
-      <button mat-flat-button color="primary" type="submit" class="!bg-[var(--color-primary-600)]" [disabled]="form.invalid || isSubmitting()">
+      <button mat-flat-button color="primary" type="submit" class="text-white !bg-[var(--color-primary-600)]"
+        [disabled]="form.invalid || isSubmitting()">
         <mat-icon>save</mat-icon>
         {{ isSubmitting() ? 'Saving...' : (isEditMode() ? 'Update Camera' : 'Create Camera') }}
       </button>
