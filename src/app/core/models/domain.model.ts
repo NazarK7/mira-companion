@@ -582,44 +582,6 @@ export interface MaintenanceEvent {
   performedBy?: string;
 }
 
-export interface Camera {
-  id: string;
-  stationId: string;
-
-  // ─── Identità (required) ──────────────────────────────────────────────────
-  name: string;
-  type: CameraType;
-
-  // ─── Hardware (tutti opzionali) ───────────────────────────────────────────
-  cameraModel?: string;
-  lensFocalMm?: number;
-  firmware?: string;
-  ipAddress?: string;
-  serialNumber?: string;
-  macAddress?: string;
-
-  // ─── MIRA_3D only ─────────────────────────────────────────────────────────
-  controllerType?: RobotControllerType;
-
-  // ─── Note ─────────────────────────────────────────────────────────────────
-  plcNotes?: string;
-  notes?: string;
-  tags?: string[];
-  status?: CameraStatus;
-
-  // ─── Sub-entities ─────────────────────────────────────────────────────────
-  jobs: Job[];
-  halconLicenses: HalconLicenseRecord[];
-  robotBackups: RobotBackupRecord[];
-  maintenanceEvents: MaintenanceEvent[];
-
-  // ─── Audit ────────────────────────────────────────────────────────────────
-  createdAt: string;
-  modifiedAt: string;
-}
-
-
-
 // =============================================================================
 // STATION / PLANT / CUSTOMER
 // =============================================================================
