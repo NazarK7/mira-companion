@@ -362,8 +362,8 @@ export interface Calibration {
   poses: CalibrationPose[];
   plate: CalibrationPlate;
   result?: CalibrationResult;
-  is_current: boolean;
-  created_at: string;
+  isCurrent: boolean;
+  createdAt: string;
   notes?: string;
 }
 
@@ -534,6 +534,7 @@ export interface Camera {
 
   // ─── Sub-entities ─────────────────────────────────────────────────────────
   jobs: Job[];
+  calibrations: Calibration[]; // <-- AGGIUNGI QUESTA RIGA
   halconLicenses: HalconLicenseRecord[];
   robotBackups: RobotBackupRecord[];
   maintenanceEvents: MaintenanceEvent[];
@@ -547,8 +548,8 @@ export interface Camera {
   };
 
   // ─── Audit ────────────────────────────────────────────────────────────────
-  createdAt: string; // <-- CAMBIATO: era modifiedAt
-  modifiedAt: string; // <-- MANTENUTO per compatibilità, ma da deprecare in futuro
+  createdAt: string; 
+  updatedAt: string; // O modifiedAt, mantieni quello che usi, ma Prisma usa updatedAt
 }
 
 /**
