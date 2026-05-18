@@ -110,5 +110,24 @@ export const routes: Routes = [
     title: 'Settings — MiRa Companion',
   },
 
+  // NEW STATION
+  {
+    path: 'customers/:slug/plants/:plantId/stations/new',
+    loadComponent: () => import('./features/station-editor/station-editor').then(m => m.StationEditorComponent),
+    title: 'New Station — MiRa Companion',
+  },
+  // EDIT STATION (Deve stare prima del detail generico)
+  {
+    path: 'customers/:slug/plants/:plantId/stations/:stationId/edit',
+    loadComponent: () => import('./features/station-editor/station-editor').then(m => m.StationEditorComponent),
+    title: 'Edit Station — MiRa Companion',
+  },
+  // STATION DETAIL
+  {
+    path: 'customers/:slug/plants/:plantId/stations/:stationId',
+    loadComponent: () => import('./features/station-detail/station-detail').then(m => m.StationDetailComponent),
+    title: 'Station — MiRa Companion',
+  },
+
   { path: '**', redirectTo: 'dashboard' },
 ];

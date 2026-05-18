@@ -15,6 +15,10 @@ export class StationService {
   readonly stations = signal<Station[]>([]);
   readonly loading = signal<boolean>(false);
 
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.endpoint}/${id}`);
+  }
+
   loadStations(plantId?: string): void {
     this.loading.set(true);
     let params = new HttpParams();
@@ -34,5 +38,14 @@ export class StationService {
 
   getById(id: string): Observable<Station> {
     return this.http.get<Station>(`${this.endpoint}/${id}`);
+  }
+
+  // --- NUOVI METODI AGGIUNTI ---
+  create(station: Partial<Station>): Observable<Station> {
+    return this.http.post<Station>(this.endpoint, station);
+  }
+
+  update(id: string, station: Partial<Station>): Observable<Station> {
+    return this.http.patch<Station>(`${this.endpoint}/${id}`, station);
   }
 }
