@@ -1,6 +1,6 @@
 // src/app/features/camera-details/camera-details.ts
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { switchMap, filter } from 'rxjs/operators';
 import { MatButtonModule } from '@angular/material/button';
@@ -11,6 +11,8 @@ import { DatePipe } from '@angular/common';
 import { CustomerService } from '../../core/services/customer.service';
 import { CameraService } from '../../core/services/camera.service';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog';
+import { combineLatest, BehaviorSubject } from 'rxjs';
+import { JobService } from '../../core/services/job.service';
 
 type CameraType = 'COGNEX_INSIGHT' | 'COGNEX_DATAMAN' | 'MIRA_3D';
 
@@ -31,8 +33,11 @@ type CameraType = 'COGNEX_INSIGHT' | 'COGNEX_DATAMAN' | 'MIRA_3D';
 export class CameraDetailsComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly customerService = inject(CustomerService);
+  private readonly router = inject(Router);
   private readonly cameraService = inject(CameraService);
   private readonly dialog = inject(MatDialog);
+  private readonly jobService = inject(JobService);
+  private readonly refresh$ = new BehaviorSubject<void>(undefined);
 
   private readonly slug$ = this.route.paramMap.pipe(filter(params => params.has('slug')));
   private readonly cameraId$ = this.route.paramMap.pipe(filter(params => params.has('cameraId')));
@@ -44,8 +49,8 @@ export class CameraDetailsComponent {
   );
 
   readonly camera = toSignal(
-    this.cameraId$.pipe(
-      switchMap(params => this.cameraService.getById(params.get('cameraId')!))
+    combineLatest([this.cameraId$, this.refresh$]).pipe(
+      switchMap(([params]) => this.cameraService.getById(params.get('cameraId')!))
     )
   );
 
@@ -69,8 +74,22 @@ export class CameraDetailsComponent {
   editJob(event: Event, jobId: string): void {
     event.preventDefault();
     event.stopPropagation();
-    // Implementazione futura: navigazione all'editor del job
-    console.log('Richiesta modifica Job ID:', jobId);
+
+    const c = this.customer();
+    const p = this.plant();
+    const s = this.station();
+    const cam = this.camera();
+
+    if (c && p && s && cam) {
+      // Naviga verso l'editor del job
+      this.router.navigate([
+        '/customers', c.slug,
+        'plants', p.id,
+        'stations', s.id,
+        'cameras', cam.id,
+        'jobs', jobId, 'edit'
+      ]);
+    }
   }
 
   deleteJob(event: Event, id: string, name: string): void {
@@ -89,12 +108,14 @@ export class CameraDetailsComponent {
 
     dialogRef.afterClosed().subscribe(confirmed => {
       if (confirmed) {
-        // Implementazione futura: chiamata a JobService
-        console.log('Richiesta eliminazione Job ID:', id);
+        // CHIAMATA DELETE VERA
+        this.jobService.delete(id).subscribe({
+          next: () => this.refresh$.next(), // Forza il ricaricamento dei dati della camera
+          error: (err) => console.error('Error deleting job:', err)
+        });
       }
     });
   }
-
   // --- UTILS PER LA UI ---
   typeLabel(t: CameraType): string {
     switch (t) {

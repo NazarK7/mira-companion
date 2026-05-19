@@ -1,8 +1,8 @@
-// src/app/features/station-detail/station-detail.ts
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router'; // <-- Aggiunto Router
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { switchMap, filter } from 'rxjs/operators';
+import { combineLatest, BehaviorSubject } from 'rxjs'; // <-- Aggiunti import RxJS
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -23,18 +23,22 @@ type CameraType = 'COGNEX_INSIGHT' | 'COGNEX_DATAMAN' | 'MIRA_3D';
 })
 export class StationDetailComponent {
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router); // <-- Iniettato
+  private readonly router = inject(Router);
   private readonly customerService = inject(CustomerService);
   private readonly cameraService = inject(CameraService);
   private readonly dialog = inject(MatDialog);
+
+  // --- NUOVO: Trigger manuale per forzare il re-fetch ---
+  private readonly refresh$ = new BehaviorSubject<void>(undefined);
 
   private readonly slug$ = this.route.paramMap.pipe(
     filter(params => params.has('slug'))
   );
 
+  // --- MODIFICATO: Combina slug$ con il refresh$ ---
   readonly customer = toSignal(
-    this.slug$.pipe(
-      switchMap(params => this.customerService.getBySlug(params.get('slug')!))
+    combineLatest([this.slug$, this.refresh$]).pipe(
+      switchMap(([params]) => this.customerService.getBySlug(params.get('slug')!))
     )
   );
 
@@ -52,23 +56,21 @@ export class StationDetailComponent {
     return p.stations.find((s: any) => s.id === id) ?? null;
   });
 
-  // --- NUOVO METODO EDIT CAMERA ---
   editCamera(event: Event, cameraId: string): void {
     event.preventDefault();
-    event.stopPropagation(); // Evita di far scattare il routerLink della card madre
+    event.stopPropagation(); 
     const c = this.customer();
     const p = this.plant();
     const s = this.station();
-    
+
     if (c && p && s) {
       this.router.navigate(['/customers', c.slug, 'plants', p.id, 'stations', s.id, 'cameras', cameraId, 'edit']);
     }
   }
 
-  // --- METODO DELETE ESISTENTE ---
   deleteCamera(event: Event, id: string, name: string): void {
     event.preventDefault();
-    event.stopPropagation(); // Evita di far scattare il routerLink della card madre
+    event.stopPropagation(); 
 
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
@@ -83,10 +85,11 @@ export class StationDetailComponent {
     dialogRef.afterClosed().subscribe(confirmed => {
       if (confirmed) {
         this.cameraService.delete(id).subscribe({
-          next: () => {
-             this.customerService.loadAll();
-          },
-          error: (err) => console.error('Error deleting camera:', err)
+          error: (err) => console.error('Error deleting camera:', err),
+          complete: () => {
+            this.customerService.loadAll();
+            this.refresh$.next(); // <-- NUOVO: Forza il ricaricamento del dato!
+          }
         });
       }
     });

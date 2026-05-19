@@ -99,6 +99,17 @@ export const routes: Routes = [
     loadComponent: () => import('./features/camera-details/camera-details').then(m => m.CameraDetailsComponent),
     title: 'Camera — MiRa Companion',
   },
+  // --- NUOVE ROTTE PER JOB ---
+  {
+    path: 'customers/:slug/plants/:plantId/stations/:stationId/cameras/:cameraId/jobs/new',
+    loadComponent: () => import('./features/job-editor/job-editor').then(m => m.JobEditorComponent),
+    title: 'New Job — MiRa Companion',
+  },
+  {
+    path: 'customers/:slug/plants/:plantId/stations/:stationId/cameras/:cameraId/jobs/:jobId/edit',
+    loadComponent: () => import('./features/job-editor/job-editor').then(m => m.JobEditorComponent),
+    title: 'Edit Job — MiRa Companion',
+  },
 
   // ─── Placeholder (Fase futura) ───────────────────────────────────────────
   {

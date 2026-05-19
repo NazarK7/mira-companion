@@ -1,0 +1,50 @@
+<section class="mx-auto max-w-3xl px-6 py-8">
+  <header class="mb-8 flex items-center justify-between">
+    <div>
+      <h1 class="text-3xl font-semibold text-[var(--text-primary)]">
+        @if (isEditMode()) { Edit Job } @else { New Job }
+      </h1>
+      <p class="mt-2 text-sm text-[var(--text-secondary)]">
+        Configure logical job properties. Backup files can be added later.
+      </p>
+    </div>
+  </header>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-6">
+    <div class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6 shadow-[var(--shadow-sm)]">
+      
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <mat-form-field appearance="outline" class="sm:col-span-2">
+          <mat-label>Job Name</mat-label>
+          <input matInput formControlName="name" placeholder="e.g. EFAD Engine Bracket" />
+          @if (form.controls.name.hasError('required')) {
+            <mat-error>Name is required</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="sm:col-span-2">
+          <mat-label>Description</mat-label>
+          <textarea matInput formControlName="description" rows="2" placeholder="Part details, recognition targets..."></textarea>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Vision Tool Slot (MiRa3D)</mat-label>
+          <input matInput type="number" formControlName="visionToolSlot" min="1" max="99" placeholder="e.g. 1" />
+          <mat-hint>Links to robot VisionTool_NN (1-99)</mat-hint>
+        </mat-form-field>
+      </div>
+
+    </div>
+
+    <div class="flex justify-end gap-3">
+      <button mat-button type="button" (click)="cancel()">Cancel</button>
+      <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || isSubmitting()" class="!bg-[var(--color-primary-600)] !text-white">
+        @if (isSubmitting()) {
+          Saving...
+        } @else {
+          Save Job
+        }
+      </button>
+    </div>
+  </form>
+</section>
