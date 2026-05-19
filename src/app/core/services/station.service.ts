@@ -48,4 +48,8 @@ export class StationService {
   update(id: string, station: Partial<Station>): Observable<Station> {
     return this.http.patch<Station>(`${this.endpoint}/${id}`, station);
   }
+
+  getAll(params: { skip: number; take: number; search: string; plantId?: string }) {
+    return this.http.get<{ items: any[]; total: number }>(`${this.endpoint}`, { params });
+  }
 }

@@ -115,6 +115,16 @@ export const routes: Routes = [
     loadComponent: () => import('./features/camera-list/camera-list').then(m => m.CameraListComponent),
     title: 'All Cameras — MiRa Companion',
   },
+  {
+    path: 'plants',
+    loadComponent: () => import('./features/plant-list/plant-list').then(m => m.PlantListComponent),
+    title: 'All Plants — MiRa Companion',
+  },
+  {
+    path: 'stations',
+    loadComponent: () => import('./features/station-list/station-list').then(m => m.StationListComponent),
+    title: 'All Stations — MiRa Companion',
+  },
 
   // ─── Placeholder (Fase futura) ───────────────────────────────────────────
   {

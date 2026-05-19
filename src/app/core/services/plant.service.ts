@@ -25,6 +25,8 @@ export class PlantService {
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.endpoint}/${id}`);
   }
+  getAll(params: { skip: number; take: number; search: string }) {
+    return this.http.get<{ items: any[]; total: number }>(`${this.endpoint}`, { params });
+  }
 
-  
 }

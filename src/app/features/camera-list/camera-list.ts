@@ -19,7 +19,6 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    RouterLink,
     MatTableModule,
     MatPaginatorModule,
     MatSortModule,
