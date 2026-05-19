@@ -1,0 +1,105 @@
+<section class="mx-auto max-w-7xl px-6 py-8">
+  <header class="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-semibold text-[var(--text-primary)]">Global Cameras List</h1>
+      <p class="mt-2 text-sm text-[var(--text-secondary)]">
+        Gestione centralizzata di {{ totalItems() }} camere.
+      </p>
+    </div>
+
+    <mat-form-field appearance="outline" class="w-full sm:w-80 subscript-hidden">
+      <mat-label>Cerca ovunque (Nome, IP, Modello)...</mat-label>
+      <mat-icon matPrefix class="text-[var(--text-tertiary)]">search</mat-icon>
+      <input matInput (keyup)="applyFilter($event)" placeholder="Es. 192.168.10.21" #input>
+    </mat-form-field>
+  </header>
+
+  <div class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] shadow-[var(--shadow-sm)] overflow-hidden">
+    <div class="overflow-x-auto">
+      <table mat-table [dataSource]="dataSource" matSort class="w-full">
+
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Nome Camera </th>
+          <td mat-cell *matCellDef="let cam">
+            <button (click)="viewCamera(cam)" class="text-left font-medium text-[var(--color-primary-600)] hover:underline">
+              {{cam.name}}
+            </button>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="path">
+          <th mat-header-cell *matHeaderCellDef> Percorso </th>
+          <td mat-cell *matCellDef="let cam" class="text-[10px] text-[var(--text-tertiary)] uppercase tracking-tight">
+            {{ cam.customerName }} <mat-icon class="!text-[10px] !w-auto !h-auto align-middle">chevron_right</mat-icon> 
+            {{ cam.plantName }} <mat-icon class="!text-[10px] !w-auto !h-auto align-middle">chevron_right</mat-icon> 
+            {{ cam.stationName }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="type">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Tipo </th>
+          <td mat-cell *matCellDef="let cam">
+            <span class="inline-flex items-center rounded px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider" 
+                  [class]="typeBadgeClass(cam.type)">
+              {{ typeLabel(cam.type) }}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="cameraModel">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Modello </th>
+          <td mat-cell *matCellDef="let cam" class="text-sm text-[var(--text-secondary)]"> {{cam.cameraModel || '—'}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Stato </th>
+          <td mat-cell *matCellDef="let cam">
+            @if (cam.status) {
+              <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium uppercase tracking-wider" 
+                    [class]="statusBadgeClass(cam.status)">
+                {{ cam.status }}
+              </span>
+            } @else {
+              <span class="text-sm text-[var(--text-tertiary)]">—</span>
+            }
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef class="w-32 text-right"> Azioni </th>
+          <td mat-cell *matCellDef="let cam" class="text-right">
+            <div class="flex justify-end gap-1">
+              <button mat-icon-button (click)="viewCamera(cam)" matTooltip="Visualizza">
+                <mat-icon class="!text-[var(--text-tertiary)] hover:!text-[var(--color-primary-600)]">visibility</mat-icon>
+              </button>
+              <button mat-icon-button (click)="editCamera(cam)" matTooltip="Modifica">
+                <mat-icon class="!text-[var(--text-tertiary)] hover:!text-[var(--color-primary-600)]">edit</mat-icon>
+              </button>
+              <button mat-icon-button (click)="deleteCamera(cam)" matTooltip="Elimina" color="warn">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true" class="bg-[var(--bg-subtle)]"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="hover:bg-[var(--bg-subtle)] transition-colors"></tr>
+
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell p-8 text-center text-[var(--text-secondary)]" colspan="6">
+            Nessuna camera trovata per "{{input.value}}" tra le {{ totalItems() }} registrate.
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <mat-paginator [length]="totalItems()"
+                   [pageSize]="pageSize()"
+                   [pageIndex]="pageIndex()"
+                   [pageSizeOptions]="[10, 25, 50, 100]" 
+                   (page)="onPageChange($event)"
+                   showFirstLastButtons 
+                   class="border-t border-[var(--border-subtle)] bg-[var(--bg-surface)]">
+    </mat-paginator>
+  </div>
+</section>

@@ -10,49 +10,50 @@
     </a>
   </header>
 
-  @if (isLoading()) {
-  <div class="loading-state flex flex-col items-center justify-center p-12">
-    <mat-spinner diameter="32"></mat-spinner>
-    <span class="mt-4 text-[var(--text-secondary)]">Caricamento statistiche…</span>
-  </div>
+  @if (!stats()) {
+    <div class="loading-state flex flex-col items-center justify-center p-12">
+      <mat-spinner diameter="32"></mat-spinner>
+      <span class="mt-4 text-[var(--text-secondary)]">Caricamento statistiche…</span>
+    </div>
   } @else {
-  <section class="stats-grid">
-    <div class="stat-card">
-      <mat-icon class="stat-icon">business</mat-icon>
-      <div class="stat-value">{{ countCustomers() }}</div>
-      <div class="stat-label">Customers</div>
-    </div>
-    <div class="stat-card">
-      <mat-icon class="stat-icon">factory</mat-icon>
-      <div class="stat-value">{{ countPlants() }}</div>
-      <div class="stat-label">Plants</div>
-    </div>
-    <div class="stat-card">
-      <mat-icon class="stat-icon">precision_manufacturing</mat-icon>
-      <div class="stat-value">{{ countStations() }}</div>
-      <div class="stat-label">Stations</div>
-    </div>
-    <div class="stat-card">
-      <mat-icon class="stat-icon">photo_camera</mat-icon>
-      <div class="stat-value">{{ countCameras() }}</div>
-      <div class="stat-label">Cameras</div>
-    </div>
-  </section>
+    <section class="stats-grid">
+      <a routerLink="/customers" class="stat-card cursor-pointer hover:border-[var(--color-primary-500)] transition">
+        <mat-icon class="stat-icon">business</mat-icon>
+        <div class="stat-value">{{ stats()!.customers }}</div>
+        <div class="stat-label">Customers</div>
+      </a>
 
-  @if (countCustomers() === 0) {
-  <section
-    class="empty-state text-center py-12 rounded-lg border border-dashed border-[var(--border-default)] bg-[var(--bg-subtle)] my-8">
-    <mat-icon class="text-4xl text-[var(--text-tertiary)] mb-4">business</mat-icon>
-    <h2 class="text-xl font-semibold text-[var(--text-primary)]">Nessun cliente nel Database</h2>
-    <p class="text-[var(--text-secondary)] mt-2 mb-6">
-      Inizia creando un nuovo cliente per organizzare le tue installazioni.
-    </p>
-    <a mat-flat-button class="!bg-[var(--color-primary-600)] !text-white" routerLink="/customers/new">
-      <mat-icon>add</mat-icon>
-      Crea il tuo primo cliente
-    </a>
-  </section>
-  }
+      <a routerLink="/plants" class="stat-card cursor-pointer hover:border-[var(--color-primary-500)] transition">
+        <mat-icon class="stat-icon">factory</mat-icon>
+        <div class="stat-value">{{ stats()!.plants }}</div>
+        <div class="stat-label">Plants</div>
+      </a>
 
+      <a routerLink="/stations" class="stat-card cursor-pointer hover:border-[var(--color-primary-500)] transition">
+        <mat-icon class="stat-icon">precision_manufacturing</mat-icon>
+        <div class="stat-value">{{ stats()!.stations }}</div>
+        <div class="stat-label">Stations</div>
+      </a>
+
+      <a routerLink="/cameras" class="stat-card cursor-pointer hover:border-[var(--color-primary-500)] transition">
+        <mat-icon class="stat-icon">photo_camera</mat-icon>
+        <div class="stat-value">{{ stats()!.cameras }}</div>
+        <div class="stat-label">Cameras</div>
+      </a>
+    </section>
+
+    @if (stats()!.customers === 0) {
+      <section class="empty-state text-center py-12 rounded-lg border border-dashed border-[var(--border-default)] bg-[var(--bg-subtle)] my-8">
+        <mat-icon class="text-4xl text-[var(--text-tertiary)] mb-4">business</mat-icon>
+        <h2 class="text-xl font-semibold text-[var(--text-primary)]">Nessun cliente nel Database</h2>
+        <p class="text-[var(--text-secondary)] mt-2 mb-6">
+          Inizia creando un nuovo cliente per organizzare le tue installazioni.
+        </p>
+        <a mat-flat-button class="!bg-[var(--color-primary-600)] !text-white" routerLink="/customers/new">
+          <mat-icon>add</mat-icon>
+          Crea il tuo primo cliente
+        </a>
+      </section>
+    }
   }
 </div>

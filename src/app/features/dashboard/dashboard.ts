@@ -1,13 +1,13 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatDividerModule } from '@angular/material/divider';
 import { RouterLink } from '@angular/router';
 
 import { ThemeService } from '../../core/services/theme.service';
+import { DashboardService } from '../../core/services/dashboard.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -19,19 +19,15 @@ import { ThemeService } from '../../core/services/theme.service';
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MatDividerModule,
   ],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.scss'],
 })
 export class DashboardComponent {
   protected readonly themeService = inject(ThemeService);
+  private readonly dashboardService = inject(DashboardService);
 
-  // Questi signal sostituiranno l'ArchiveDataService.
-  // Nel prossimo step li popoleremo tramite un nuovo DashboardService / HttpClient.
-  readonly isLoading = signal(false);
-  readonly countCustomers = signal(0);
-  readonly countPlants = signal(0);
-  readonly countStations = signal(0);
-  readonly countCameras = signal(0);
+  // toSignal converte l'Observable HTTP in un Signal reattivo. 
+  // Fino a quando la chiamata non finisce, il valore è undefined.
+  readonly stats = toSignal(this.dashboardService.getStats());
 }

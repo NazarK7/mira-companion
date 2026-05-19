@@ -3,7 +3,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { API_URL } from '../config/api.config';
-import { Camera } from '../models/domain.model'; 
+import { Camera } from '../models/domain.model';
 
 @Injectable({
   providedIn: 'root'
@@ -84,5 +84,10 @@ export class CameraService {
     // Ricarica la lista solo se stiamo guardando una specifica stazione
     // (Oppure forza sempre un ricaricamento globale se preferisci)
     this.loadCameras(stationId);
+  }
+
+  // Aggiungi questo in camera.service.ts se non c'è già
+  getAll(params: { skip: number, take: number, search: string }) {
+    return this.http.get(`${this.apiUrl}/cameras`, { params });
   }
 }

@@ -110,6 +110,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/job-editor/job-editor').then(m => m.JobEditorComponent),
     title: 'Edit Job — MiRa Companion',
   },
+  {
+    path: 'cameras',
+    loadComponent: () => import('./features/camera-list/camera-list').then(m => m.CameraListComponent),
+    title: 'All Cameras — MiRa Companion',
+  },
 
   // ─── Placeholder (Fase futura) ───────────────────────────────────────────
   {
