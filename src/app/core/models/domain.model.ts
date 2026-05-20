@@ -272,16 +272,14 @@ export interface JobBackup {
   id: string;
   jobId: string;
   createdAt: string;
-  filePath?: string;
-  fileSize?: number;
-  /** Solo Cognex. Path alla master image associata a questo backup. */
-  masterImagePath?: string;
-  testImages: JobTestImage[];
-  /** Note di versione: cosa è cambiato, perché. */
+  fileName: string;     // <-- AGGIUNTO (Obbligatorio per la UI)
+  filePath: string;     // <-- AGGIUNTO (Path fisico UUID)
+  fileSize: number | bigint; // <-- AGGIUNTO (number o bigint per file > 2GB)
   notes?: string;
   createdBy?: string;
+  masterImagePath?: string;
+  testImages: any[];
 }
-
 /**
  * Job logico (es. "EFAD", "ERAD", "Pallet Sense").
  * Contiene N JobBackup nel tempo.
@@ -511,11 +509,11 @@ export interface Camera {
   id: string;
   stationId: string;
 
-  // ─── Identità (required) ──────────────────────────────────────────────────
+  // ─── Identità ──────────────────────────────────────────────────
   name: string;
   type: CameraType;
 
-  // ─── Hardware (tutti opzionali) ───────────────────────────────────────────
+  // ─── Hardware ───────────────────────────────────────────
   cameraModel?: string;
   lensFocalMm?: number;
   firmware?: string;
@@ -523,33 +521,46 @@ export interface Camera {
   serialNumber?: string;
   macAddress?: string;
 
-  // ─── MIRA_3D only ─────────────────────────────────────────────────────────
+  // ─── MIRA_3D only ─────────────────────────────────────────
   controllerType?: RobotControllerType;
 
-  // ─── Note ─────────────────────────────────────────────────────────────────
+  // ─── Assets MiRa3D (Aggiunti per Task 4, 5, 6) ──────────────────
+  // Istanza singola, mappati direttamente dalla tabella Camera
+  mira3dBackupPath?: string;
+  mira3dBackupName?: string;
+  mira3dBackupSize?: number | bigint;
+
+  halconLicensePath?: string;
+  halconLicenseName?: string;
+  halconLicenseSize?: number | bigint;
+
+  restartOnCrashPath?: string;
+  restartOnCrashName?: string;
+  restartOnCrashSize?: number | bigint;
+
+  // ─── Note ──────────────────────────────────────────────────
   plcNotes?: string;
   notes?: string;
   tags?: string[];
   status?: CameraStatus;
 
-  // ─── Sub-entities ─────────────────────────────────────────────────────────
+  // ─── Sub-entities ──────────────────────────────────────────
   jobs: Job[];
-  calibrations: Calibration[]; // <-- AGGIUNGI QUESTA RIGA
-  halconLicenses: HalconLicenseRecord[];
+  calibrations: Calibration[]; 
   robotBackups: RobotBackupRecord[];
   maintenanceEvents: MaintenanceEvent[];
 
-  // ─── Prisma Aggregates (Aggiunto per supportare la UI Piatta) ─────────────
+  // ─── Prisma Aggregates ─────────────
   _count?: {
     jobs?: number;
     robotBackups?: number;
-    halconLicenses?: number;
+    // halconLicenses rimosso perché non è più una relazione countable
     maintenanceEvents?: number;
   };
 
-  // ─── Audit ────────────────────────────────────────────────────────────────
+  // ─── Audit ────────────────────────────────────────────────
   createdAt: string; 
-  updatedAt: string; // O modifiedAt, mantieni quello che usi, ma Prisma usa updatedAt
+  updatedAt: string; 
 }
 
 /**

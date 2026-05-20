@@ -1,19 +1,24 @@
 // src/app/features/camera-details/camera-details.ts
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { switchMap, filter } from 'rxjs/operators';
+import { filter, switchMap } from 'rxjs/operators';
+import { combineLatest, BehaviorSubject } from 'rxjs';
+
+// MATERIAL IMPORTS
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { DatePipe } from '@angular/common';
+
+// COMMON IMPORTS (Aggiunti NgTemplateOutlet e DecimalPipe)
+import { DatePipe, DecimalPipe, NgTemplateOutlet } from '@angular/common';
+
+// SERVICES & COMPONENTS
 import { CustomerService } from '../../core/services/customer.service';
 import { CameraService } from '../../core/services/camera.service';
-import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog';
-import { combineLatest, BehaviorSubject } from 'rxjs';
 import { JobService } from '../../core/services/job.service';
-
+import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog';
 type CameraType = 'COGNEX_INSIGHT' | 'COGNEX_DATAMAN' | 'MIRA_3D';
 
 @Component({
@@ -26,7 +31,8 @@ type CameraType = 'COGNEX_INSIGHT' | 'COGNEX_DATAMAN' | 'MIRA_3D';
     MatIconModule,
     MatTooltipModule,
     MatDialogModule,
-    DatePipe
+    DatePipe,
+    NgTemplateOutlet,  // Risolve l'errore NG8116
   ],
   templateUrl: './camera-details.html',
 })
@@ -35,10 +41,15 @@ export class CameraDetailsComponent {
   private readonly customerService = inject(CustomerService);
   private readonly router = inject(Router);
   private readonly cameraService = inject(CameraService);
-  private readonly dialog = inject(MatDialog);
   private readonly jobService = inject(JobService);
+  private readonly dialog = inject(MatDialog);
+  
   private readonly refresh$ = new BehaviorSubject<void>(undefined);
 
+  // --- SIGNALS PER GLI ASSET ---
+  readonly isUploadingAsset = signal<'mira3d' | 'halcon' | 'restart' | null>(null);
+
+  // --- DATA FETCHING ---
   private readonly slug$ = this.route.paramMap.pipe(filter(params => params.has('slug')));
   private readonly cameraId$ = this.route.paramMap.pipe(filter(params => params.has('cameraId')));
 
@@ -58,49 +69,80 @@ export class CameraDetailsComponent {
     const cust = this.customer();
     const id = this.route.snapshot.paramMap.get('plantId');
     if (!cust || !id) return null;
-    return cust.plants.find((p: any) => p.id === id) ?? null;
+    return (cust as any).plants.find((p: any) => p.id === id) ?? null;
   });
 
   readonly station = computed(() => {
     const p = this.plant();
     const id = this.route.snapshot.paramMap.get('stationId');
     if (!p || !id) return null;
-    return p.stations.find((s: any) => s.id === id) ?? null;
+    return (p as any).stations.find((s: any) => s.id === id) ?? null;
   });
 
   readonly isMira3D = computed(() => this.camera()?.type === 'MIRA_3D');
 
-  // --- AZIONI SUI JOB ---
-  editJob(event: Event, jobId: string): void {
-    event.preventDefault();
-    event.stopPropagation();
+  // --- LOGICA ASSET (TASK 4, 5, 6) ---
 
-    const c = this.customer();
-    const p = this.plant();
-    const s = this.station();
+  onAssetSelected(event: any, type: 'mira3d' | 'halcon' | 'restart'): void {
+    const file = event.target.files[0];
     const cam = this.camera();
+    if (!file || !cam) return;
 
-    if (c && p && s && cam) {
-      // Naviga verso l'editor del job
-      this.router.navigate([
-        '/customers', c.slug,
-        'plants', p.id,
-        'stations', s.id,
-        'cameras', cam.id,
-        'jobs', jobId, 'edit'
-      ]);
-    }
+    this.isUploadingAsset.set(type);
+    
+    this.cameraService.uploadAsset(cam.id, type, file).subscribe({
+      next: () => {
+        this.isUploadingAsset.set(null);
+        this.refresh$.next(); // Ricarica per aggiornare i nomi file nel template
+      },
+      error: (err) => {
+        this.isUploadingAsset.set(null);
+        console.error(`Errore upload ${type}:`, err);
+        alert(`Errore durante l'upload. Verifica che il file non superi i limiti.`);
+      }
+    });
   }
 
-  deleteJob(event: Event, id: string, name: string): void {
-    event.preventDefault();
-    event.stopPropagation();
+  downloadAsset(type: 'mira3d' | 'halcon' | 'restart'): void {
+    const cam = this.camera();
+    if (!cam) return;
+    const url = this.cameraService.getAssetDownloadUrl(cam.id, type);
+    window.open(url, '_blank');
+  }
 
+  // --- LOGICA JOB ---
+
+openJobDetails(jobId: string): void {
+  const c = this.customer();
+  const p = this.plant();
+  const s = this.station();
+  const cam = this.camera();
+
+  if (c && p && s && cam) {
+    this.router.navigate([
+      '/customers', c.slug, 
+      'plants', p.id, 
+      'stations', s.id, 
+      'cameras', cam.id, 
+      'jobs', jobId, 
+      'edit'
+    ]);
+  }
+}
+
+// Nota: il metodo editJob() può essere rimosso o puntare a openJobDetails()
+editJob(event: Event, jobId: string): void {
+  event.stopPropagation();
+  this.openJobDetails(jobId);
+}
+
+  deleteJob(event: Event, id: string, name: string): void {
+    event.stopPropagation();
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
         title: 'Delete Job',
-        message: `Are you sure you want to delete the job "${name}"?\n\nThis action will remove all associated backups and test images. It is irreversible.`,
+        message: `Sei sicuro di voler eliminare il job "${name}"?`,
         confirmText: 'Delete',
         isDestructive: true
       }
@@ -108,15 +150,13 @@ export class CameraDetailsComponent {
 
     dialogRef.afterClosed().subscribe(confirmed => {
       if (confirmed) {
-        // CHIAMATA DELETE VERA
-        this.jobService.delete(id).subscribe({
-          next: () => this.refresh$.next(), // Forza il ricaricamento dei dati della camera
-          error: (err) => console.error('Error deleting job:', err)
-        });
+        this.jobService.delete(id).subscribe(() => this.refresh$.next());
       }
     });
   }
-  // --- UTILS PER LA UI ---
+
+  // --- UI UTILS ---
+
   typeLabel(t: CameraType): string {
     switch (t) {
       case 'COGNEX_INSIGHT': return 'In-Sight';
@@ -140,8 +180,6 @@ export class CameraDetailsComponent {
     switch (status.toLowerCase()) {
       case 'production': return 'bg-[var(--color-success-50)] text-[var(--color-success-700)]';
       case 'maintenance': return 'bg-[var(--color-warning-50)] text-[var(--color-warning-700)]';
-      case 'planning': return 'bg-[var(--color-info-50)] text-[var(--color-info-700)]';
-      case 'archived': return 'bg-[var(--bg-strong)] text-[var(--text-tertiary)]';
       default: return 'bg-[var(--bg-strong)] text-[var(--text-secondary)]';
     }
   }
