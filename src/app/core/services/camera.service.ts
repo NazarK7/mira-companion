@@ -94,15 +94,12 @@ export class CameraService {
   uploadAsset(cameraId: string, type: 'mira3d' | 'halcon' | 'restart', file: File): Observable<any> {
     const formData = new FormData();
     formData.append('file', file);
-
-    // Utilizziamo l'endpoint dinamico creato nel CamerasController
-    return this.http.post(`${this.apiUrl}/${cameraId}/assets/${type}`, formData);
+    // CORREZIONE: Usa this.endpoint invece di this.apiUrl
+    return this.http.post(`${this.endpoint}/${cameraId}/assets/${type}`, formData);
   }
 
-  /**
-   * Genera l'URL per il download dell'asset
-   */
   getAssetDownloadUrl(cameraId: string, type: 'mira3d' | 'halcon' | 'restart'): string {
-    return `${this.apiUrl}/${cameraId}/assets/${type}/download`;
+    // CORREZIONE: Anche qui serve il segmento /cameras
+    return `${this.endpoint}/${cameraId}/assets/${type}/download`;
   }
 }

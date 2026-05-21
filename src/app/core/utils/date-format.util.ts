@@ -36,17 +36,24 @@ export function daysUntil(isoDate: string): number {
 }
 
 /**
- * "487 MB", "1.2 GB", "143 KB". Restituisce "—" se undefined/0.
+ * Formatta i bytes in stringhe leggibili (es. "487 MB", "1.2 GB").
+ * Supporta number, bigint e string per compatibilità con BigIntInterceptor.
  */
-export function formatFileSize(bytes: number | undefined | null): string {
-  if (!bytes || bytes <= 0) return '—';
+export function formatFileSize(bytes: number | bigint | string | undefined | null): string {
+  // Conversione sicura a Number per il calcolo delle unità
+  const numericBytes = bytes !== undefined && bytes !== null ? Number(bytes) : 0;
+
+  if (numericBytes <= 0) return '—';
+
   const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-  let size = bytes;
+  let size = numericBytes;
   let unitIdx = 0;
+
   while (size >= 1024 && unitIdx < units.length - 1) {
     size /= 1024;
     unitIdx++;
   }
+
   return `${size < 10 ? size.toFixed(1) : Math.round(size)} ${units[unitIdx]}`;
 }
 

@@ -11,13 +11,17 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { JobService } from '../../core/services/job.service';
 import { Job, JobBackup } from '../../core/models/domain.model';
 
+import { FeedbackService } from '../../shared/components/feedback-toast/feedback.service';
+import { LoadingOverlayComponent } from '../../shared/components/loading-overlay/loading-overlay';
+
 @Component({
   selector: 'app-job-editor',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule, MatButtonModule, MatFormFieldModule,
-    MatInputModule, MatIconModule, MatTooltipModule, DatePipe, DecimalPipe
+    MatInputModule, MatIconModule, MatTooltipModule, DatePipe, DecimalPipe,
+    LoadingOverlayComponent
   ],
   templateUrl: './job-editor.html',
 })
@@ -28,12 +32,12 @@ export class JobEditorComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly jobService = inject(JobService);
-
+  private readonly feedback = inject(FeedbackService);
   // --- STATO ---
   readonly isSubmitting = signal(false);
   readonly isEditMode = signal(false);
   readonly errorMessage = signal<string | null>(null);
-  
+
   // Gestione Backup
   readonly backups = signal<JobBackup[]>([]);
   readonly isUploading = signal(false);
@@ -99,16 +103,13 @@ export class JobEditorComponent implements OnInit {
     req$.subscribe({
       next: () => {
         this.isSubmitting.set(false);
+        this.feedback.success('Configurazione Job salvata con successo!'); // Feedback Expert
         this.navigateBack();
       },
       error: (err) => {
         this.isSubmitting.set(false);
-        // Gestione errore conflitto (Task 2)
-        if (err.status === 409) {
-          this.errorMessage.set(err.error.message || 'Slot VT o Nome già in uso per questa camera.');
-        } else {
-          this.errorMessage.set('Errore durante il salvataggio del Job.');
-        }
+        const msg = err.status === 409 ? 'Slot VT o Nome già in uso.' : 'Errore nel salvataggio.';
+        this.feedback.error(msg); // Feedback Expert
       }
     });
   }
@@ -128,9 +129,14 @@ export class JobEditorComponent implements OnInit {
       next: () => {
         this.isUploading.set(false);
         this.selectedFile.set(null);
-        this.loadJobData(); // Ricarica lo storico
+        this.feedback.success('Backup caricato nell\'archivio stratigrafico.'); // Feedback Expert
+        this.loadJobData();
       },
-      error: () => this.isUploading.set(false)
+      error: (err) => {
+        this.isUploading.set(true); // Ops, correggi il bug nel tuo file: qui deve essere false!
+        this.isUploading.set(false);
+        this.feedback.error('Errore durante l\'upload del file ZIP.');
+      }
     });
   }
 

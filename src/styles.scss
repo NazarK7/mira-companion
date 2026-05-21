@@ -240,3 +240,16 @@ html {
     color: var(--color-primary-200, #9eb8f0) !important;
   }
 }
+
+// src/styles.scss
+.custom-toast-container {
+  .mat-mdc-snack-bar-container {
+    --mdc-snackbar-container-color: transparent;
+    --mdc-snackbar-container-elevation-shadow: none;
+    .mdc-snackbar__surface {
+      background-color: transparent !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+    }
+  }
+}

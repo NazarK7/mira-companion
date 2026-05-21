@@ -1,0 +1,22 @@
+<div class="flex items-center gap-4 overflow-hidden rounded-lg border-l-4 bg-zinc-900 px-4 py-3 shadow-2xl transition-all"
+         [class.border-green-500]="data.type === 'success'"
+         [class.border-red-500]="data.type === 'error'"
+         [class.border-amber-500]="data.type === 'warning'"
+         [class.border-blue-500]="data.type === 'info'">
+      
+      <mat-icon class="shrink-0"
+                [class.text-green-500]="data.type === 'success'"
+                [class.text-red-500]="data.type === 'error'"
+                [class.text-amber-500]="data.type === 'warning'"
+                [class.text-blue-500]="data.type === 'info'">
+        {{ icon }}
+      </mat-icon>
+
+      <span class="flex-1 text-sm font-semibold tracking-wide text-white">
+        {{ data.message }}
+      </span>
+
+      <button mat-icon-button (click)="snackBarRef.dismiss()" class="text-zinc-400 hover:text-white">
+        <mat-icon class="!text-lg">close</mat-icon>
+      </button>
+    </div>

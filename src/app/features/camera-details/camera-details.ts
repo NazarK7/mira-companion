@@ -19,6 +19,11 @@ import { CustomerService } from '../../core/services/customer.service';
 import { CameraService } from '../../core/services/camera.service';
 import { JobService } from '../../core/services/job.service';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog';
+
+import { FeedbackToastComponent } from '../../shared/components/feedback-toast/feedback-toast';
+import { FeedbackService } from '../../shared/components/feedback-toast/feedback.service';
+import { LoadingOverlayComponent } from "../../shared/components/loading-overlay/loading-overlay";
+
 type CameraType = 'COGNEX_INSIGHT' | 'COGNEX_DATAMAN' | 'MIRA_3D';
 
 @Component({
@@ -32,7 +37,8 @@ type CameraType = 'COGNEX_INSIGHT' | 'COGNEX_DATAMAN' | 'MIRA_3D';
     MatTooltipModule,
     MatDialogModule,
     DatePipe,
-    NgTemplateOutlet,  // Risolve l'errore NG8116
+    NgTemplateOutlet,
+    LoadingOverlayComponent
   ],
   templateUrl: './camera-details.html',
 })
@@ -43,7 +49,8 @@ export class CameraDetailsComponent {
   private readonly cameraService = inject(CameraService);
   private readonly jobService = inject(JobService);
   private readonly dialog = inject(MatDialog);
-  
+  private readonly feedback = inject(FeedbackService);
+
   private readonly refresh$ = new BehaviorSubject<void>(undefined);
 
   // --- SIGNALS PER GLI ASSET ---
@@ -89,16 +96,23 @@ export class CameraDetailsComponent {
     if (!file || !cam) return;
 
     this.isUploadingAsset.set(type);
-    
+
     this.cameraService.uploadAsset(cam.id, type, file).subscribe({
       next: () => {
         this.isUploadingAsset.set(null);
-        this.refresh$.next(); // Ricarica per aggiornare i nomi file nel template
+        this.feedback.success(`Upload di ${type} completato con successo!`); // Feedback pro
+        this.refresh$.next();
       },
       error: (err) => {
         this.isUploadingAsset.set(null);
         console.error(`Errore upload ${type}:`, err);
-        alert(`Errore durante l'upload. Verifica che il file non superi i limiti.`);
+
+        // Gestione errore raffinata
+        const errorMsg = err.status === 404
+          ? "Rotta non trovata (Verifica l'URL del backend)"
+          : "Errore durante l'upload. Il file potrebbe essere troppo grande.";
+
+        this.feedback.error(errorMsg); // Niente più alert brutti!
       }
     });
   }
@@ -107,34 +121,36 @@ export class CameraDetailsComponent {
     const cam = this.camera();
     if (!cam) return;
     const url = this.cameraService.getAssetDownloadUrl(cam.id, type);
+
+    // Usiamo window.open come nei Job che funzionano
     window.open(url, '_blank');
   }
 
   // --- LOGICA JOB ---
 
-openJobDetails(jobId: string): void {
-  const c = this.customer();
-  const p = this.plant();
-  const s = this.station();
-  const cam = this.camera();
+  openJobDetails(jobId: string): void {
+    const c = this.customer();
+    const p = this.plant();
+    const s = this.station();
+    const cam = this.camera();
 
-  if (c && p && s && cam) {
-    this.router.navigate([
-      '/customers', c.slug, 
-      'plants', p.id, 
-      'stations', s.id, 
-      'cameras', cam.id, 
-      'jobs', jobId, 
-      'edit'
-    ]);
+    if (c && p && s && cam) {
+      this.router.navigate([
+        '/customers', c.slug,
+        'plants', p.id,
+        'stations', s.id,
+        'cameras', cam.id,
+        'jobs', jobId,
+        'edit'
+      ]);
+    }
   }
-}
 
-// Nota: il metodo editJob() può essere rimosso o puntare a openJobDetails()
-editJob(event: Event, jobId: string): void {
-  event.stopPropagation();
-  this.openJobDetails(jobId);
-}
+  // Nota: il metodo editJob() può essere rimosso o puntare a openJobDetails()
+  editJob(event: Event, jobId: string): void {
+    event.stopPropagation();
+    this.openJobDetails(jobId);
+  }
 
   deleteJob(event: Event, id: string, name: string): void {
     event.stopPropagation();
