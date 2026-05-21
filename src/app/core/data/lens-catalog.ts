@@ -18,9 +18,9 @@ import type { LensSpec } from '../models/domain.model';
  */
 export const LENS_CATALOG: readonly LensSpec[] = [
   {
-    id: 'cmount-6mm',
-    label: '6 mm',
-    focal_length_mm: 6,
+    id: 'cmount-5mm',
+    label: '5 mm',
+    focal_length_mm: 5,
     image_circle_format: '1"',
     image_circle_diameter_mm: 16.0,
   },
@@ -28,27 +28,6 @@ export const LENS_CATALOG: readonly LensSpec[] = [
     id: 'cmount-8mm',
     label: '8 mm',
     focal_length_mm: 8,
-    image_circle_format: '1"',
-    image_circle_diameter_mm: 16.0,
-  },
-  {
-    id: 'cmount-8.5mm',
-    label: '8.5 mm',
-    focal_length_mm: 8.5,
-    image_circle_format: '1"',
-    image_circle_diameter_mm: 16.0,
-  },
-  {
-    id: 'cmount-9mm',
-    label: '9 mm',
-    focal_length_mm: 9,
-    image_circle_format: '1"',
-    image_circle_diameter_mm: 16.0,
-  },
-  {
-    id: 'cmount-10mm',
-    label: '10 mm',
-    focal_length_mm: 10,
     image_circle_format: '1"',
     image_circle_diameter_mm: 16.0,
   },
