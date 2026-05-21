@@ -463,3 +463,12 @@ app-three-viewer {
         margin: 0;
     }
 }
+
+.pose-warning {
+    color: #ffd740;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 12px;
+    border-radius: 4px;
+    margin: 16px 0;
+    border: 1px solid #ffd740;
+}
