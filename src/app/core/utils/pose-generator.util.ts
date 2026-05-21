@@ -44,6 +44,7 @@ import {
   type PlateWorldSetup,
 } from './plate.visibility.util';
 import { mat3, quat, vec3 } from 'gl-matrix';
+import { computeFovLinear, computeSensorDimensions } from './camera-geometry.util';
 
 
 // =============================================================================
@@ -262,55 +263,125 @@ export function generateCalibrationPoses(
   constraints: PoseGeneratorConstraints,
   options: PoseGeneratorOptions,
 ): PoseGenerationResult {
-  const seed = options.seed ?? DEFAULT_SEED;
-  const n_candidates = options.n_candidates ?? DEFAULT_N_CANDIDATES;
-  const rng = new SeededRng(seed);
+  const rng = new SeededRng(options.seed ?? 42);
+  const selected: CanonicalPose[] = [];
+  const minTrans = constraints.min_translation_diff_mm;
+  const plateCenter = options.plate_setup.center;
 
-  // 1. Sampling: genera tutti i candidati raw
-  const allCandidates: CanonicalPose[] = [];
-  for (let i = 0; i < n_candidates; i++) {
-    allCandidates.push(sampleCandidate(anchor, constraints, rng, options.plate_setup.center));
-  }
+  // --- 1. GENERAZIONE TARGET (Centro + 4 Angoli) ---
+  const targets = [
+    { h: 0, v: 0 },   // Centro (Anchor)
+    { h: -1, v: -1 }, // Top-Left
+    { h: 1, v: -1 },  // Top-Right
+    { h: 1, v: 1 },   // Bottom-Right
+    { h: -1, v: 1 },  // Bottom-Left
+  ];
 
-  // 2. Filtering: tieni solo i candidati che vedono il plate in range
-  const validCandidates: CanonicalPose[] = [];
-  for (const candidate of allCandidates) {
-    const visibility = checkPlateVisibility(
-      candidate,
-      options.plate_setup,
-      options.camera_hw,
-      {
-        coverage_min_pct: constraints.plate_coverage_min_pct,
-        coverage_max_pct: constraints.plate_coverage_max_pct,
-      },
-    );
-    if (visibility.in_acceptable_coverage_range) {
-      validCandidates.push(candidate);
+  for (const t of targets) {
+    const [offX, offY] = getCornerOffset(t.h, t.v, options.camera_hw, constraints.dome.radius_mm);
+    
+    // Calcoliamo la posizione target
+    const targetPos: DomainVec3 = [
+      anchor.position[0] + offX,
+      anchor.position[1] + offY,
+      anchor.position[2]
+    ];
+
+    // FIX CRITICO: Ricalcoliamo l'orientamento LookAt specifico per questa posizione!
+    const direction = vec3.normalize(vec3.create(), [
+      plateCenter[0] - targetPos[0],
+      plateCenter[1] - targetPos[1],
+      plateCenter[2] - targetPos[2]
+    ]);
+    
+    // Creiamo il quaternione che guarda il plate (Z+ forward)
+    const lookAtQ = calculateLookAtQuaternion(targetPos, plateCenter);
+    
+    const candidate: CanonicalPose = { 
+      position: targetPos, 
+      quaternion: lookAtQ 
+    };
+
+    // Verifichiamo se questa posa target confligge con quelle già inserite
+    const hasConflict = selected.some(s => vec3Distance(s.position, candidate.position) < minTrans);
+    
+    // La inseriamo solo se valida e se vede il plate
+    const visibility = checkPlateVisibility(candidate, options.plate_setup, options.camera_hw);
+    
+    if (!hasConflict && visibility.all_corners_visible) {
+      selected.push(candidate);
     }
   }
 
-  // 2b. HARD FILTER: Distanza minima dall'anchor
-  const filteredCandidates = validCandidates.filter(c => {
-    const d = vec3Distance(c.position, anchor.position);
-    return d >= constraints.min_translation_diff_mm;
-  });
+  // --- 2. RIEMPIMENTO GREEDY (Pose da 6 a N) ---
+  const pool: CanonicalPose[] = [];
+  // Generiamo un pool molto grande di candidati validi
+  for (let i = 0; i < 3000; i++) {
+    const c = sampleCandidate(anchor, constraints, rng, plateCenter);
+    const visibility = checkPlateVisibility(c, options.plate_setup, options.camera_hw, {
+      coverage_min_pct: constraints.plate_coverage_min_pct,
+      coverage_max_pct: constraints.plate_coverage_max_pct
+    });
+    
+    if (visibility.in_acceptable_coverage_range) {
+      pool.push(c);
+    }
+  }
 
-  // 3. Selezione greedy maximin (anchor sempre la prima)
-  // FIX: Ora passiamo filteredCandidates invece di validCandidates
-  const selected = selectGreedyMaximin(
-    anchor,
-    filteredCandidates,
-    constraints.n_total_poses,
-    constraints.min_translation_diff_mm,
-  );
+  while (selected.length < constraints.n_total_poses && pool.length > 0) {
+    const bestIdx = pickBestMaximinCandidate(selected, pool);
+    if (bestIdx < 0) break;
+
+    const candidate = pool.splice(bestIdx, 1)[0];
+
+    // FILTRO RIGIDO: Se la migliore posa possibile comunque confligge, la scartiamo
+    const tooClose = selected.some(s => vec3Distance(s.position, candidate.position) < minTrans);
+    
+    if (!tooClose) {
+      selected.push(candidate);
+    }
+  }
 
   return {
     poses: selected,
-    n_candidates_generated: allCandidates.length,
-    n_candidates_valid: filteredCandidates.length, // FIX: aggiornato anche qui
+    n_candidates_generated: 3000,
+    n_candidates_valid: pool.length,
     reached_target: selected.length >= constraints.n_total_poses,
     diversity_stats: computeDiversityStats(selected),
   };
+}
+
+/** Helper per calcolare l'orientamento camera verso un punto (Z+ forward) */
+function calculateLookAtQuaternion(source: DomainVec3, target: DomainVec3): Quaternion {
+  const forward = vec3.normalize(vec3.create(), [
+    target[0] - source[0],
+    target[1] - source[1],
+    target[2] - source[2]
+  ]);
+  const worldUp = vec3.fromValues(0, 0, 1);
+  const right = vec3.normalize(vec3.create(), vec3.cross(vec3.create(), worldUp, forward));
+  const down = vec3.cross(vec3.create(), forward, right);
+  const m3 = mat3.fromValues(
+    right[0], right[1], right[2],
+    down[0], down[1], down[2],
+    forward[0], forward[1], forward[2]
+  );
+  const q = quat.fromMat3(quat.create(), m3);
+  return [q[0], q[1], q[2], q[3]];
+}
+/**
+ * Calcola un offset sulla cupola per forzare il plate in un angolo del FOV.
+ * @param horizontal 0 = centro, -1 = sinistra, 1 = destra
+ * @param vertical   0 = centro, -1 = sopra, 1 = sotto
+ */
+function getCornerOffset(horizontal: number, vertical: number, camera: CameraHardware, radius: number): [number, number] {
+  const sensor = computeSensorDimensions(camera.sensor.width_px, camera.sensor.height_px, camera.sensor.pixel_pitch_um);
+  const fov = computeFovLinear(sensor, camera.lens.focal_length_mm, radius);
+  
+  // Spostiamo la camera del 35% del FOV per portare il plate verso l'angolo
+  const offsetX = horizontal * (fov.width_mm * 0.35);
+  const offsetY = vertical * (fov.height_mm * 0.35);
+  return [offsetX, offsetY];
 }
 
 /**

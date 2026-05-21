@@ -38,7 +38,7 @@ export function validateCalibrationPose(
   isAnchor: boolean = false
 ): PoseValidationResult {
   const issues: ValidationIssue[] = [];
-  
+
   const distanceToPlateMm = vec3Distance(pose.position, plate.center);
 
   const sensorW = camera.sensor.width_px * (camera.sensor.pixel_pitch_um / 1000);
@@ -58,8 +58,8 @@ export function validateCalibrationPose(
 
     const dx = Math.abs(pose.position[0] - other.position[0]);
     const dy = Math.abs(pose.position[1] - other.position[1]);
-    const dz = Math.abs(pose.position[2] - other.position[2]);
-    const maxTrans = Math.max(dx, dy, dz);
+    // Consideriamo solo lo spostamento sul piano X-Y per la traslazione minima
+    const transXY = Math.max(dx, dy);
 
     const eulerPose = quatToZyxIntrinsic(pose.quaternion);
     const eulerOther = quatToZyxIntrinsic(other.quaternion);
@@ -68,21 +68,21 @@ export function validateCalibrationPose(
     const dRz = wrapAngleDiff(eulerPose[0], eulerOther[0]);
     const maxRot = Math.max(dRx, dRy, dRz);
 
-    if (maxTrans < minTranslationToAnyPoseMm) minTranslationToAnyPoseMm = maxTrans;
+    if (transXY < minTranslationToAnyPoseMm) minTranslationToAnyPoseMm = transXY;
     if (maxRot < minRotationToAnyPoseDeg) minRotationToAnyPoseDeg = maxRot;
 
     // Uso i parametri dinamici invece di 500 e 30
-    const transLacking = maxTrans < minTransMm;
+    const transLacking = transXY < minTransMm;
     const rotLacking = maxRot < minRotDeg;
 
     if (transLacking || rotLacking) {
       isTooSimilar = true;
       closestPoseIndex = i;
-      
+
       if (transLacking && rotLacking) {
-        similarityReason = `Manca traslazione (${maxTrans.toFixed(0)} < ${minTransMm}mm) e rotazione (${maxRot.toFixed(1)} < ${minRotDeg}°).`;
+        similarityReason = `Manca traslazione (${transXY.toFixed(0)} < ${minTransMm}mm) e rotazione (${maxRot.toFixed(1)} < ${minRotDeg}°).`;
       } else if (transLacking) {
-        similarityReason = `Manca traslazione (${maxTrans.toFixed(0)} < ${minTransMm}mm). Rotazione OK.`;
+        similarityReason = `Manca traslazione (${transXY.toFixed(0)} < ${minTransMm}mm). Rotazione OK.`;
       } else {
         similarityReason = `Manca rotazione (${maxRot.toFixed(1)} < ${minRotDeg}°). Traslazione OK.`;
       }
