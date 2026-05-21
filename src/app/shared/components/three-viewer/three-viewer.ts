@@ -62,7 +62,6 @@ const SCENE_BG_COLOR = 0x111418;
   templateUrl: './three-viewer.html',
   styleUrl: './three-viewer.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe],
 })
 
 export class ThreeViewer implements AfterViewInit {

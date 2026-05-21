@@ -104,6 +104,13 @@ export class CalibrationWizardComponent {
     return null;
   });
 
+  // Verifica reattiva basata sui cataloghi forniti
+  readonly isConfigurationValid = computed(() => {
+    const lens = this.selectedLens(); // dal lens-catalog [cite: 318]
+    const cam = this.selectedCamera(); // dal camera-catalog [cite: 317]
+    return isLensCompatible(lens, cam); // [cite: 320]
+  });
+
   /**
    * Tipo di violazione per il conflitto attuale (per messaggio UI specifico).
    * null se nessun conflitto.

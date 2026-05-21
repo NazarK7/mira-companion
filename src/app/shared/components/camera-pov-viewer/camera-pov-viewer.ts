@@ -136,6 +136,7 @@ export class CameraPovViewer implements AfterViewInit {
       this.updateCamera(pose, cam, lens);
       this.updatePlate(plate, plateSpec);
       this.computeCoverage(plate);
+      this.drawTargetGuide();
       this.requestRender();
     });
   }
@@ -206,6 +207,34 @@ export class CameraPovViewer implements AfterViewInit {
     );
     this.camera.quaternion.copy(opencvQ).multiply(this.flipX180);
   }
+
+  /**
+ * Aggiunge una guida visiva nel POV per mostrare l'area target (1/6 del FOV).
+ * Aiuta a capire se il plate è troppo piccolo o troppo grande.
+ */
+private drawTargetGuide(): void {
+  // Rimuovi guide precedenti se esistono
+  const oldGuide = this.scene.getObjectByName('targetGuide');
+  if (oldGuide) this.scene.remove(oldGuide);
+
+  // Calcolo dimensioni target (sqrt(1/6) dell'area sensore)
+  const targetRatio = Math.sqrt(1/6); 
+  const cam = this.cameraSpec();
+  const sensorW = cam.resolution_px.w * cam.pixel_pitch_mm;
+  const sensorH = cam.resolution_px.h * cam.pixel_pitch_mm;
+  
+  const guideW = (sensorW * targetRatio * this.cameraPose().position[2]) / this.lensSpec().focal_length_mm;
+  const guideH = (sensorH * targetRatio * this.cameraPose().position[2]) / this.lensSpec().focal_length_mm;
+
+  const geometry = new THREE.PlaneGeometry(guideW, guideH);
+  const edges = new THREE.EdgesGeometry(geometry);
+  const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x00ff00, transparent: true, opacity: 0.3 }));
+  
+  line.name = 'targetGuide';
+  // Posiziona la guida sul piano del plate (Z=0 del mondo)
+  line.position.set(this.plateSetup().center[0], this.plateSetup().center[1], this.plateSetup().center[2] + 1);
+  this.scene.add(line);
+}
 
   // ---------------------------------------------------------------------------
   // Plate update (texture + mesh)
