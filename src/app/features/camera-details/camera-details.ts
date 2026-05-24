@@ -20,9 +20,8 @@ import { CameraService } from '../../core/services/camera.service';
 import { JobService } from '../../core/services/job.service';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog';
 
-import { FeedbackToastComponent } from '../../shared/components/feedback-toast/feedback-toast';
-import { FeedbackService } from '../../shared/components/feedback-toast/feedback.service';
-import { LoadingOverlayComponent } from "../../shared/components/loading-overlay/loading-overlay";
+import { ToastContainerComponent } from '../../shared/components/feedback-toast/toast-container.component';
+import { NotificationService } from '../../shared/services/notification.service';
 
 type CameraType = 'COGNEX_INSIGHT' | 'COGNEX_DATAMAN' | 'MIRA_3D';
 
@@ -38,7 +37,6 @@ type CameraType = 'COGNEX_INSIGHT' | 'COGNEX_DATAMAN' | 'MIRA_3D';
     MatDialogModule,
     DatePipe,
     NgTemplateOutlet,
-    LoadingOverlayComponent
   ],
   templateUrl: './camera-details.html',
 })
@@ -49,7 +47,7 @@ export class CameraDetailsComponent {
   private readonly cameraService = inject(CameraService);
   private readonly jobService = inject(JobService);
   private readonly dialog = inject(MatDialog);
-  private readonly feedback = inject(FeedbackService);
+  private readonly feedback = inject(NotificationService);
 
   private readonly refresh$ = new BehaviorSubject<void>(undefined);
 

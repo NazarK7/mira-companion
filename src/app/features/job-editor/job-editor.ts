@@ -11,8 +11,7 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { JobService } from '../../core/services/job.service';
 import { Job, JobBackup } from '../../core/models/domain.model';
 
-import { FeedbackService } from '../../shared/components/feedback-toast/feedback.service';
-import { LoadingOverlayComponent } from '../../shared/components/loading-overlay/loading-overlay';
+import { NotificationService } from '../../shared/services/notification.service';
 
 @Component({
   selector: 'app-job-editor',
@@ -21,7 +20,6 @@ import { LoadingOverlayComponent } from '../../shared/components/loading-overlay
   imports: [
     ReactiveFormsModule, MatButtonModule, MatFormFieldModule,
     MatInputModule, MatIconModule, MatTooltipModule, DatePipe, DecimalPipe,
-    LoadingOverlayComponent
   ],
   templateUrl: './job-editor.html',
 })
@@ -32,7 +30,7 @@ export class JobEditorComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly jobService = inject(JobService);
-  private readonly feedback = inject(FeedbackService);
+  private readonly feedback = inject(NotificationService);
   // --- STATO ---
   readonly isSubmitting = signal(false);
   readonly isEditMode = signal(false);

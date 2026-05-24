@@ -1,58 +1,62 @@
-<div class="dashboard-container">
-  <header class="dashboard-header flex justify-between items-start">
+<div class="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+  
+  <header class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
     <div>
-      <h1>Dashboard</h1>
-      <p class="subtitle">Archivio installazioni MiRa_3D e Cognex</p>
+      <h1 class="text-4xl font-black text-text-primary tracking-tighter italic">DASHBOARD</h1>
+      <p class="text-text-secondary font-medium tracking-wide">Archivio installazioni MiRa_3D e Cognex</p>
     </div>
-    <a mat-flat-button class="!bg-[var(--color-primary-600)] !text-white" routerLink="/customers/new">
-      <mat-icon>add</mat-icon>
+    <app-button variant="primary" routerLink="/customers/new">
+      <span class="material-symbols-outlined text-lg">add</span>
       Nuovo cliente
-    </a>
+    </app-button>
   </header>
 
   @if (!stats()) {
-    <div class="loading-state flex flex-col items-center justify-center p-12">
-      <mat-spinner diameter="32"></mat-spinner>
-      <span class="mt-4 text-[var(--text-secondary)]">Caricamento statistiche…</span>
+    <div class="flex flex-col items-center justify-center p-20 bg-bg-surface border border-dashed border-border-subtle rounded-2xl">
+      <div class="h-12 w-12 animate-spin rounded-full border-b-2 border-t-2 border-primary-500"></div>
+      <span class="mt-6 text-text-tertiary font-black uppercase tracking-[0.3em] text-[10px] animate-pulse">
+        Sincronizzazione Plant...
+      </span>
     </div>
   } @else {
-    <section class="stats-grid">
-      <a routerLink="/customers" class="stat-card cursor-pointer hover:border-[var(--color-primary-500)] transition">
-        <mat-icon class="stat-icon">business</mat-icon>
-        <div class="stat-value">{{ stats()!.customers }}</div>
-        <div class="stat-label">Customers</div>
-      </a>
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      
+      @for (stat of [
+        { label: 'Customers', val: stats()?.customers, icon: 'business', link: '/customers' },
+        { label: 'Plants', val: stats()?.plants, icon: 'factory', link: '/plants' },
+        { label: 'Stations', val: stats()?.stations, icon: 'precision_manufacturing', link: '/stations' },
+        { label: 'Cameras', val: stats()?.cameras, icon: 'photo_camera', link: '/cameras' }
+      ]; track stat.label) {
+        <a [routerLink]="stat.link" 
+           class="group relative flex flex-col gap-3 p-6 bg-bg-surface border border-border-subtle rounded-xl transition-all hover:border-primary-500/50 hover:shadow-xl hover:shadow-primary-500/5">
+          
+          <span class="material-symbols-outlined text-3xl text-primary-500 group-hover:scale-110 transition-transform">
+            {{ stat.icon }}
+          </span>
+          
+          <div class="text-5xl font-mono font-bold text-text-primary tracking-tighter">
+            {{ stat.val ?? 0 }}
+          </div>
+          
+          <div class="text-[10px] font-black uppercase tracking-[0.2em] text-text-tertiary group-hover:text-primary-400 transition-colors">
+            {{ stat.label }}
+          </div>
 
-      <a routerLink="/plants" class="stat-card cursor-pointer hover:border-[var(--color-primary-500)] transition">
-        <mat-icon class="stat-icon">factory</mat-icon>
-        <div class="stat-value">{{ stats()!.plants }}</div>
-        <div class="stat-label">Plants</div>
-      </a>
-
-      <a routerLink="/stations" class="stat-card cursor-pointer hover:border-[var(--color-primary-500)] transition">
-        <mat-icon class="stat-icon">precision_manufacturing</mat-icon>
-        <div class="stat-value">{{ stats()!.stations }}</div>
-        <div class="stat-label">Stations</div>
-      </a>
-
-      <a routerLink="/cameras" class="stat-card cursor-pointer hover:border-[var(--color-primary-500)] transition">
-        <mat-icon class="stat-icon">photo_camera</mat-icon>
-        <div class="stat-value">{{ stats()!.cameras }}</div>
-        <div class="stat-label">Cameras</div>
-      </a>
+          <div class="absolute bottom-0 left-6 right-6 h-0.5 bg-primary-500 scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
+        </a>
+      }
     </section>
 
-    @if (stats()!.customers === 0) {
-      <section class="empty-state text-center py-12 rounded-lg border border-dashed border-[var(--border-default)] bg-[var(--bg-subtle)] my-8">
-        <mat-icon class="text-4xl text-[var(--text-tertiary)] mb-4">business</mat-icon>
-        <h2 class="text-xl font-semibold text-[var(--text-primary)]">Nessun cliente nel Database</h2>
-        <p class="text-[var(--text-secondary)] mt-2 mb-6">
-          Inizia creando un nuovo cliente per organizzare le tue installazioni.
+    @if (stats()?.customers === 0) {
+      <section class="flex flex-col items-center text-center py-20 px-6 rounded-2xl border border-dashed border-border-strong bg-bg-subtle/20">
+        <span class="material-symbols-outlined text-7xl text-text-disabled mb-6">database_off</span>
+        <h2 class="text-2xl font-bold text-text-primary tracking-tight">Archivio Locale Vuoto</h2>
+        <p class="text-text-secondary mt-3 mb-10 max-w-md leading-relaxed">
+          Nessun dato trovato nel database locale. Inizia creando un nuovo cliente per avviare l'archiviazione del disaster recovery.
         </p>
-        <a mat-flat-button class="!bg-[var(--color-primary-600)] !text-white" routerLink="/customers/new">
-          <mat-icon>add</mat-icon>
-          Crea il tuo primo cliente
-        </a>
+        <app-button variant="outline" routerLink="/customers/new">
+          Configura Primo Cliente
+        </app-button>
       </section>
     }
   }

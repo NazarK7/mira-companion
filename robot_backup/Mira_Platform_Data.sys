@@ -1,4 +1,4 @@
-MODULE Mira_Platform_Data(SYSMODULE,NOSTEPIN)
+mMODULE Mira_Platform_Data(SYSMODULE,NOSTEPIN)
   !
   !***********************************************************
   !

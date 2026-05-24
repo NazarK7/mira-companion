@@ -1,96 +1,63 @@
-<mat-sidenav-container class="app-container" [hasBackdrop]="isMobile()">
-  <!-- ─── SIDENAV ─────────────────────────────────────────────────────────── -->
-  <mat-sidenav
-    #sidenav
-    class="app-sidenav"
-    [mode]="isMobile() ? 'over' : 'side'"
-    [opened]="!isMobile() && sidenavOpen()"
-    [fixedInViewport]="isMobile()">
+<div class="flex h-screen w-full overflow-hidden bg-bg-app text-text-primary">
 
-    <!-- Brand header -->
-    <div class="sidenav-brand">
-      <div class="brand-mark">
-        <span class="brand-bracket">&lt;</span><span
-          class="brand-name"
-        >mi_ra</span><span class="brand-bracket">&gt;</span>
+  <aside [class.w-64]="sidenavOpen()" [class.w-20]="!sidenavOpen()"
+    class="relative z-20 flex flex-col border-r border-border-subtle bg-bg-surface transition-all duration-300 ease-in-out shadow-xl">
+    <div class="flex flex-col items-center justify-center h-20 border-b border-border-subtle shrink-0 overflow-hidden">
+      <div class="flex items-center font-mono text-xl font-bold tracking-tighter">
+        <span class="text-primary-500">&lt;</span>
+        <span [class.hidden]="!sidenavOpen()">mi_ra</span>
+        <span class="text-primary-500">&gt;</span>
       </div>
-      <div class="brand-subtitle">companion</div>
-    </div>
-
-    <!-- Nav -->
-    <mat-nav-list class="sidenav-list">
-      @for (item of navItems; track item.route) {
-        <a
-          mat-list-item
-          [routerLink]="item.route"
-          routerLinkActive="nav-active"
-          (click)="isMobile() && sidenav.close()">
-          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
-          <span matListItemTitle>{{ item.label }}</span>
-        </a>
+      @if (sidenavOpen()) {
+      <div class="text-[9px] font-black uppercase tracking-[0.4em] text-text-tertiary">companion</div>
       }
-    </mat-nav-list>
-
-    <!-- Footer -->
-    <div class="sidenav-footer">
-      <span class="version-tag">v0.1.0-dev</span>
     </div>
-  </mat-sidenav>
 
-  <!-- ─── MAIN CONTENT ──────────────────────────────────────────────────── -->
-  <mat-sidenav-content class="app-content">
-    <!-- Toolbar -->
-    <mat-toolbar class="app-toolbar">
-      <button
-        mat-icon-button
-        (click)="isMobile() ? sidenav.toggle() : toggleSidenav()"
-        matTooltip="Toggle sidebar"
-        aria-label="Toggle sidebar">
-        <mat-icon>menu</mat-icon>
-      </button>
-
-      <span class="toolbar-spacer"></span>
-
-      <!-- Theme menu -->
-      <button
-        mat-icon-button
-        [matTooltip]="'Tema: ' + themeService.theme()"
-        [matMenuTriggerFor]="themeMenu"
-        aria-label="Theme menu">
-        @if (themeService.resolvedTheme() === 'dark') {
-          <mat-icon>dark_mode</mat-icon>
-        } @else {
-          <mat-icon>light_mode</mat-icon>
+    <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-2">
+      @for (item of navItems; track item.route) {
+      <a [routerLink]="item.route" routerLinkActive="bg-primary-500/10 text-primary-500 border-primary-500/20"
+        class="group flex items-center gap-3 rounded-xl px-3 py-3 border border-transparent transition-all hover:bg-bg-subtle"
+        [title]="item.label">
+        <span class="material-symbols-outlined shrink-0 text-2xl group-hover:scale-110 transition-transform">
+          {{ item.icon }}
+        </span>
+        @if (sidenavOpen()) {
+        <span class="text-sm font-medium truncate">{{ item.label }}</span>
         }
-      </button>
-      <mat-menu #themeMenu="matMenu">
-        <button mat-menu-item (click)="setTheme('light')">
-          <mat-icon>light_mode</mat-icon>
-          <span>Light</span>
-          @if (themeService.theme() === 'light') {
-            <mat-icon class="theme-check">check</mat-icon>
-          }
-        </button>
-        <button mat-menu-item (click)="setTheme('dark')">
-          <mat-icon>dark_mode</mat-icon>
-          <span>Dark</span>
-          @if (themeService.theme() === 'dark') {
-            <mat-icon class="theme-check">check</mat-icon>
-          }
-        </button>
-        <button mat-menu-item (click)="setTheme('auto')">
-          <mat-icon>brightness_auto</mat-icon>
-          <span>Auto (sistema)</span>
-          @if (themeService.theme() === 'auto') {
-            <mat-icon class="theme-check">check</mat-icon>
-          }
-        </button>
-      </mat-menu>
-    </mat-toolbar>
+      </a>
+      }
+    </nav>
 
-    <!-- Routed view -->
-    <main class="app-main">
+    <div class="p-4 border-t border-border-subtle text-center">
+      <span class="text-[10px] font-mono text-text-disabled uppercase">
+        {{ sidenavOpen() ? 'v2.4.0 — Local' : 'v2.4' }}
+      </span>
+    </div>
+  </aside>
+
+  <div class="flex flex-1 flex-col overflow-hidden">
+
+    <header class="flex h-16 items-center justify-between border-b border-border-subtle bg-bg-surface px-6">
+      <div class="flex items-center gap-4">
+        <app-button variant="ghost" size="icon" (clicked)="toggleSidenav()">
+          <span class="material-symbols-outlined">menu</span>
+        </app-button>
+
+        @if (loading.isLoading()) {
+        <h2 class="text-sm font-semibold uppercase tracking-widest text-primary-500 animate-pulse">
+          {{ i18n.t().common.loading }}
+        </h2>
+        }
+      </div>
+
+    </header>
+
+    <main class="relative flex-1 overflow-y-auto p-8 bg-bg-app">
       <router-outlet />
     </main>
-  </mat-sidenav-content>
-</mat-sidenav-container>
+  </div>
+</div>
+
+<app-toast-container />
+<app-confirm-dialog />
+<app-loading-overlay />

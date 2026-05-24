@@ -2,7 +2,7 @@
 @use "./app/styles/tokens" as tokens;
 
 @use "tailwindcss";
-
+@use 'material-symbols/outlined.css';
 // 2. Iniezione del tema in Tailwind v4
 @theme {
   --color-primary-50: var(--color-primary-50);
