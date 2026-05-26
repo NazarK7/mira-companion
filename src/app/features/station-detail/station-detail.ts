@@ -33,15 +33,7 @@ export class StationDetailComponent {
   // Trigger reattivo per il refresh dei dati
   private readonly refreshTrigger = signal(0);
 
-  readonly customer = toSignal(
-    computed(() => {
-      this.refreshTrigger(); // Dipendenza per il refresh
-      return this.route.paramMap.pipe(
-        map(params => params.get('slug')!),
-        switchMap(slug => this.customerService.getBySlug(slug))
-      );
-    }).bind(this)() // Corretto accesso al pipe in contesto signal
-  );
+
 
   // Re-implementazione semplificata del fetch senza BehaviorSubject manuale
   readonly customerData = toSignal(
@@ -90,7 +82,7 @@ export class StationDetailComponent {
       this.cameraService.delete(id).subscribe({
         next: () => {
           this.notify.success('Camera eliminata con successo');
-          this.customerService.getBySlug(this.customer()!.slug).subscribe(() => {
+          this.customerService.getBySlug(this.customerData()!.slug).subscribe(() => {
             this.reloadRoute();
           });
         },

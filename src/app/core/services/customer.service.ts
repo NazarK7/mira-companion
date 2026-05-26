@@ -8,6 +8,7 @@ import { Customer } from '../models/domain.model';
 @Injectable({
   providedIn: 'root'
 })
+
 export class CustomerService {
   private readonly http = inject(HttpClient);
   private readonly endpoint = `${inject(API_URL)}/customers`;
@@ -43,7 +44,6 @@ export class CustomerService {
     );
   }
 
-  // --- NUOVO METODO PER LA MODIFICA ---
   update(id: string, changes: Partial<Customer>): Observable<Customer> {
     const payload = {
       ...changes,
