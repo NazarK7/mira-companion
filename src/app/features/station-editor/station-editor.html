@@ -1,69 +1,81 @@
- <section class="max-w-4xl mx-auto py-8 px-4">
-      <header class="flex justify-between items-center mb-8">
-        <div class="flex items-center gap-4">
-          <button mat-icon-button type="button" (click)="cancel()" aria-label="Back">
-            <mat-icon>arrow_back</mat-icon>
-          </button>
-          <div>
-            <h1 class="text-3xl font-bold text-[var(--text-primary)]">
-              {{ isEditMode() ? 'Edit Station' : 'New Station' }}
-            </h1>
-            <p class="text-[var(--text-secondary)] mt-1">Configure robotic cell / station parameters</p>
-          </div>
-        </div>
-      </header>
+<section class="max-w-4xl mx-auto py-10 px-6 space-y-8 animate-in fade-in duration-500">
 
-      <form [formGroup]="form" (ngSubmit)="save()" class="flex flex-col gap-8">
-        <div class="p-6 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl grid grid-cols-2 gap-6 shadow-sm">
-          
-          <mat-form-field appearance="outline" class="col-span-2 md:col-span-1">
-            <mat-label>Station Name</mat-label>
-            <input matInput formControlName="name" placeholder="e.g. Body Side Assy LH" required>
-          </mat-form-field>
+  <header class="flex items-center gap-6 border-b border-border-subtle pb-8">
+    <app-button variant="ghost" size="icon" (clicked)="cancel()">
+      <span class="material-symbols-outlined">arrow_back</span>
+    </app-button>
+    <div>
+      <h1 class="text-4xl font-black text-text-primary italic tracking-tighter uppercase leading-none">
+        {{ isEditMode() ? 'Edit Station' : 'New Station' }}
+      </h1>
+      <p class="text-sm font-medium text-text-tertiary uppercase tracking-widest mt-2">
+        Configurazione Cella Robotizzata / Parametri Visione
+      </p>
+    </div>
+  </header>
 
-          <mat-form-field appearance="outline" class="col-span-2 md:col-span-1">
-            <mat-label>Station Code</mat-label>
-            <input matInput formControlName="code" placeholder="e.g. 17-54-020">
-          </mat-form-field>
+  <form [formGroup]="form" (ngSubmit)="save()" class="space-y-8">
 
-          <mat-form-field appearance="outline" class="col-span-2 md:col-span-1">
-            <mat-label>Line</mat-label>
-            <input matInput formControlName="line" placeholder="e.g. Body Shop Line A">
-          </mat-form-field>
+    <div class="bg-bg-surface border border-border-subtle rounded-2xl p-8 shadow-sm space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-          <mat-form-field appearance="outline" class="col-span-2 md:col-span-1">
-            <mat-label>Status</mat-label>
-            <mat-select formControlName="status">
-              <mat-option value="PRODUCTION">Production</mat-option>
-              <mat-option value="MAINTENANCE">Maintenance</mat-option>
-              <mat-option value="PLANNING">Planning</mat-option>
-              <mat-option value="ARCHIVED">Archived</mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="col-span-2">
-            <mat-label>Description</mat-label>
-            <textarea matInput formControlName="description" rows="2"></textarea>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="col-span-2">
-            <mat-label>Recovery Procedure</mat-label>
-            <textarea matInput formControlName="recoveryProcedure" rows="3" placeholder="Steps to recover from a vision error..."></textarea>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="col-span-2">
-            <mat-label>Internal Notes</mat-label>
-            <textarea matInput formControlName="notes" rows="2"></textarea>
-          </mat-form-field>
-
+        <div class="flex flex-col gap-2">
+          <label class="text-[10px] font-black uppercase tracking-widest text-text-tertiary">Station Name *</label>
+          <input formControlName="name" placeholder="Assy Cell LH"
+            class="bg-bg-subtle border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-primary-500 outline-none transition-all" />
         </div>
 
-        <div class="flex justify-end gap-4">
-          <button type="button" mat-button (click)="cancel()" [disabled]="isSubmitting()">Cancel</button>
-          <button type="submit" mat-flat-button color="primary" class="!bg-[var(--color-primary-600)]" [disabled]="form.invalid || isSubmitting()">
-            <mat-icon>save</mat-icon>
-            {{ isSubmitting() ? 'Saving...' : (isEditMode() ? 'Update Station' : 'Create Station') }}
-          </button>
+        <div class="flex flex-col gap-2">
+          <label class="text-[10px] font-black uppercase tracking-widest text-text-tertiary">Station Code</label>
+          <input formControlName="code" placeholder="17-54-020"
+            class="bg-bg-subtle border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-primary-500 outline-none transition-all font-mono" />
         </div>
-      </form>
-    </section>
+
+        <div class="flex flex-col gap-2">
+          <label class="text-[10px] font-black uppercase tracking-widest text-text-tertiary">Production Line</label>
+          <input formControlName="line" placeholder="Body Shop Line A"
+            class="bg-bg-subtle border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-primary-500 outline-none transition-all" />
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label class="text-[10px] font-black uppercase tracking-widest text-text-tertiary">Current Status</label>
+          <select formControlName="status"
+            class="bg-bg-surface border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-primary-500 outline-none transition-all appearance-none cursor-pointer w-full">
+            @for (opt of statusOptions; track opt.value) {
+            <option [value]="opt.value" class="bg-bg-surface text-text-primary">
+              {{ opt.label }}
+            </option>
+            }
+          </select>
+        </div>
+
+        <div class="flex flex-col gap-2 md:col-span-2">
+          <label class="text-[10px] font-black uppercase tracking-widest text-text-tertiary">Description</label>
+          <textarea formControlName="description" rows="2"
+            class="bg-bg-subtle border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-primary-500 outline-none transition-all resize-none"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-bg-surface border border-border-subtle rounded-2xl p-8 shadow-sm space-y-6">
+      <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-warning-500">terminal</span>
+        <h3 class="text-xl font-bold text-text-primary tracking-tight italic uppercase">Recovery Procedure</h3>
+      </div>
+      <div class="flex flex-col gap-2">
+        <label class="text-[10px] font-black uppercase tracking-widest text-text-tertiary">Istruzioni operative in caso
+          di errore visione</label>
+        <textarea formControlName="recoveryProcedure" rows="4" placeholder="1. Reset PLC... 2. Check Exposure..."
+          class="bg-bg-app border border-border-subtle rounded-xl px-4 py-3 text-text-primary font-mono text-xs focus:border-primary-500 outline-none transition-all"></textarea>
+      </div>
+    </div>
+
+    <footer class="flex justify-end gap-4 pt-4 border-t border-border-subtle">
+      <app-button variant="ghost" (clicked)="cancel()" [disabled]="isSubmitting()">Cancel</app-button>
+      <app-button variant="primary" type="submit" [loading]="isSubmitting()" [disabled]="form.invalid">
+        <span class="material-symbols-outlined">save</span>
+        {{ isEditMode() ? 'Update Station' : 'Create Station' }}
+      </app-button>
+    </footer>
+  </form>
+</section>

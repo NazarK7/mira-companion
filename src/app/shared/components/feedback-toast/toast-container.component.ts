@@ -16,12 +16,12 @@ import { I18nService } from '../../services/i18n.service';
           role="alert"
         >
           <div class="shrink-0">
-             @switch (note.type) {
-               @case ('success') { <span class="text-success-500 text-xl">check_circle</span> }
-               @case ('error') { <span class="text-danger-500 text-xl">error</span> }
-               @case ('warning') { <span class="text-warning-500 text-xl">warning</span> }
-               @default { <span class="text-info-500 text-xl">info</span> }
-             }
+          @switch (note.type) {
+          @case ('success') { <span class="material-symbols-outlined text-success-500 text-2xl">check_circle</span> }
+          @case ('error') { <span class="material-symbols-outlined text-danger-500 text-2xl">error</span> }
+          @case ('warning') { <span class="material-symbols-outlined text-warning-500 text-2xl">warning</span> }
+          @default { <span class="material-symbols-outlined text-info-500 text-2xl">info</span> }
+          }
           </div>
 
           <div class="flex-1">

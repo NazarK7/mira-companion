@@ -76,32 +76,32 @@ export class PlantDetailComponent {
   }
 
   async openContactDialog(contact?: any) {
-  const p = this.plant();
-  if (!p) return;
+    const p = this.plant();
+    if (!p) return;
 
-  const result = await this.app.contactDialog().open(contact);
+    const result = await this.app.contactDialog().open(contact);
 
-  if (result) {
-    let updatedContacts: any[] = [...(p.contacts || [])];
-    
-    if (contact && contact.id) {
-      updatedContacts = updatedContacts.map((c: any) => 
-        c.id === contact.id ? { ...c, ...result, id: contact.id } : c
-      );
-    } else {
-      const { id, ...newContactData } = result;
-      updatedContacts.push(newContactData);
-    }
+    if (result) {
+      let updatedContacts: any[] = [...(p.contacts || [])];
 
-    // 3. Inviamo l'aggiornamento al service
-    this.plantService.update(p.id, { contacts: updatedContacts }).subscribe({
-      next: () => {
-        this.notify.success(contact ? 'Contatto aggiornato' : 'Contatto aggiunto');
-        this.reloadRoute();
+      if (contact && contact.id) {
+        updatedContacts = updatedContacts.map((c: any) =>
+          c.id === contact.id ? { ...c, ...result, id: contact.id } : c
+        );
+      } else {
+        const { id, ...newContactData } = result;
+        updatedContacts.push(newContactData);
       }
-    });
+
+      // 3. Inviamo l'aggiornamento al service
+      this.plantService.update(p.id, { contacts: updatedContacts }).subscribe({
+        next: () => {
+          this.notify.success(contact ? 'Contatto aggiornato' : 'Contatto aggiunto');
+          this.reloadRoute();
+        }
+      });
+    }
   }
-}
 
 
   // --- GESTIONE CONTATTI ---
@@ -122,16 +122,16 @@ export class PlantDetailComponent {
     }
   }
 
-private reloadRoute(): void {
-  // 1. Salviamo l'URL attuale PRIMA di navigare via
-  const currentUrl = this.router.url;
+  private reloadRoute(): void {
+    const c = this.customer();
+    const p = this.plant();
+    if (!c || !p) return;
 
-  // 2. Navighiamo verso la root temporaneamente (senza scriverlo nella history)
-  this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
-    // 3. Torniamo all'URL che avevamo salvato
-    this.router.navigateByUrl(currentUrl);
-  });
-}
+    this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+      // Navighiamo esplicitamente verso il dettaglio di questo specifico Plant
+      this.router.navigate(['/customers', c.slug, 'plants', p.id]);
+    });
+  }
 
   statusBadgeClass(status: string): string {
     switch (status?.toLowerCase()) {

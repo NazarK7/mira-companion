@@ -43,3 +43,20 @@ export const FEATURES = {
 export type AppLanguage = typeof FEATURES.UI.LANGUAGES[number];
 export type AppTheme = typeof FEATURES.UI.THEMES[number];
 export type RobotVendor = typeof FEATURES.ROBOTICS.VENDORS[number];
+
+// src/app/core/constants/station-status.ts
+export const STATION_STATUS = {
+  PRODUCTION: 'PRODUCTION',
+  MAINTENANCE: 'MAINTENANCE',
+  PLANNING: 'PLANNING',
+  ARCHIVED: 'ARCHIVED'
+} as const;
+
+export type StationStatus = typeof STATION_STATUS[keyof typeof STATION_STATUS];
+
+export const STATION_STATUS_OPTIONS = [
+  { value: STATION_STATUS.PRODUCTION, label: 'Production', color: 'success' },
+  { value: STATION_STATUS.MAINTENANCE, label: 'Maintenance', color: 'warning' },
+  { value: STATION_STATUS.PLANNING, label: 'Planning', color: 'info' },
+  { value: STATION_STATUS.ARCHIVED, label: 'Archived', color: 'neutral' }
+];
