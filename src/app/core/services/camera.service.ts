@@ -69,10 +69,11 @@ export class CameraService {
     );
   }
 
-  delete(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.endpoint}/${id}`).pipe(
+  delete(id: string): Observable<any> {
+    // Aggiungiamo { responseType: 'text' } per gestire il corpo vuoto del 200 OK
+    return this.http.delete(`${this.endpoint}/${id}`, { responseType: 'text' }).pipe(
       tap(() => {
-        // Aggiornamento ottimistico dello stato locale
+        // Aggiorna il segnale locale delle camere
         this.cameras.update(list => list.filter(c => c.id !== id));
       })
     );

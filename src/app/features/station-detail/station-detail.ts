@@ -2,7 +2,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { switchMap, map } from 'rxjs/operators';
+import { switchMap, map, distinctUntilChanged } from 'rxjs/operators';
 
 import { CustomerService } from '../../core/services/customer.service';
 import { CameraService } from '../../core/services/camera.service';
@@ -10,7 +10,7 @@ import { I18nService } from '../../shared/services/i18n.service';
 import { AppButtonComponent } from '../../shared/components/button/button.component';
 import { AppComponent } from '../../app';
 import { NotificationService } from '../../shared/services/notification.service';
-import { STATION_STATUS_OPTIONS } from '../../core/data/features';
+import { CAMERA_TYPE_OPTIONS, STATION_STATUS_OPTIONS } from '../../core/data/features';
 
 type CameraType = 'COGNEX_INSIGHT' | 'COGNEX_DATAMAN' | 'MIRA_3D';
 
@@ -82,7 +82,7 @@ export class StationDetailComponent {
 
     const confirmed = await this.app.confirm().open({
       title: 'Elimina Camera',
-      message: `Sei sicuro di voler eliminare la camera "${name}"?\n\nL'operazione rimuoverà permanentemente tutti i Job e le calibrazioni associate.`,
+      message: `Sei sicuro di voler eliminare la camera "${name}"?`,
       isDestructive: true
     });
 
@@ -90,9 +90,14 @@ export class StationDetailComponent {
       this.cameraService.delete(id).subscribe({
         next: () => {
           this.notify.success('Camera eliminata con successo');
-          this.reloadRoute();
+          this.customerService.getBySlug(this.customer()!.slug).subscribe(() => {
+            this.reloadRoute();
+          });
         },
-        error: () => this.notify.error('Errore durante l\'eliminazione')
+        error: (err) => {
+          console.error('Errore durante la delete:', err);
+          this.notify.error('Errore durante l\'eliminazione');
+        }
       });
     }
   }
@@ -117,8 +122,9 @@ export class StationDetailComponent {
   }
 
   private reloadRoute(): void {
+    const currentUrl = this.router.url;
     this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
-      this.router.navigate([this.router.url]);
+      this.router.navigateByUrl(currentUrl);
     });
   }
 }

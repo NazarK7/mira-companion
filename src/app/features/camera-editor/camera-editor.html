@@ -1,122 +1,117 @@
-<section class="mx-auto max-w-5xl px-6 py-8">
-  <header class="mb-8 flex items-center gap-4">
-    <button mat-icon-button type="button" (click)="cancel()" aria-label="Back">
-      <mat-icon>arrow_back</mat-icon>
-    </button>
+<section class="mx-auto max-w-5xl px-6 py-10 space-y-10 animate-in fade-in duration-500">
+  
+  <header class="flex items-center gap-6 border-b border-border-subtle pb-8">
+    <app-button variant="ghost" size="icon" (clicked)="cancel()">
+      <span class="material-symbols-outlined">arrow_back</span>
+    </app-button>
     <div>
-      <h1 class="text-3xl font-semibold text-[var(--text-primary)]">
+      <h1 class="text-4xl font-black text-text-primary italic tracking-tighter uppercase leading-none">
         {{ isEditMode() ? 'Edit Camera' : 'New Camera' }}
       </h1>
-      <p class="mt-1 text-sm text-[var(--text-secondary)]">
-        Configure hardware and network parameters for the vision system
+      <p class="mt-2 text-sm font-medium text-text-tertiary uppercase tracking-widest">
+        Hardware Configuration & Optical Parameters
       </p>
     </div>
   </header>
 
-  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-8">
+  <form [formGroup]="form" (ngSubmit)="save()" class="space-y-8">
 
-    <div
-      class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6 shadow-[var(--shadow-sm)] grid grid-cols-2 md:grid-cols-3 gap-6">
-
-      <mat-form-field appearance="outline" class="col-span-2 md:col-span-1">
-        <mat-label>Camera Name</mat-label>
-        <input matInput formControlName="name" placeholder="e.g., Right Side Pallet" required />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="col-span-2 md:col-span-1">
-        <mat-label>Type</mat-label>
-        <mat-select formControlName="type" required>
-          <mat-option value="MIRA_3D">MiRa 3D (Robot Guidance)</mat-option>
-          <mat-option value="COGNEX_INSIGHT">Cognex In-Sight</mat-option>
-          <mat-option value="COGNEX_DATAMAN">Cognex DataMan</mat-option>
-        </mat-select>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="col-span-2 md:col-span-1">
-        <mat-label>Status</mat-label>
-        <mat-select formControlName="status">
-          <mat-option [value]="null">Nessuno / Da definire</mat-option>
-          <mat-option value="PLANNING">Planning</mat-option>
-          <mat-option value="CALIBRATING">Calibrating</mat-option>
-          <mat-option value="JOB_CREATION">Job Creation</mat-option>
-          <mat-option value="PRODUCTION">Production</mat-option>
-          <mat-option value="MAINTENANCE">Maintenance</mat-option>
-          <mat-option value="ARCHIVED">Archived</mat-option>
-        </mat-select>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="col-span-2 md:col-span-1">
-        <mat-label>Hardware Model</mat-label>
-        <input matInput formControlName="cameraModel" placeholder="e.g., Matrox Iris GTR" />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="col-span-2 md:col-span-1">
-        <mat-label>Lens Focal (mm)</mat-label>
-        <input matInput type="number" formControlName="lensFocalMm" placeholder="e.g., 12.5" />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="col-span-2 md:col-span-1">
-        <mat-label>Firmware Version</mat-label>
-        <input matInput formControlName="firmware" placeholder="e.g., 23.2.1" />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="col-span-2 md:col-span-1">
-        <mat-label>IP Address</mat-label>
-        <input matInput formControlName="ipAddress" placeholder="e.g., 192.168.1.100" />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="col-span-2 md:col-span-1">
-        <mat-label>Serial Number</mat-label>
-        <input matInput formControlName="serialNumber" placeholder="e.g., IGTR12M-2024-0042" />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="col-span-2 md:col-span-1">
-        <mat-label>MAC Address</mat-label>
-        <input matInput formControlName="macAddress" placeholder="e.g., 00:1A:2B:3C:4D" />
-      </mat-form-field>
-    </div>
-
-    <div
-      class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6 shadow-[var(--shadow-sm)] grid grid-cols-2 gap-6">
-
-      <div class="col-span-2 flex items-center gap-2 mb-2">
-        <mat-icon class="text-[var(--text-tertiary)]">settings_ethernet</mat-icon>
-        <h3 class="text-lg font-medium text-[var(--text-primary)]">Integration & Control</h3>
+    <div class="bg-bg-surface border border-border-subtle rounded-2xl p-8 shadow-sm space-y-8">
+      <div class="flex items-center gap-3 border-b border-border-subtle pb-4">
+        <span class="material-symbols-outlined text-primary-500">router</span>
+        <h3 class="text-xl font-bold text-text-primary tracking-tight italic uppercase">System Identity</h3>
       </div>
 
-      @if (form.get('type')?.value === 'MIRA_3D') {
-      <mat-form-field appearance="outline" class="col-span-2 md:col-span-1">
-        <mat-label>Robot Controller Type</mat-label>
-        <mat-select formControlName="controllerType">
-          <mat-option [value]="null">Nessuno / Da definire</mat-option>
-          <mat-option value="ABB">ABB (Quaternions)</mat-option>
-          <mat-option value="COMAU">Comau (Euler ZYZ Intrinsic)</mat-option>
-          <mat-option value="FANUC">Fanuc (Euler XYZ Extrinsic)</mat-option>
-          <mat-option value="KUKA">Kuka (Euler ZYX Intrinsic)</mat-option>
-        </mat-select>
-      </mat-form-field>
-      }
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="flex flex-col gap-1.5 md:col-span-2">
+          <label class="text-[10px] font-black uppercase tracking-widest text-text-tertiary">Camera Alias *</label>
+          <input matInput formControlName="name" placeholder="e.g., Right Side Pallet" class="bg-bg-subtle border border-border-subtle rounded-xl px-4 py-3 text-text-primary outline-none focus:border-primary-500" />
+        </div>
 
-      <mat-form-field appearance="outline" class="col-span-2">
-        <mat-label>PLC / Trigger Notes</mat-label>
-        <textarea matInput formControlName="plcNotes" rows="2"
-          placeholder="e.g., Triggered by PLC over PROFINET, Station 10..."></textarea>
-      </mat-form-field>
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[10px] font-black uppercase tracking-widest text-text-tertiary">Sensor Type</label>
+          <mat-select formControlName="type" class="bg-bg-subtle border border-border-subtle rounded-xl px-4 py-3 text-text-primary">
+            @for (opt of typeOptions; track opt.value) {
+              <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+            }
+          </mat-select>
+        </div>
 
-      <mat-form-field appearance="outline" class="col-span-2">
-        <mat-label>General Notes</mat-label>
-        <textarea matInput formControlName="notes" rows="2"
-          placeholder="Anomalies, specific setup instructions..."></textarea>
-      </mat-form-field>
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[10px] font-black uppercase tracking-widest text-text-tertiary">Lifecycle Status</label>
+          <mat-select formControlName="status" class="bg-bg-subtle border border-border-subtle rounded-xl px-4 py-3 text-text-primary">
+            <mat-option [value]="null">Undefined</mat-option>
+            <mat-option value="PRODUCTION">Production</mat-option>
+            <mat-option value="MAINTENANCE">Maintenance</mat-option>
+            <mat-option value="CALIBRATING">Calibrating</mat-option>
+            <mat-option value="ARCHIVED">Archived</mat-option>
+          </mat-select>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[10px] font-black uppercase tracking-widest text-text-tertiary">Hardware Model</label>
+          <input matInput formControlName="cameraModel" class="bg-bg-subtle border border-border-subtle rounded-xl px-4 py-3 text-text-primary outline-none" />
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[10px] font-black uppercase tracking-widest text-text-tertiary">Lens Focal (mm)</label>
+          <input matInput type="number" formControlName="lensFocalMm" class="bg-bg-subtle border border-border-subtle rounded-xl px-4 py-3 text-text-primary outline-none" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-border-subtle/30">
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[10px] font-black uppercase tracking-widest text-text-tertiary">IP Address</label>
+          <input matInput formControlName="ipAddress" placeholder="192.168..." class="bg-bg-subtle border border-border-subtle rounded-xl px-4 py-3 text-primary-500 font-mono" />
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[10px] font-black uppercase tracking-widest text-text-tertiary">Serial Number</label>
+          <input matInput formControlName="serialNumber" class="bg-bg-subtle border border-border-subtle rounded-xl px-4 py-3 text-text-primary font-mono" />
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[10px] font-black uppercase tracking-widest text-text-tertiary">MAC Address</label>
+          <input matInput formControlName="macAddress" class="bg-bg-subtle border border-border-subtle rounded-xl px-4 py-3 text-text-primary font-mono" />
+        </div>
+      </div>
     </div>
 
-    <div class="flex justify-end gap-3">
-      <button mat-button type="button" (click)="cancel()" [disabled]="isSubmitting()">Cancel</button>
-      <button mat-flat-button color="primary" type="submit" class="text-white !bg-[var(--color-primary-600)]"
-        [disabled]="form.invalid || isSubmitting()">
-        <mat-icon>save</mat-icon>
-        {{ isSubmitting() ? 'Saving...' : (isEditMode() ? 'Update Camera' : 'Create Camera') }}
-      </button>
+    <div class="bg-bg-surface border border-border-subtle rounded-2xl p-8 shadow-sm space-y-6">
+      <div class="flex items-center gap-3 border-b border-border-subtle pb-4">
+        <span class="material-symbols-outlined text-warning-500">settings_ethernet</span>
+        <h3 class="text-xl font-bold text-text-primary tracking-tight italic uppercase">Integration & Logic</h3>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        @if (form.get('type')?.value === 'MIRA_3D') {
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[10px] font-black uppercase tracking-widest text-text-tertiary">Robot Controller Type</label>
+            <mat-select formControlName="controllerType" class="bg-bg-subtle border border-border-subtle rounded-xl px-4 py-3 text-text-primary">
+              <mat-option [value]="null">Undefined</mat-option>
+              @for (opt of robotOptions; track opt.value) {
+                <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+              }
+            </mat-select>
+          </div>
+        }
+
+        <div class="flex flex-col gap-1.5 md:col-span-2">
+          <label class="text-[10px] font-black uppercase tracking-widest text-text-tertiary">PLC / Trigger Notes</label>
+          <textarea matInput formControlName="plcNotes" rows="2" class="bg-bg-subtle border border-border-subtle rounded-xl px-4 py-3 text-text-primary font-mono text-xs outline-none transition-all"></textarea>
+        </div>
+
+        <div class="flex flex-col gap-1.5 md:col-span-2">
+          <label class="text-[10px] font-black uppercase tracking-widest text-text-tertiary">General Deployment Notes</label>
+          <textarea matInput formControlName="notes" rows="2" class="bg-bg-subtle border border-border-subtle rounded-xl px-4 py-3 text-text-primary italic outline-none transition-all"></textarea>
+        </div>
+      </div>
     </div>
+
+    <footer class="flex justify-end gap-4 pt-4">
+      <app-button variant="ghost" (clicked)="cancel()" [disabled]="isSubmitting()">Cancel</app-button>
+      <app-button variant="primary" type="submit" [loading]="isSubmitting()" [disabled]="form.invalid">
+        <span class="material-symbols-outlined">save</span>
+        {{ isEditMode() ? 'Update Configuration' : 'Register Camera' }}
+      </app-button>
+    </footer>
   </form>
 </section>

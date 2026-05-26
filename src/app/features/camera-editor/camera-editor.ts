@@ -1,13 +1,17 @@
+// src/app/features/camera-editor/camera-editor.ts
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
+import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatIconModule } from '@angular/material/icon';
+
 import { CameraService } from '../../core/services/camera.service';
+import { NotificationService } from '../../shared/services/notification.service';
+import { I18nService } from '../../shared/services/i18n.service';
+import { AppButtonComponent } from '../../shared/components/button/button.component';
 import { Camera, CameraStatus } from '../../core/models/domain.model';
+import { CAMERA_STATUS, CAMERA_TYPE_OPTIONS, ROBOT_CONTROLLER_OPTIONS } from '../../core/data/features';
 
 @Component({
   selector: 'app-camera-editor',
@@ -15,22 +19,26 @@ import { Camera, CameraStatus } from '../../core/models/domain.model';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,
-    MatButtonModule,
+    MatSelectModule,
     MatFormFieldModule,
     MatInputModule,
-    MatSelectModule,
-    MatIconModule
+    AppButtonComponent
   ],
   templateUrl: './camera-editor.html',
 })
 export class CameraEditorComponent implements OnInit {
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly cameraService = inject(CameraService);
+  private readonly notify = inject(NotificationService);
+  protected readonly i18n = inject(I18nService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
   readonly isSubmitting = signal(false);
   readonly isEditMode = signal(false);
+  
+  protected readonly typeOptions = CAMERA_TYPE_OPTIONS;
+  protected readonly robotOptions = ROBOT_CONTROLLER_OPTIONS;
 
   private customerSlug = '';
   private plantId = '';
@@ -38,12 +46,12 @@ export class CameraEditorComponent implements OnInit {
   private cameraId = '';
 
   readonly form = this.fb.group({
-    name: ['', Validators.required],
+    name: ['', [Validators.required, Validators.minLength(2)]],
     type: ['MIRA_3D', Validators.required],
     status: [null as CameraStatus | null],
     cameraModel: [''],
     lensFocalMm: [null as number | null],
-    ipAddress: [''],
+    ipAddress: ['', [Validators.pattern(/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/)]],
     firmware: [''],
     serialNumber: [''],
     macAddress: [''],
@@ -57,7 +65,6 @@ export class CameraEditorComponent implements OnInit {
     this.plantId = this.route.snapshot.paramMap.get('plantId') || '';
     this.stationId = this.route.snapshot.paramMap.get('stationId') || '';
     
-    // Controlliamo se stiamo modificando o creando
     const idParam = this.route.snapshot.paramMap.get('cameraId');
     if (idParam && !this.route.snapshot.url.map(s => s.path).includes('new')) {
       this.cameraId = idParam;
@@ -80,15 +87,18 @@ export class CameraEditorComponent implements OnInit {
             notes: camera.notes || ''
           });
         },
-        error: (err) => console.error('Impossibile caricare la camera per la modifica', err)
+        error: () => this.notify.error('Errore nel caricamento della camera')
       });
     }
   }
 
-  onSubmit(): void {
-    if (this.form.invalid || !this.stationId) return;
+  save(): void {
+    if (this.form.invalid || !this.stationId) {
+      this.notify.warning('Verifica i parametri hardware');
+      return;
+    }
+    
     this.isSubmitting.set(true);
-
     const payload = this.form.getRawValue() as Partial<Camera>;
 
     const req$ = this.isEditMode()
@@ -97,12 +107,12 @@ export class CameraEditorComponent implements OnInit {
 
     req$.subscribe({
       next: () => {
-        this.isSubmitting.set(false);
+        this.notify.success(this.isEditMode() ? 'Configurazione aggiornata' : 'Camera registrata');
         this.navigateBack();
       },
-      error: (err) => {
-        console.error('Salvataggio fallito:', err);
+      error: () => {
         this.isSubmitting.set(false);
+        this.notify.error('Salvataggio fallito');
       }
     });
   }

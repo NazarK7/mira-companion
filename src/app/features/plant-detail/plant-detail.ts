@@ -2,7 +2,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { switchMap, map } from 'rxjs/operators';
+import { switchMap, map, distinctUntilChanged } from 'rxjs/operators';
 
 import { CustomerService } from '../../core/services/customer.service';
 import { PlantService } from '../../core/services/plant.service';
@@ -19,6 +19,7 @@ import { NotificationService } from '../../shared/services/notification.service'
   imports: [RouterLink, AppButtonComponent],
   templateUrl: './plant-detail.html',
 })
+
 export class PlantDetailComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -33,6 +34,7 @@ export class PlantDetailComponent {
   readonly customer = toSignal(
     this.route.paramMap.pipe(
       map(params => params.get('slug')!),
+      distinctUntilChanged(),
       switchMap(slug => this.customerService.getBySlug(slug))
     )
   );

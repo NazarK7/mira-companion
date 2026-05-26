@@ -60,3 +60,25 @@ export const STATION_STATUS_OPTIONS = [
   { value: STATION_STATUS.PLANNING, label: 'Planning', color: 'info' },
   { value: STATION_STATUS.ARCHIVED, label: 'Archived', color: 'neutral' }
 ];
+
+export const CAMERA_STATUS = {
+  PLANNING: 'PLANNING',
+  CALIBRATING: 'CALIBRATING',
+  JOB_CREATION: 'JOB_CREATION',
+  PRODUCTION: 'PRODUCTION',
+  MAINTENANCE: 'MAINTENANCE',
+  ARCHIVED: 'ARCHIVED'
+} as const;
+
+export const CAMERA_TYPE_OPTIONS = [
+  { value: 'MIRA_3D', label: 'MiRa 3D (Robot Guidance)' },
+  { value: 'COGNEX_INSIGHT', label: 'Cognex In-Sight' },
+  { value: 'COGNEX_DATAMAN', label: 'Cognex DataMan' }
+];
+
+export const ROBOT_CONTROLLER_OPTIONS = [
+  { value: 'ABB', label: 'ABB (Quaternions)' },
+  { value: 'COMAU', label: 'Comau (Euler ZYZ Intrinsic)' },
+  { value: 'FANUC', label: 'Fanuc (Euler XYZ Extrinsic)' },
+  { value: 'KUKA', label: 'Kuka (Euler ZYX Intrinsic)' }
+];

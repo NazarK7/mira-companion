@@ -1,7 +1,7 @@
 // src/app/core/services/customer.service.ts
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { Observable, of, tap } from 'rxjs';
 import { API_URL } from '../config/api.config';
 import { Customer } from '../models/domain.model';
 
