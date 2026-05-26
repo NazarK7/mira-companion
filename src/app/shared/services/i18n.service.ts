@@ -19,6 +19,7 @@ const DICTIONARY = {
       createCustomer: 'Crea Cliente',
       saveCustomer: 'Salva Cliente',
       addContact: 'Aggiungi Contatto',
+      dashBoard_archive: 'Archivio installazioni MiRa_3D e Cognex',
     },
     actions: {
       success: 'Operazione completata',
@@ -42,6 +43,7 @@ const DICTIONARY = {
       createCustomer: 'Create Customer',
       saveCustomer: 'Save Customer',
       addContact: 'Add Contact',
+      dashBoard_archive: 'MiRa_3D and Cognex Installations Archive',
     },
     actions: {
       success: 'Operation completed',

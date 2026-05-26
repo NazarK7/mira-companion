@@ -8,6 +8,7 @@ import { RouterLink } from '@angular/router';
 
 import { ThemeService } from '../../core/services/theme.service';
 import { DashboardService } from '../../core/services/dashboard.service';
+import { I18nService } from '../../shared/services/i18n.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -26,6 +27,7 @@ import { DashboardService } from '../../core/services/dashboard.service';
 export class DashboardComponent {
   protected readonly themeService = inject(ThemeService);
   private readonly dashboardService = inject(DashboardService);
+  protected readonly i18n = inject(I18nService);
 
   // toSignal converte l'Observable HTTP in un Signal reattivo. 
   // Fino a quando la chiamata non finisce, il valore è undefined.

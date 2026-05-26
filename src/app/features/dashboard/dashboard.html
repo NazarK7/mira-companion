@@ -3,12 +3,9 @@
   <header class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
     <div>
       <h1 class="text-4xl font-black text-text-primary tracking-tighter italic">DASHBOARD</h1>
-      <p class="text-text-secondary font-medium tracking-wide">Archivio installazioni MiRa_3D e Cognex</p>
+      <p class="text-text-secondary font-medium tracking-wide">{{ i18n.t().common.dashBoard_archive }}</p>
     </div>
-    <app-button variant="primary" routerLink="/customers/new">
-      <span class="material-symbols-outlined text-lg">add</span>
-      Nuovo cliente
-    </app-button>
+
   </header>
 
   @if (!stats()) {
