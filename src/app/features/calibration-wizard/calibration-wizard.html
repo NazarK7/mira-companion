@@ -142,26 +142,25 @@
 
 
 
-                                <mat-card>
+                <mat-card>
                     <mat-card-content>
                         @if (!isConfigurationValid()) {
-                        <div class="alert-warning pose-warning"
-                           >
+                        <div class="alert-warning pose-warning">
                             ⚠️ <strong>Attenzione:</strong> La lente selezionata non copre l'intera superficie del
                             sensore.
                             Scegli un'ottica con "image circle" maggiore per evitare errori di calibrazione.
                         </div>
                         }
 
-                     <button mat-flat-button color="primary" class="wizard-generate-button" [disabled]="form.invalid"
-                    (click)="generate()">
-                    <mat-icon>auto_awesome</mat-icon>
-                    Genera le Pose
-                </button>
+                        <button mat-flat-button color="primary" class="wizard-generate-button" [disabled]="form.invalid"
+                            (click)="generate()">
+                            <mat-icon>auto_awesome</mat-icon>
+                            Genera le Pose
+                        </button>
                     </mat-card-content>
                 </mat-card>
 
-       
+
             </form>
 
             @if (generatedPoses().length > 0) {

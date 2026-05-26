@@ -6,6 +6,9 @@ import { StationService } from '../../core/services/station.service';
 import { NotificationService } from '../../shared/services/notification.service';
 import { I18nService } from '../../shared/services/i18n.service';
 import { AppButtonComponent } from '../../shared/components/button/button.component';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 
 import { Station } from '../../core/models/domain.model';
 // Assicurati di importare anche il tipo StationStatus
@@ -15,7 +18,7 @@ import { STATION_STATUS, STATION_STATUS_OPTIONS, StationStatus } from '../../cor
   selector: 'app-station-editor',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, AppButtonComponent],
+  imports: [ReactiveFormsModule, AppButtonComponent, MatSelectModule, MatFormFieldModule, MatInputModule],
   templateUrl: './station-editor.html',
 })
 export class StationEditorComponent implements OnInit {

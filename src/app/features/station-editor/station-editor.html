@@ -37,17 +37,19 @@
             class="bg-bg-subtle border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-primary-500 outline-none transition-all" />
         </div>
 
-        <div class="flex flex-col gap-2">
-          <label class="text-[10px] font-black uppercase tracking-widest text-text-tertiary">Current Status</label>
-          <select formControlName="status"
-            class="bg-bg-surface border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-primary-500 outline-none transition-all appearance-none cursor-pointer w-full">
-            @for (opt of statusOptions; track opt.value) {
-            <option [value]="opt.value" class="bg-bg-surface text-text-primary">
-              {{ opt.label }}
-            </option>
-            }
-          </select>
-        </div>
+<div class="flex flex-col gap-2">
+  <label class="text-[10px] font-black uppercase tracking-widest text-text-tertiary">Current Status</label>
+  
+  <mat-form-field appearance="outline" class="w-full">
+    <mat-select formControlName="status">
+      @for (opt of statusOptions; track opt.value) {
+        <mat-option [value]="opt.value">
+          {{ opt.label }}
+        </mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+</div>
 
         <div class="flex flex-col gap-2 md:col-span-2">
           <label class="text-[10px] font-black uppercase tracking-widest text-text-tertiary">Description</label>

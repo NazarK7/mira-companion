@@ -3,6 +3,7 @@
 
 @use "tailwindcss";
 @use 'material-symbols/outlined.css';
+
 // 2. Iniezione del tema in Tailwind v4
 @theme {
   --color-primary-50: var(--color-primary-50);
@@ -44,6 +45,8 @@ body {
   margin: 0;
   padding: 0;
 }
+
+
 
 body {
   @include tokens.base-typography;
@@ -159,6 +162,10 @@ $mira-theme: mat.define-theme((color: (theme-type: dark,
     ));
 
 html {
+  // --- AGGIUNGI QUESTA RIGA ---
+  color-scheme: dark;
+  // ----------------------------
+
   // Theme + typography
   @include mat.all-component-themes($mira-theme);
   @include mat.typography-hierarchy($mira-theme);
@@ -228,16 +235,17 @@ html {
 
 // Mat option (item nella dropdown)
 .mat-mdc-option {
-  color: var(--text-primary, #eceff4) !important;
+  color: var(--text-primary, #eceff4) !important; //
 
   &:hover {
     background: var(--bg-hover, rgba(255, 255, 255, 0.05)) !important;
   }
 
-  &.mat-mdc-option-active,
-  &.mdc-list-item--selected {
-    background: var(--color-primary-900, #001853) !important;
-    color: var(--color-primary-200, #9eb8f0) !important;
+  .mat-mdc-select-panel,
+  .mat-mdc-autocomplete-panel {
+    background: var(--bg-elevated, #1c212b) !important; // <--- Questo rende il fondo scuro
+    border: 1px solid var(--color-neutral-700, #2c3340) !important;
+    border-radius: var(--radius-md, 6px) !important;
   }
 }
 
@@ -246,10 +254,16 @@ html {
   .mat-mdc-snack-bar-container {
     --mdc-snackbar-container-color: transparent;
     --mdc-snackbar-container-elevation-shadow: none;
+
     .mdc-snackbar__surface {
       background-color: transparent !important;
       box-shadow: none !important;
       padding: 0 !important;
     }
   }
+}
+
+// Forza Tailwind a riconoscere sempre il tema scuro
+:root {
+  color-scheme: dark;
 }

@@ -17,10 +17,11 @@ export interface ConfirmOptions {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [AppButtonComponent],
   template: `
-      <dialog 
-        #dialogElement
-        class="fixed inset-0 m-auto rounded-2xl border border-border-subtle bg-bg-surface p-0 shadow-2xl backdrop:bg-zinc-950/40 backdrop:backdrop-blur-sm open:flex open:flex-col max-w-md w-[calc(100%-2rem)] focus:outline-none"
-        (cancel)="onCancel()">
+<dialog 
+  #dialogElement
+  class="fixed inset-0 m-auto rounded-2xl border border-border-subtle bg-bg-surface p-0 shadow-2xl backdrop:bg-zinc-950/40 backdrop:backdrop-blur-sm open:flex open:flex-col max-w-md w-[calc(100%-2rem)] focus:outline-none animate-in fade-in zoom-in duration-300"
+  (cancel)="onCancel()"
+>
       <div class="p-6">
         <h2 class="text-xl font-bold text-text-primary">{{ options().title }}</h2>
         <p class="mt-3 text-text-secondary whitespace-pre-wrap leading-relaxed">
