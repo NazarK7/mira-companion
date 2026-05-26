@@ -20,6 +20,10 @@ const DICTIONARY = {
       saveCustomer: 'Salva Cliente',
       addContact: 'Aggiungi Contatto',
       dashBoard_archive: 'Archivio installazioni MiRa_3D e Cognex',
+      editPlant: 'Modifica Impianto',
+      newPlant: 'Nuovo Impianto',
+      savePlant: 'Salva Impianto',
+      createPlant: 'Crea Impianto',
     },
     actions: {
       success: 'Operazione completata',
@@ -44,6 +48,11 @@ const DICTIONARY = {
       saveCustomer: 'Save Customer',
       addContact: 'Add Contact',
       dashBoard_archive: 'MiRa_3D and Cognex Installations Archive',
+      editPlant: 'Edit Plant',
+      newPlant: 'New Plant',
+      savePlant: 'Save Plant',
+      createPlant: 'Create Plant',
+
     },
     actions: {
       success: 'Operation completed',
