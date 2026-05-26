@@ -1,156 +1,134 @@
-<section class="mx-auto max-w-7xl px-6 py-8">
-    <nav class="mb-4 text-sm text-[var(--text-tertiary)]" aria-label="Breadcrumb">
-        <a routerLink="/customers" class="hover:text-[var(--color-primary-600)]">Customers</a>
-        <span class="mx-2">/</span>
-        @if (customer(); as c) {
-        <a [routerLink]="['/customers', c.slug]" class="hover:text-[var(--color-primary-600)]">
-            {{ c.name }}
-        </a>
-        <span class="mx-2">/</span>
+<section class="mx-auto max-w-7xl px-6 py-10 space-y-10 animate-in fade-in duration-500">
+    
+    <nav class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-text-tertiary">
+        <a routerLink="/customers" class="hover:text-primary-500 transition-colors italic">Customers</a>
+        <span class="material-symbols-outlined text-xs">chevron_right</span>
+        @if (customerData(); as c) {
+            <a [routerLink]="['/customers', c.slug]" class="hover:text-primary-500 transition-colors italic">{{ c.name }}</a>
+            <span class="material-symbols-outlined text-xs">chevron_right</span>
         }
         @if (plant(); as p) {
-        <a [routerLink]="['/customers', customer()!.slug, 'plants', p.id]"
-            class="hover:text-[var(--color-primary-600)]">
-            {{ p.name }}
-        </a>
-        <span class="mx-2">/</span>
+            <a [routerLink]="['/customers', customerData()!.slug, 'plants', p.id]" class="hover:text-primary-500 transition-colors italic">{{ p.name }}</a>
+            <span class="material-symbols-outlined text-xs">chevron_right</span>
         }
-        <span class="text-[var(--text-primary)]">{{ station()?.name ?? '—' }}</span>
+        <span class="text-text-primary italic">{{ station()?.name ?? '...' }}</span>
     </nav>
 
     @if (station(); as s) {
-    <header class="mb-8">
-        <div class="flex items-start justify-between gap-4">
-            <div>
+    <header class="space-y-6">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-border-subtle pb-8">
+            <div class="space-y-2">
                 @if (s.code) {
-                <p class="font-mono text-sm text-[var(--text-tertiary)]">{{ s.code }}</p>
+                    <span class="text-[10px] font-mono font-black text-text-tertiary uppercase tracking-widest bg-bg-subtle px-2 py-0.5 rounded">{{ s.code }}</span>
                 }
-                <h1 class="text-3xl font-semibold text-[var(--text-primary)]">{{ s.name }}</h1>
-                <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                <h1 class="text-5xl font-black text-text-primary italic tracking-tighter uppercase leading-none">{{ s.name }}</h1>
+                
+                <div class="flex flex-wrap items-center gap-4 pt-2">
                     @if (s.line) {
-                    <span class="text-[var(--text-secondary)]">
-                        <mat-icon class="!text-base !w-4 !h-4 align-middle">linear_scale</mat-icon>
-                        {{ s.line }}
-                    </span>
-                    }
-                    @if (s.installDate) {
-                    <span class="text-[var(--text-secondary)]">
-                        <mat-icon class="!text-base !w-4 !h-4 align-middle">event</mat-icon>
-                        Installed {{ s.installDate }}
-                    </span>
+                        <div class="flex items-center gap-1.5 text-xs font-bold text-text-secondary uppercase tracking-wider">
+                            <span class="material-symbols-outlined text-sm text-primary-500">linear_scale</span>
+                            {{ s.line }}
+                        </div>
                     }
                     @if (s.status) {
-                    <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
-                        [class]="statusBadgeClass(s.status)">
-                        {{ s.status }}
-                    </span>
+                        <span class="text-[10px] font-black uppercase tracking-widest border px-2 py-1 rounded-lg" [class]="statusBadgeClass(s.status)">
+                            {{ s.status }}
+                        </span>
                     }
                 </div>
-                @if (s.description) {
-                <p class="mt-3 max-w-2xl text-sm text-[var(--text-secondary)]">{{ s.description }}</p>
-                }
             </div>
+
         </div>
 
-        @if (s.recoveryProcedure || s.notes) {
-        <div class="mt-6 flex flex-col gap-4 border-t border-[var(--border-subtle)] pt-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             @if (s.recoveryProcedure) {
-            <div>
-                <h3 class="flex items-center gap-2 text-sm font-semibold text-[var(--color-accent-400)]">
-                    <mat-icon class="!text-base !w-4 !h-4">restore</mat-icon>
-                    Recovery Procedure
-                </h3>
-                <p class="mt-1 whitespace-pre-wrap text-sm text-[var(--text-secondary)]">{{ s.recoveryProcedure }}</p>
-            </div>
+                <div class="bg-bg-surface border border-border-subtle rounded-2xl p-6 space-y-4">
+                    <h3 class="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-warning-500">
+                        <span class="material-symbols-outlined text-base">terminal</span>
+                        Recovery Procedure
+                    </h3>
+                    <p class="text-sm font-mono text-text-secondary whitespace-pre-wrap leading-relaxed">{{ s.recoveryProcedure }}</p>
+                </div>
             }
             @if (s.notes) {
-            <div>
-                <h3 class="flex items-center gap-2 text-sm font-semibold text-[var(--color-warning-400)]">
-                    <mat-icon class="!text-base !w-4 !h-4">note</mat-icon>
-                    Internal Notes
-                </h3>
-                <p class="mt-1 whitespace-pre-wrap text-sm text-[var(--text-secondary)]">{{ s.notes }}</p>
-            </div>
+                <div class="bg-bg-surface border border-border-subtle rounded-2xl p-6 space-y-4">
+                    <h3 class="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-info-500">
+                        <span class="material-symbols-outlined text-base">sticky_note_2</span>
+                        Internal Notes
+                    </h3>
+                    <p class="text-sm font-medium text-text-tertiary italic leading-relaxed">{{ s.notes }}</p>
+                </div>
             }
         </div>
-        }
     </header>
 
-    <div>
-        <div class="mb-4 flex items-end justify-between">
-            <h2 class="text-xl font-semibold text-[var(--text-primary)]">Cameras</h2>
+    <div class="space-y-6 pt-4">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-primary-500">videocam</span>
+                <h2 class="text-2xl font-bold text-text-primary tracking-tight uppercase italic">Optical Units</h2>
+            </div>
 
-            <a mat-flat-button [routerLink]="[
-                '/customers',
-                customer()!.slug,
-                'plants',
-                plant()!.id,
-                'stations',
-                s.id,
-                'cameras',
-                'new'
-              ]" class="!bg-[var(--color-primary-600)]">
-                <mat-icon>add</mat-icon>
+            <app-button variant="primary" size="sm" [routerLink]="['cameras', 'new']">
+                <span class="material-symbols-outlined text-sm">add_a_photo</span>
                 New Camera
-            </a>
+            </app-button>
         </div>
 
         @if (s.cameras.length === 0) {
-        <div
-            class="rounded-lg border border-dashed border-[var(--border-default)] bg-[var(--bg-subtle)] p-8 text-center text-sm text-[var(--text-secondary)]">
-            No cameras registered in this station yet.
-        </div>
+            <div class="py-16 text-center border-2 border-dashed border-border-subtle rounded-3xl bg-bg-surface/30">
+                <span class="material-symbols-outlined text-5xl text-text-disabled mb-4 italic">no_photography</span>
+                <p class="text-sm font-black uppercase tracking-widest text-text-tertiary">No vision sensors linked to this station</p>
+            </div>
         } @else {
-        <ul class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3" role="list">
-            @for (cam of s.cameras; track cam.id) {
-            <li>
-                <a [routerLink]="['/customers', customer()!.slug, 'plants', plant()!.id, 'stations', s.id, 'cameras', cam.id]"
-                    class="group relative block h-full rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] transition hover:border-[var(--color-primary-500)] hover:shadow-[var(--shadow-md)]">
+            <ul class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3" role="list">
+                @for (cam of s.cameras; track cam.id) {
+                <li class="group relative bg-bg-surface border border-border-subtle rounded-2xl transition-all hover:border-primary-500/40 hover:shadow-2xl overflow-hidden cursor-pointer"
+                    [routerLink]="['cameras', cam.id]">
+                    
+                    <div class="p-6 space-y-6">
+                        <div class="flex justify-between items-start">
+                            <div class="min-w-0 flex-1">
+                                <h3 class="text-lg font-bold text-text-primary tracking-tight truncate group-hover:text-primary-500 transition-colors">{{ cam.name }}</h3>
+                                <div class="mt-1 inline-flex items-center rounded-md bg-primary-500/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-primary-500 border border-primary-500/20">
+                                    {{ typeLabel(cam.type) }}
+                                </div>
+                            </div>
+                        </div>
 
-                    <div
-                        class="absolute top-2 right-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 z-10">
-                        <button mat-icon-button (click)="editCamera($event, cam.id)" title="Edit Camera">
-                            <mat-icon
-                                class="!text-[var(--text-tertiary)] hover:!text-[var(--color-primary-600)]">edit</mat-icon>
-                        </button>
-                        <button mat-icon-button color="warn" (click)="deleteCamera($event, cam.id, cam.name)"
-                            title="Delete Camera">
-                            <mat-icon>delete</mat-icon>
-                        </button>
+                        <div class="grid grid-cols-2 gap-4 pt-4 border-t border-border-subtle/30">
+                            @if (cam.cameraModel) {
+                                <div class="space-y-1">
+                                    <p class="text-[9px] font-black uppercase text-text-tertiary tracking-tighter">Model</p>
+                                    <p class="font-mono text-[10px] text-text-primary truncate">{{ cam.cameraModel }}</p>
+                                </div>
+                            }
+                            @if (cam.ipAddress) {
+                                <div class="space-y-1">
+                                    <p class="text-[9px] font-black uppercase text-text-tertiary tracking-tighter">IP Address</p>
+                                    <p class="font-mono text-[10px] text-primary-500">{{ cam.ipAddress }}</p>
+                                </div>
+                            }
+                        </div>
                     </div>
 
-                    <div class="mb-3 pr-16 flex flex-col items-start gap-1">
-                        <h3 class="truncate text-base font-semibold text-[var(--text-primary)]">{{ cam.name }}</h3>
-                        <span
-                            class="inline-flex shrink-0 items-center rounded px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider"
-                            [class]="typeBadgeClass(cam.type)">
-                            {{ typeLabel(cam.type) }}
-                        </span>
+                    <div class="bg-bg-subtle/40 px-6 py-3 flex justify-end gap-2 border-t border-border-subtle/30 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <app-button variant="ghost" size="icon" (clicked)="editCamera($event, cam.id)">
+                            <span class="material-symbols-outlined text-sm">edit</span>
+                        </app-button>
+                        <app-button variant="ghost" size="icon" (clicked)="deleteCamera($event, cam.id, cam.name)">
+                            <span class="material-symbols-outlined text-sm text-danger-500">delete</span>
+                        </app-button>
                     </div>
-
-                    <dl class="space-y-1 text-xs">
-                        @if (cam.cameraModel) {
-                        <div class="flex justify-between gap-2">
-                            <dt class="text-[var(--text-tertiary)]">Model</dt>
-                            <dd class="truncate font-mono text-[var(--text-primary)]">{{ cam.cameraModel }}</dd>
-                        </div>
-                        }
-                        @if (cam.ipAddress) {
-                        <div class="flex justify-between gap-2">
-                            <dt class="text-[var(--text-tertiary)]">IP</dt>
-                            <dd class="font-mono text-[var(--text-primary)]">{{ cam.ipAddress }}</dd>
-                        </div>
-                        }
-                    </dl>
-                </a>
-            </li>
-            }
-        </ul>
+                </li>
+                }
+            </ul>
         }
     </div>
     } @else {
-    <div class="rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] p-12 text-center">
-        <p class="text-base text-[var(--text-secondary)]">Station not found.</p>
-    </div>
+        <div class="py-24 text-center">
+            <span class="material-symbols-outlined text-6xl text-text-disabled mb-4">search_off</span>
+            <p class="text-sm font-black uppercase tracking-widest text-text-tertiary">Station Entity Not Found</p>
+        </div>
     }
 </section>

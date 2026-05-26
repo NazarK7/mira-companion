@@ -1,16 +1,16 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+// src/app/features/station-detail/station-detail.ts
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { switchMap, filter } from 'rxjs/operators';
-import { combineLatest, BehaviorSubject } from 'rxjs'; // <-- Aggiunti import RxJS
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { switchMap, map } from 'rxjs/operators';
 
 import { CustomerService } from '../../core/services/customer.service';
 import { CameraService } from '../../core/services/camera.service';
-import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog';
+import { I18nService } from '../../shared/services/i18n.service';
+import { AppButtonComponent } from '../../shared/components/button/button.component';
+import { AppComponent } from '../../app';
+import { NotificationService } from '../../shared/services/notification.service';
+import { STATION_STATUS_OPTIONS } from '../../core/data/features';
 
 type CameraType = 'COGNEX_INSIGHT' | 'COGNEX_DATAMAN' | 'MIRA_3D';
 
@@ -18,7 +18,7 @@ type CameraType = 'COGNEX_INSIGHT' | 'COGNEX_DATAMAN' | 'MIRA_3D';
   selector: 'app-station-detail',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, MatButtonModule, MatIconModule, MatTooltipModule, MatDialogModule],
+  imports: [RouterLink, AppButtonComponent],
   templateUrl: './station-detail.html',
 })
 export class StationDetailComponent {
@@ -26,24 +26,33 @@ export class StationDetailComponent {
   private readonly router = inject(Router);
   private readonly customerService = inject(CustomerService);
   private readonly cameraService = inject(CameraService);
-  private readonly dialog = inject(MatDialog);
+  private readonly app = inject(AppComponent);
+  private readonly notify = inject(NotificationService);
+  protected readonly i18n = inject(I18nService);
 
-  // --- NUOVO: Trigger manuale per forzare il re-fetch ---
-  private readonly refresh$ = new BehaviorSubject<void>(undefined);
+  // Trigger reattivo per il refresh dei dati
+  private readonly refreshTrigger = signal(0);
 
-  private readonly slug$ = this.route.paramMap.pipe(
-    filter(params => params.has('slug'))
+  readonly customer = toSignal(
+    computed(() => {
+      this.refreshTrigger(); // Dipendenza per il refresh
+      return this.route.paramMap.pipe(
+        map(params => params.get('slug')!),
+        switchMap(slug => this.customerService.getBySlug(slug))
+      );
+    }).bind(this)() // Corretto accesso al pipe in contesto signal
   );
 
-  // --- MODIFICATO: Combina slug$ con il refresh$ ---
-  readonly customer = toSignal(
-    combineLatest([this.slug$, this.refresh$]).pipe(
-      switchMap(([params]) => this.customerService.getBySlug(params.get('slug')!))
+  // Re-implementazione semplificata del fetch senza BehaviorSubject manuale
+  readonly customerData = toSignal(
+    this.route.paramMap.pipe(
+      map(params => params.get('slug')!),
+      switchMap(slug => this.customerService.getBySlug(slug))
     )
   );
 
   readonly plant = computed(() => {
-    const cust = this.customer();
+    const cust = this.customerData();
     const id = this.route.snapshot.paramMap.get('plantId');
     if (!cust || !id) return null;
     return cust.plants.find((p: any) => p.id === id) ?? null;
@@ -58,68 +67,58 @@ export class StationDetailComponent {
 
   editCamera(event: Event, cameraId: string): void {
     event.preventDefault();
-    event.stopPropagation(); 
-    const c = this.customer();
+    event.stopPropagation();
+    const c = this.customerData();
     const p = this.plant();
     const s = this.station();
-
     if (c && p && s) {
       this.router.navigate(['/customers', c.slug, 'plants', p.id, 'stations', s.id, 'cameras', cameraId, 'edit']);
     }
   }
 
-  deleteCamera(event: Event, id: string, name: string): void {
+  async deleteCamera(event: Event, id: string, name: string) {
     event.preventDefault();
-    event.stopPropagation(); 
+    event.stopPropagation();
 
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '400px',
-      data: {
-        title: 'Delete Camera',
-        message: `Are you sure you want to delete the camera "${name}"?\n\nThis action will cascade delete all associated jobs and calibrations. This action is irreversible.`,
-        confirmText: 'Delete',
-        isDestructive: true
-      }
+    const confirmed = await this.app.confirm().open({
+      title: 'Elimina Camera',
+      message: `Sei sicuro di voler eliminare la camera "${name}"?\n\nL'operazione rimuoverà permanentemente tutti i Job e le calibrazioni associate.`,
+      isDestructive: true
     });
 
-    dialogRef.afterClosed().subscribe(confirmed => {
-      if (confirmed) {
-        this.cameraService.delete(id).subscribe({
-          error: (err) => console.error('Error deleting camera:', err),
-          complete: () => {
-            this.customerService.loadAll();
-            this.refresh$.next(); // <-- NUOVO: Forza il ricaricamento del dato!
-          }
-        });
-      }
-    });
+    if (confirmed) {
+      this.cameraService.delete(id).subscribe({
+        next: () => {
+          this.notify.success('Camera eliminata con successo');
+          this.reloadRoute();
+        },
+        error: () => this.notify.error('Errore durante l\'eliminazione')
+      });
+    }
   }
 
   typeLabel(t: CameraType): string {
-    switch (t) {
-      case 'COGNEX_INSIGHT': return 'In-Sight';
-      case 'COGNEX_DATAMAN': return 'DataMan';
-      case 'MIRA_3D': return 'MiRa 3D';
-      default: return 'Unknown';
-    }
-  }
-
-  typeBadgeClass(t: CameraType): string {
-    switch (t) {
-      case 'MIRA_3D': return 'bg-[var(--color-primary-50)] text-[var(--color-primary-700)]';
-      case 'COGNEX_INSIGHT': return 'bg-[var(--color-accent-50)] text-[var(--color-accent-700)]';
-      case 'COGNEX_DATAMAN': return 'bg-[var(--color-info-50)] text-[var(--color-info-700)]';
-      default: return 'bg-gray-100 text-gray-700';
-    }
+    const labels: Record<CameraType, string> = {
+      'COGNEX_INSIGHT': 'In-Sight',
+      'COGNEX_DATAMAN': 'DataMan',
+      'MIRA_3D': 'MiRa 3D'
+    };
+    return labels[t] || 'Unknown';
   }
 
   statusBadgeClass(status: string): string {
-    switch (status?.toLowerCase()) {
-      case 'production': return 'bg-[var(--color-success-50)] text-[var(--color-success-700)]';
-      case 'maintenance': return 'bg-[var(--color-warning-50)] text-[var(--color-warning-700)]';
-      case 'planning': return 'bg-[var(--color-info-50)] text-[var(--color-info-700)]';
-      case 'archived': return 'bg-[var(--bg-strong)] text-[var(--text-tertiary)]';
-      default: return 'bg-[var(--bg-strong)] text-[var(--text-secondary)]';
+    const option = STATION_STATUS_OPTIONS.find(o => o.value === status.toUpperCase());
+    switch (option?.value) {
+      case 'PRODUCTION': return 'bg-success-500/10 text-success-500 border-success-500/20';
+      case 'MAINTENANCE': return 'bg-warning-500/10 text-warning-500 border-warning-500/20';
+      case 'PLANNING': return 'bg-info-500/10 text-info-500 border-info-500/20';
+      default: return 'bg-bg-subtle text-text-tertiary border-border-subtle';
     }
+  }
+
+  private reloadRoute(): void {
+    this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+      this.router.navigate([this.router.url]);
+    });
   }
 }
