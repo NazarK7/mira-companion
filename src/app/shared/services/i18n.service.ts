@@ -12,7 +12,13 @@ const DICTIONARY = {
       delete: 'Elimina',
       close: 'Chiudi',
       loading: 'Caricamento...',
-      noData: 'Nessun dato disponibile'
+      noData: 'Nessun dato disponibile',
+      customers: 'Clienti',
+      editCustomer: 'Modifica Cliente',
+      newCustomer: 'Nuovo Cliente',
+      createCustomer: 'Crea Cliente',
+      saveCustomer: 'Salva Cliente',
+      addContact: 'Aggiungi Contatto',
     },
     actions: {
       success: 'Operazione completata',
@@ -29,7 +35,13 @@ const DICTIONARY = {
       delete: 'Delete',
       close: 'Close',
       loading: 'Loading...',
-      noData: 'No data available'
+      noData: 'No data available',
+      customers: 'Customers',
+      editCustomer: 'Edit Customer',
+      newCustomer: 'New Customer',
+      createCustomer: 'Create Customer',
+      saveCustomer: 'Save Customer',
+      addContact: 'Add Contact',
     },
     actions: {
       success: 'Operation completed',

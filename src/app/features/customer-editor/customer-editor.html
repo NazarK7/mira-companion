@@ -1,89 +1,115 @@
-<section class="mx-auto max-w-5xl px-6 py-8">
-  <header class="mb-8 flex items-center gap-4">
-    <button mat-icon-button type="button" (click)="cancel()" aria-label="Back">
-      <mat-icon>arrow_back</mat-icon>
-    </button>
+<section class="mx-auto max-w-5xl px-6 py-10 space-y-8 animate-in fade-in duration-500">
+  
+  <header class="flex items-center gap-6 border-b border-border-subtle pb-8">
+    <app-button variant="ghost" size="icon" (clicked)="cancel()">
+      <span class="material-symbols-outlined">arrow_back</span>
+    </app-button>
     <div>
-      <h1 class="text-3xl font-semibold text-[var(--text-primary)]">
-        {{ isEditMode() ? 'Edit Customer' : 'New Customer' }}
+      <h1 class="text-4xl font-black text-text-primary italic tracking-tighter uppercase leading-none">
+        {{ isEditMode() ? i18n.t().common.editCustomer : i18n.t().common.newCustomer }}
       </h1>
-      <p class="mt-1 text-sm text-[var(--text-secondary)]">
-        {{ isEditMode() ? 'Update customer settings and contacts' : 'Create a new OEM or Tier-1 entry' }}
+      <p class="mt-2 text-sm font-medium text-text-tertiary uppercase tracking-widest">
+        {{ isEditMode() ? 'Database Update Phase' : 'Entity Creation Phase' }}
       </p>
     </div>
   </header>
 
-  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-8">
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-8">
     
-    <div class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6 shadow-[var(--shadow-sm)] grid grid-cols-2 gap-6">
-      <mat-form-field appearance="outline" class="col-span-2">
-        <mat-label>Customer Name</mat-label>
-        <input matInput formControlName="name" placeholder="e.g., Volvo Cars" required />
-      </mat-form-field>
+    <div class="bg-bg-surface border border-border-subtle rounded-2xl p-8 shadow-sm space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <div class="flex flex-col gap-2 md:col-span-2">
+          <label class="text-[10px] font-black uppercase tracking-widest text-text-tertiary">Customer Name *</label>
+          <input 
+            formControlName="name" 
+            class="bg-bg-subtle border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all placeholder:text-text-disabled"
+            placeholder="e.g., Volvo Cars"
+          />
+        </div>
 
-      <mat-form-field appearance="outline" class="col-span-2 md:col-span-1">
-        <mat-label>Short Name (Optional)</mat-label>
-        <input matInput formControlName="shortName" placeholder="e.g., Volvo" />
-      </mat-form-field>
+        <div class="flex flex-col gap-2">
+          <label class="text-[10px] font-black uppercase tracking-widest text-text-tertiary">Short Name</label>
+          <input 
+            formControlName="shortName" 
+            class="bg-bg-subtle border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
+          />
+        </div>
 
-      <mat-form-field appearance="outline" class="col-span-2">
-        <mat-label>Notes (Optional)</mat-label>
-        <textarea matInput formControlName="notes" rows="3" placeholder="Platform notes, general info..."></textarea>
-      </mat-form-field>
+        <div class="flex flex-col gap-2 md:col-span-2">
+          <label class="text-[10px] font-black uppercase tracking-widest text-text-tertiary">Notes</label>
+          <textarea 
+            formControlName="notes" 
+            rows="3"
+            class="bg-bg-subtle border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all resize-none"
+          ></textarea>
+        </div>
+      </div>
     </div>
 
-    <div class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6 shadow-[var(--shadow-sm)]">
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="text-lg font-medium text-[var(--text-primary)]">Customer Contacts</h3>
-        <button type="button" mat-stroked-button (click)="addContact()">
-          <mat-icon>add</mat-icon> Add Contact
-        </button>
+    <div class="bg-bg-surface border border-border-subtle rounded-2xl p-8 shadow-sm space-y-6">
+      <div class="flex justify-between items-center">
+        <h3 class="text-xl font-bold text-text-primary tracking-tight italic uppercase">Contacts</h3>
+        <app-button variant="outline" size="sm" (clicked)="addContact()">
+          <span class="material-symbols-outlined text-sm">person_add</span>
+          Add Contact
+        </app-button>
       </div>
 
-      <div formArrayName="contacts" class="flex flex-col gap-4">
+      <div formArrayName="contacts" class="space-y-4">
         @for (contactCtrl of contactsFormArray.controls; track $index) {
-          <div [formGroupName]="$index" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-start p-4 border border-[var(--border-default)] rounded-lg bg-[var(--bg-subtle)]">
+          <div [formGroupName]="$index" class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-4 items-end p-6 border border-border-subtle bg-bg-app rounded-xl group relative animate-in slide-in-from-top-2 duration-300">
             
-            <mat-form-field appearance="outline" class="w-full">
-              <mat-label>Name</mat-label>
-              <input matInput formControlName="name" required>
-            </mat-form-field>
+            <div class="flex flex-col gap-1">
+              <label class="text-[9px] font-black uppercase text-text-tertiary">Name *</label>
+              <input formControlName="name" class="bg-bg-surface border border-border-subtle rounded-lg px-3 py-2 text-sm text-text-primary outline-none focus:border-primary-500" />
+            </div>
             
-            <mat-form-field appearance="outline" class="w-full">
-              <mat-label>Role</mat-label>
-              <input matInput formControlName="role">
-            </mat-form-field>
+            <div class="flex flex-col gap-1">
+              <label class="text-[9px] font-black uppercase text-text-tertiary">Role</label>
+              <input formControlName="role" class="bg-bg-surface border border-border-subtle rounded-lg px-3 py-2 text-sm text-text-primary outline-none focus:border-primary-500" />
+            </div>
             
-            <mat-form-field appearance="outline" class="w-full">
-              <mat-label>Email</mat-label>
-              <input matInput formControlName="email" type="email">
-            </mat-form-field>
+            <div class="flex flex-col gap-1">
+              <label class="text-[9px] font-black uppercase text-text-tertiary">Email</label>
+              <input formControlName="email" type="email" class="bg-bg-surface border border-border-subtle rounded-lg px-3 py-2 text-sm text-text-primary outline-none focus:border-primary-500" />
+            </div>
             
-            <mat-form-field appearance="outline" class="w-full">
-              <mat-label>Phone</mat-label>
-              <input matInput formControlName="phone">
-            </mat-form-field>
+            <div class="flex flex-col gap-1">
+              <label class="text-[9px] font-black uppercase text-text-tertiary">Phone</label>
+              <input formControlName="phone" class="bg-bg-surface border border-border-subtle rounded-lg px-3 py-2 text-sm text-text-primary outline-none focus:border-primary-500" />
+            </div>
             
-            <div class="flex justify-end md:mt-2">
-              <button type="button" mat-icon-button color="warn" (click)="removeContact($index)" title="Remove contact">
-                <mat-icon>delete</mat-icon>
-              </button>
+            <div class="flex justify-end">
+              <app-button variant="ghost" size="icon" (clicked)="removeContact($index)">
+                <span class="material-symbols-outlined text-danger-500">delete</span>
+              </app-button>
             </div>
           </div>
         }
         
         @if (contactsFormArray.length === 0) {
-          <p class="text-sm text-[var(--text-secondary)] text-center py-6">No contacts yet. Click "Add Contact" to start.</p>
+          <div class="text-center py-10 border border-dashed border-border-subtle rounded-xl text-text-tertiary">
+            <span class="material-symbols-outlined text-4xl block mb-2">person_off</span>
+            <p class="text-xs uppercase font-black tracking-widest">No contacts assigned</p>
+          </div>
         }
       </div>
     </div>
 
-    <div class="flex justify-end gap-3">
-      <button mat-button type="button" (click)="cancel()" [disabled]="isSubmitting()">Cancel</button>
-      <button mat-flat-button color="primary" type="submit" class="!bg-[var(--color-primary-600)]" [disabled]="form.invalid || isSubmitting()">
-        <mat-icon>save</mat-icon>
-        {{ isSubmitting() ? 'Saving...' : (isEditMode() ? 'Update Customer' : 'Create Customer') }}
-      </button>
-    </div>
+    <footer class="flex justify-end gap-4 pt-4">
+      <app-button variant="ghost" (clicked)="cancel()" [disabled]="isSubmitting()">
+        Cancel
+      </app-button>
+      <app-button 
+        variant="primary" 
+        type="submit" 
+        [loading]="isSubmitting()"
+        [disabled]="form.invalid"
+      >
+        <span class="material-symbols-outlined">save</span>
+        {{ isEditMode() ? 'Update Customer' : 'Create Customer' }}
+      </app-button>
+    </footer>
   </form>
 </section>
