@@ -95,22 +95,15 @@ export class StationDetailComponent {
   }
 
   typeLabel(t: CameraType): string {
-    const labels: Record<CameraType, string> = {
-      'COGNEX_INSIGHT': 'In-Sight',
-      'COGNEX_DATAMAN': 'DataMan',
-      'MIRA_3D': 'MiRa 3D'
-    };
-    return labels[t] || 'Unknown';
+    const option = CAMERA_TYPE_OPTIONS.find(opt => opt.value === t);
+    return option?.label ?? 'Unknown';
   }
 
-  statusBadgeClass(status: string): string {
+  statusBadgeClass(status: string | undefined | null): string {
+    if (!status) return 'hidden';
+
     const option = STATION_STATUS_OPTIONS.find(o => o.value === status.toUpperCase());
-    switch (option?.value) {
-      case 'PRODUCTION': return 'bg-success-500/10 text-success-500 border-success-500/20';
-      case 'MAINTENANCE': return 'bg-warning-500/10 text-warning-500 border-warning-500/20';
-      case 'PLANNING': return 'bg-info-500/10 text-info-500 border-info-500/20';
-      default: return 'bg-bg-subtle text-text-tertiary border-border-subtle';
-    }
+    return option?.badgeClass ?? 'bg-bg-subtle text-text-tertiary border-border-subtle';
   }
 
   private reloadRoute(): void {

@@ -55,10 +55,10 @@ export const STATION_STATUS = {
 export type StationStatus = typeof STATION_STATUS[keyof typeof STATION_STATUS];
 
 export const STATION_STATUS_OPTIONS = [
-  { value: STATION_STATUS.PRODUCTION, label: 'Production', color: 'success' },
-  { value: STATION_STATUS.MAINTENANCE, label: 'Maintenance', color: 'warning' },
-  { value: STATION_STATUS.PLANNING, label: 'Planning', color: 'info' },
-  { value: STATION_STATUS.ARCHIVED, label: 'Archived', color: 'neutral' }
+  { value: STATION_STATUS.PRODUCTION, label: 'Production', color: 'success', badgeClass: 'bg-success-500/10 text-success-500 border-success-500/20' },
+  { value: STATION_STATUS.MAINTENANCE, label: 'Maintenance', color: 'warning', badgeClass: 'bg-warning-500/10 text-warning-500 border-warning-500/20' },
+  { value: STATION_STATUS.PLANNING, label: 'Planning', color: 'info', badgeClass: 'bg-info-500/10 text-info-500 border-info-500/20' },
+  { value: STATION_STATUS.ARCHIVED, label: 'Archived', color: 'neutral', badgeClass: 'bg-bg-subtle text-text-tertiary border-border-subtle' }
 ];
 
 export const CAMERA_STATUS = {
@@ -71,9 +71,9 @@ export const CAMERA_STATUS = {
 } as const;
 
 export const CAMERA_TYPE_OPTIONS = [
-  { value: 'MIRA_3D', label: 'MiRa 3D (Robot Guidance)' },
-  { value: 'COGNEX_INSIGHT', label: 'Cognex In-Sight' },
-  { value: 'COGNEX_DATAMAN', label: 'Cognex DataMan' }
+  { value: 'MIRA_3D', label: 'MiRa 3D (Robot Guidance)', badgeClass: 'bg-[var(--color-primary-50)] text-[var(--color-primary-700)]' },
+  { value: 'COGNEX_INSIGHT', label: 'Cognex In-Sight', badgeClass: 'bg-[var(--color-accent-50)] text-[var(--color-accent-700)]' },
+  { value: 'COGNEX_DATAMAN', label: 'Cognex DataMan', badgeClass: 'bg-[var(--color-info-50)] text-[var(--color-info-700)]' }
 ];
 
 export const ROBOT_CONTROLLER_OPTIONS = [

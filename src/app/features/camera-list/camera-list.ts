@@ -13,6 +13,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CameraService } from '../../core/services/camera.service';
 import { CameraType } from '../../core/models/domain.model';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog';
+import { CAMERA_TYPE_OPTIONS, STATION_STATUS_OPTIONS } from '../../core/data/features';
 
 @Component({
   selector: 'app-camera-list',
@@ -44,7 +45,7 @@ export class CameraListComponent implements OnInit {
 
   // Aggiunta colonna 'path' per mostrare la gerarchia
   readonly displayedColumns = ['name', 'path', 'type', 'cameraModel', 'status', 'actions'];
-  
+
   // DataSource ora solo per il rendering, non per il filtraggio logico
   readonly dataSource = new MatTableDataSource<any>([]);
 
@@ -97,19 +98,19 @@ export class CameraListComponent implements OnInit {
 
   viewCamera(cam: any): void {
     this.router.navigate([
-      '/customers', cam.customerSlug, 
-      'plants', cam.plantId, 
-      'stations', cam.stationId, 
+      '/customers', cam.customerSlug,
+      'plants', cam.plantId,
+      'stations', cam.stationId,
       'cameras', cam.id
     ]);
   }
 
   editCamera(cam: any): void {
     this.router.navigate([
-      '/customers', cam.customerSlug, 
-      'plants', cam.plantId, 
-      'stations', cam.stationId, 
-      'cameras', cam.id, 
+      '/customers', cam.customerSlug,
+      'plants', cam.plantId,
+      'stations', cam.stationId,
+      'cameras', cam.id,
       'edit'
     ]);
   }
@@ -135,33 +136,23 @@ export class CameraListComponent implements OnInit {
     });
   }
 
-  // --- UI UTILS ---
-
   typeLabel(t: CameraType): string {
-    switch (t) {
-      case 'COGNEX_INSIGHT': return 'In-Sight';
-      case 'COGNEX_DATAMAN': return 'DataMan';
-      case 'MIRA_3D': return 'MiRa 3D';
-      default: return 'Unknown';
-    }
+    const option = CAMERA_TYPE_OPTIONS.find(opt => opt.value === t);
+    return option?.label ?? 'Unknown';
   }
 
+  /**
+   * Restituisce la classe CSS del badge cercando nel catalogo centralizzato 
+   */
   typeBadgeClass(t: CameraType): string {
-    switch (t) {
-      case 'MIRA_3D': return 'bg-[var(--color-primary-50)] text-[var(--color-primary-700)]';
-      case 'COGNEX_INSIGHT': return 'bg-[var(--color-accent-50)] text-[var(--color-accent-700)]';
-      case 'COGNEX_DATAMAN': return 'bg-[var(--color-info-50)] text-[var(--color-info-700)]';
-      default: return 'bg-gray-100 text-gray-700';
-    }
+    const option = CAMERA_TYPE_OPTIONS.find(opt => opt.value === t);
+    return option?.badgeClass ?? 'bg-gray-100 text-gray-700';
   }
 
   statusBadgeClass(status: string | undefined | null): string {
     if (!status) return 'hidden';
-    switch (status.toLowerCase()) {
-      case 'production': return 'bg-[var(--color-success-50)] text-[var(--color-success-700)]';
-      case 'maintenance': return 'bg-[var(--color-warning-50)] text-[var(--color-warning-700)]';
-      case 'planning': return 'bg-[var(--color-info-50)] text-[var(--color-info-700)]';
-      default: return 'bg-[var(--bg-strong)] text-[var(--text-secondary)]';
-    }
+
+    const option = STATION_STATUS_OPTIONS.find(o => o.value === status.toUpperCase());
+    return option?.badgeClass ?? 'bg-bg-subtle text-text-tertiary border-border-subtle';
   }
 }

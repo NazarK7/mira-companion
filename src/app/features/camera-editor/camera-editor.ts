@@ -11,7 +11,7 @@ import { NotificationService } from '../../shared/services/notification.service'
 import { I18nService } from '../../shared/services/i18n.service';
 import { AppButtonComponent } from '../../shared/components/button/button.component';
 import { Camera, CameraStatus } from '../../core/models/domain.model';
-import { CAMERA_STATUS, CAMERA_TYPE_OPTIONS, ROBOT_CONTROLLER_OPTIONS } from '../../core/data/features';
+import { CAMERA_TYPE_OPTIONS, ROBOT_CONTROLLER_OPTIONS } from '../../core/data/features';
 
 @Component({
   selector: 'app-camera-editor',
