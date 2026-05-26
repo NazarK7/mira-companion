@@ -1,189 +1,115 @@
 // src/app/features/camera-details/camera-details.ts
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { filter, switchMap } from 'rxjs/operators';
-import { combineLatest, BehaviorSubject } from 'rxjs';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { filter, switchMap, distinctUntilChanged } from 'rxjs/operators';
+import { DatePipe } from '@angular/common';
 
-// MATERIAL IMPORTS
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-
-// COMMON IMPORTS (Aggiunti NgTemplateOutlet e DecimalPipe)
-import { DatePipe, DecimalPipe, NgTemplateOutlet } from '@angular/common';
-
-// SERVICES & COMPONENTS
 import { CustomerService } from '../../core/services/customer.service';
 import { CameraService } from '../../core/services/camera.service';
 import { JobService } from '../../core/services/job.service';
-import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog';
-
-import { ToastContainerComponent } from '../../shared/components/feedback-toast/toast-container.component';
+import { I18nService } from '../../shared/services/i18n.service';
 import { NotificationService } from '../../shared/services/notification.service';
-import { CAMERA_TYPE_OPTIONS, STATION_STATUS_OPTIONS } from '../../core/data/features';
+import { AppComponent } from '../../app';
+import { AppButtonComponent } from '../../shared/components/button/button.component';
 
-type CameraType = 'COGNEX_INSIGHT' | 'COGNEX_DATAMAN' | 'MIRA_3D';
+// Importiamo tutto dal SSOT (features.ts)
+import {
+  CAMERA_TYPE_OPTIONS,
+  STATION_STATUS_OPTIONS,
+  ASSET_CONFIGS,
+  CAMERA_SPEC_DEFINITIONS,
+  AssetKey,
+  getAssetFileName,
+  getAssetFileSize
+} from '../../core/data/features';
+import { Camera, CameraType } from '../../core/models/domain.model';
 
 @Component({
   selector: 'app-camera-details',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    RouterLink,
-    MatButtonModule,
-    MatIconModule,
-    MatTooltipModule,
-    MatDialogModule,
-    DatePipe,
-    NgTemplateOutlet,
-  ],
+  imports: [RouterLink, AppButtonComponent, DatePipe],
   templateUrl: './camera-details.html',
 })
 export class CameraDetailsComponent {
-  private readonly route = inject(ActivatedRoute);
-  private readonly customerService = inject(CustomerService);
   private readonly router = inject(Router);
+  private readonly customerService = inject(CustomerService);
   private readonly cameraService = inject(CameraService);
   private readonly jobService = inject(JobService);
-  private readonly dialog = inject(MatDialog);
-  private readonly feedback = inject(NotificationService);
+  private readonly app = inject(AppComponent);
+  private readonly notify = inject(NotificationService);
+  protected readonly i18n = inject(I18nService);
 
-  private readonly refresh$ = new BehaviorSubject<void>(undefined);
+  // --- Exposed to Template ---
+  protected readonly ASSET_MAP = ASSET_CONFIGS;
+  protected readonly SPECS_DEF = CAMERA_SPEC_DEFINITIONS;
 
-  // --- SIGNALS PER GLI ASSET ---
-  readonly isUploadingAsset = signal<'mira3d' | 'halcon' | 'restart' | null>(null);
+  // --- Route Inputs ---
+  slug = input.required<string>();
+  plantId = input.required<string>();
+  stationId = input.required<string>();
+  cameraId = input.required<string>();
 
-  // --- DATA FETCHING ---
-  private readonly slug$ = this.route.paramMap.pipe(filter(params => params.has('slug')));
-  private readonly cameraId$ = this.route.paramMap.pipe(filter(params => params.has('cameraId')));
+  // --- UI States ---
+  readonly isUploadingAsset = signal<AssetKey | null>(null);
 
-  readonly customer = toSignal(
-    this.slug$.pipe(
-      switchMap(params => this.customerService.getBySlug(params.get('slug')!))
-    )
-  );
+  // --- Data Fetching ---
+  readonly customer = toSignal(toObservable(this.slug).pipe(filter(Boolean), distinctUntilChanged(), switchMap(s => this.customerService.getBySlug(s))));
+  readonly camera = toSignal<Camera>(toObservable(this.cameraId).pipe(filter(Boolean), distinctUntilChanged(), switchMap(id => this.cameraService.getById(id))));
 
-  readonly camera = toSignal(
-    combineLatest([this.cameraId$, this.refresh$]).pipe(
-      switchMap(([params]) => this.cameraService.getById(params.get('cameraId')!))
-    )
-  );
-
-  readonly plant = computed(() => {
-    const cust = this.customer();
-    const id = this.route.snapshot.paramMap.get('plantId');
-    if (!cust || !id) return null;
-    return (cust as any).plants.find((p: any) => p.id === id) ?? null;
-  });
-
-  readonly station = computed(() => {
-    const p = this.plant();
-    const id = this.route.snapshot.paramMap.get('stationId');
-    if (!p || !id) return null;
-    return (p as any).stations.find((s: any) => s.id === id) ?? null;
-  });
-
+  readonly plant = computed(() => this.customer()?.plants.find(p => p.id === this.plantId()) ?? null);
+  readonly station = computed(() => this.plant()?.stations.find(s => s.id === this.stationId()) ?? null);
   readonly isMira3D = computed(() => this.camera()?.type === 'MIRA_3D');
 
-  // --- LOGICA ASSET (TASK 4, 5, 6) ---
+  // --- Logic Wrappers ---
+  getFileName(cam: Camera, key: AssetKey) { return getAssetFileName(cam, key); }
+  getFileSize(cam: Camera, key: AssetKey) { return getAssetFileSize(cam, key); }
 
-  onAssetSelected(event: any, type: 'mira3d' | 'halcon' | 'restart'): void {
-    const file = event.target.files[0];
+  formatBytes(bytes: number | bigint | string | undefined): string {
+    if (!bytes) return '0 MB';
+    const b = typeof bytes === 'string' ? parseInt(bytes, 10) : Number(bytes);
+    return (b / (1024 * 1024)).toFixed(2) + ' MB';
+  }
+
+  typeLabel(t: CameraType): string { return CAMERA_TYPE_OPTIONS.find(opt => opt.value === t)?.label ?? 'Unknown'; }
+  typeBadgeClass(t: CameraType): string { return CAMERA_TYPE_OPTIONS.find(opt => opt.value === t)?.badgeClass ?? 'bg-bg-subtle'; }
+  statusBadgeClass(status: string | undefined | null): string {
+    if (!status) return 'hidden';
+    return STATION_STATUS_OPTIONS.find(o => o.value === status.toUpperCase())?.badgeClass ?? 'bg-bg-subtle';
+  }
+
+  // --- Actions ---
+  onAssetSelected(event: Event, type: AssetKey): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
     const cam = this.camera();
     if (!file || !cam) return;
 
     this.isUploadingAsset.set(type);
-
     this.cameraService.uploadAsset(cam.id, type, file).subscribe({
       next: () => {
         this.isUploadingAsset.set(null);
-        this.feedback.success(`Upload di ${type} completato con successo!`); // Feedback pro
-        this.refresh$.next();
+        this.notify.success(`Asset updated`);
+        this.reload();
       },
-      error: (err) => {
-        this.isUploadingAsset.set(null);
-        console.error(`Errore upload ${type}:`, err);
-
-        // Gestione errore raffinata
-        const errorMsg = err.status === 404
-          ? "Rotta non trovata (Verifica l'URL del backend)"
-          : "Errore durante l'upload. Il file potrebbe essere troppo grande.";
-
-        this.feedback.error(errorMsg); // Niente più alert brutti!
-      }
+      error: () => { this.isUploadingAsset.set(null); this.notify.error("Upload error"); }
     });
   }
 
-  downloadAsset(type: 'mira3d' | 'halcon' | 'restart'): void {
+  downloadAsset(type: AssetKey): void {
     const cam = this.camera();
-    if (!cam) return;
-    const url = this.cameraService.getAssetDownloadUrl(cam.id, type);
-
-    // Usiamo window.open come nei Job che funzionano
-    window.open(url, '_blank');
+    if (cam) window.open(this.cameraService.getAssetDownloadUrl(cam.id, type), '_blank');
   }
 
-  // --- LOGICA JOB ---
-
-  openJobDetails(jobId: string): void {
-    const c = this.customer();
-    const p = this.plant();
-    const s = this.station();
-    const cam = this.camera();
-
-    if (c && p && s && cam) {
-      this.router.navigate([
-        '/customers', c.slug,
-        'plants', p.id,
-        'stations', s.id,
-        'cameras', cam.id,
-        'jobs', jobId,
-        'edit'
-      ]);
-    }
-  }
-
-  // Nota: il metodo editJob() può essere rimosso o puntare a openJobDetails()
-  editJob(event: Event, jobId: string): void {
+  async deleteJob(event: Event, jobId: string, jobName: string) {
     event.stopPropagation();
-    this.openJobDetails(jobId);
+    const ok = await this.app.confirm().open({ title: 'Delete Job', message: `Remove ${jobName}?`, isDestructive: true });
+    if (ok) this.jobService.delete(jobId).subscribe(() => { this.notify.success('Job removed'); this.reload(); });
   }
 
-  deleteJob(event: Event, id: string, name: string): void {
-    event.stopPropagation();
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '400px',
-      data: {
-        title: 'Delete Job',
-        message: `Sei sicuro di voler eliminare il job "${name}"?`,
-        confirmText: 'Delete',
-        isDestructive: true
-      }
+  private reload(): void {
+    this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+      this.router.navigate(['/customers', this.slug(), 'plants', this.plantId(), 'stations', this.stationId(), 'cameras', this.cameraId()]);
     });
-
-    dialogRef.afterClosed().subscribe(confirmed => {
-      if (confirmed) {
-        this.jobService.delete(id).subscribe(() => this.refresh$.next());
-      }
-    });
-  }
-
-  typeBadgeClass(t: CameraType): string {
-    const option = CAMERA_TYPE_OPTIONS.find(opt => opt.value === t);
-    return option?.badgeClass ?? 'bg-gray-100 text-gray-700';
-  }
-  
-  typeLabel(t: CameraType): string {
-    const option = CAMERA_TYPE_OPTIONS.find(opt => opt.value === t);
-    return option?.label ?? 'Unknown';
-  }
-
-  statusBadgeClass(status: string | undefined | null): string {
-    if (!status) return 'hidden';
-
-    const option = STATION_STATUS_OPTIONS.find(o => o.value === status.toUpperCase());
-    return option?.badgeClass ?? 'bg-bg-subtle text-text-tertiary border-border-subtle';
   }
 }

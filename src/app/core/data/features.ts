@@ -3,6 +3,7 @@
 import { PLATE_CATALOG, DEFAULT_PLATE_ID } from './plate-catalog';
 import { CAMERA_CATALOG, DEFAULT_CAMERA_ID } from './camera-catalog';
 import { LENS_CATALOG, DEFAULT_LENS_ID } from './lens-catalog';
+import { Camera } from '../models/domain.model';
 
 /**
  * MiRa Companion - Centralized Metadata Store (SSOT)
@@ -82,3 +83,58 @@ export const ROBOT_CONTROLLER_OPTIONS = [
   { value: 'FANUC', label: 'Fanuc (Euler XYZ Extrinsic)' },
   { value: 'KUKA', label: 'Kuka (Euler ZYX Intrinsic)' }
 ];
+
+
+export type AssetKey = 'mira3d' | 'halcon' | 'restart';
+
+export interface AssetConfig {
+  key: AssetKey;
+  title: string;
+  icon: string;
+  accept: string;
+}
+
+export const ASSET_CONFIGS: AssetConfig[] = [
+  { key: 'mira3d', title: 'System Backup', icon: 'settings_backup_restore', accept: '.zip' },
+  { key: 'halcon', title: 'Halcon License', icon: 'verified_user', accept: '.zip' },
+  { key: 'restart', title: 'Restart Utility', icon: 'rebase_edit', accept: '.pptx,.zip' }
+];
+
+// --- CAMERA SPECIFICATIONS UI ---
+export interface SpecDefinition {
+  label: string;
+  key: keyof Camera;
+  icon: string;
+  suffix?: string;
+}
+
+export const CAMERA_SPEC_DEFINITIONS: SpecDefinition[] = [
+  { label: 'Model', key: 'cameraModel', icon: 'videocam' },
+  { label: 'Focal', key: 'lensFocalMm', icon: 'center_focus_strong', suffix: 'mm' },
+  { label: 'IP', key: 'ipAddress', icon: 'lan' },
+  { label: 'Firmware', key: 'firmware', icon: 'developer_mode' },
+  { label: 'Serial', key: 'serialNumber', icon: 'barcode' },
+  { label: 'MAC', key: 'macAddress', icon: 'id_card' }
+];
+
+// --- HELPERS (SSOT LOGIC) ---
+
+/** Recupera il nome del file fisico basato sulla chiave asset */
+export function getAssetFileName(cam: Camera, key: AssetKey): string | undefined {
+  const mapping: Record<AssetKey, string | undefined> = {
+    mira3d: cam.mira3dBackupName,
+    halcon: cam.halconLicenseName,
+    restart: cam.restartOnCrashName
+  };
+  return mapping[key];
+}
+
+/** Recupera la dimensione del file basata sulla chiave asset */
+export function getAssetFileSize(cam: Camera, key: AssetKey): number | bigint | undefined {
+  const mapping: Record<AssetKey, number | bigint | undefined> = {
+    mira3d: cam.mira3dBackupSize,
+    halcon: cam.halconLicenseSize,
+    restart: cam.restartOnCrashSize
+  };
+  return mapping[key];
+}

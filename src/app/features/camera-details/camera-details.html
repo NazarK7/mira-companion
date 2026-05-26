@@ -1,295 +1,176 @@
-<section class="mx-auto max-w-7xl px-6 py-8">
-  <nav class="mb-4 text-sm text-[var(--text-tertiary)]" aria-label="Breadcrumb">
-    <a routerLink="/customers" class="hover:text-[var(--color-primary-600)]">Customers</a>
-    <span class="mx-2">/</span>
+<section class="mx-auto max-w-7xl px-6 py-10 space-y-10 animate-in fade-in duration-500">
+
+  <nav class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-text-tertiary">
+    <a routerLink="/customers" class="hover:text-primary-500 transition-colors italic">Customers</a>
+    <span class="material-symbols-outlined text-xs">chevron_right</span>
     @if (customer(); as c) {
-    <a [routerLink]="['/customers', c.slug]" class="hover:text-[var(--color-primary-600)]">{{ c.name }}</a>
-    <span class="mx-2">/</span>
+    <a [routerLink]="['/customers', c.slug]" class="hover:text-primary-500 transition-colors italic">{{ c.name }}</a>
+    <span class="material-symbols-outlined text-xs">chevron_right</span>
     }
     @if (plant(); as p) {
-    <a [routerLink]="['/customers', customer()!.slug, 'plants', p.id]" class="hover:text-[var(--color-primary-600)]">
-      {{ p.name }}
-    </a>
-    <span class="mx-2">/</span>
+    <a [routerLink]="['/customers', slug(), 'plants', p.id]" class="hover:text-primary-500 transition-colors italic">{{
+      p.name }}</a>
+    <span class="material-symbols-outlined text-xs">chevron_right</span>
     }
-    @if (station(); as s) {
-    <a [routerLink]="['/customers', customer()!.slug, 'plants', plant()!.id, 'stations', s.id]"
-      class="hover:text-[var(--color-primary-600)]">{{ s.name }}</a>
-    <span class="mx-2">/</span>
-    }
-    <span class="text-[var(--text-primary)]">{{ camera()?.name ?? '—' }}</span>
+    <span class="text-text-primary italic">{{ camera()?.name ?? '...' }}</span>
   </nav>
 
   @if (camera(); as cam) {
-  <header class="mb-8 flex items-start justify-between gap-4">
-    <div>
-      <div class="flex items-center gap-3">
-        <h1 class="text-3xl font-semibold text-[var(--text-primary)]">{{ cam.name }}</h1>
-
-        <span class="inline-flex items-center rounded px-2 py-0.5 font-mono text-xs font-bold uppercase tracking-wider"
-          [class]="typeBadgeClass(cam.type)">
-          {{ typeLabel(cam.type) }}
-        </span>
-
-        @if (cam.status) {
-        <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium uppercase tracking-wider"
-          [class]="statusBadgeClass(cam.status)">
-          {{ cam.status }}
-        </span>
-        }
+  <header class="border-b border-border-subtle pb-8">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+      <div class="space-y-4">
+        <div class="flex items-center gap-4">
+          <h1 class="text-5xl font-black text-text-primary italic tracking-tighter uppercase leading-none">{{ cam.name
+            }}</h1>
+          <span class="text-[10px] font-black uppercase tracking-widest border px-3 py-1 rounded-lg"
+            [class]="typeBadgeClass(cam.type)">
+            {{ typeLabel(cam.type) }}
+          </span>
+        </div>
+        <div class="flex items-center gap-2">
+          @if (cam.status) {
+          <span class="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded border"
+            [class]="statusBadgeClass(cam.status)">
+            {{ cam.status }}
+          </span>
+          }
+          @for (tag of cam.tags; track tag) {
+          <span class="text-[9px] font-mono font-bold text-text-tertiary bg-bg-subtle px-2 py-0.5 rounded">#{{ tag
+            }}</span>
+          }
+        </div>
       </div>
-
-      @if (cam.notes) {
-      <p class="mt-2 max-w-2xl text-sm text-[var(--text-secondary)]">{{ cam.notes }}</p>
-      }
-
-      @if (cam.tags && cam.tags.length > 0) {
-      <div class="mt-3 flex flex-wrap gap-2">
-        @for (tag of cam.tags; track tag) {
-        <span class="rounded bg-[var(--bg-subtle)] px-2 py-1 text-xs text-[var(--text-secondary)]">#{{ tag }}</span>
-        }
-      </div>
-      }
+      <app-button variant="outline" size="sm" [routerLink]="['edit']">
+        <span class="material-symbols-outlined text-sm">settings</span>
+        Configure Unit
+      </app-button>
     </div>
+    @if (cam.notes) {
+    <p
+      class="mt-6 max-w-3xl text-sm font-medium text-text-secondary leading-relaxed border-l-2 border-primary-500/30 pl-4">
+      {{ cam.notes }}</p>
+    }
   </header>
 
-  <section class="mb-6 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)]">
-    <h2 class="mb-4 text-sm font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
-      <mat-icon class="!h-4 !w-4 !text-base align-middle">videocam</mat-icon>
-      Hardware
-    </h2>
-    <dl class="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-3 lg:grid-cols-6">
-      <div>
-        <dt class="text-xs text-[var(--text-tertiary)]">Model</dt>
-        <dd class="font-mono text-sm text-[var(--text-primary)]">{{ cam.cameraModel || '—' }}</dd>
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+    @for (spec of [
+    { label: 'Model', val: cam.cameraModel, icon: 'videocam' },
+    { label: 'Focal', val: cam.lensFocalMm ? cam.lensFocalMm + 'mm' : 'N/A', icon: 'center_focus_strong' },
+    { label: 'IP', val: cam.ipAddress, icon: 'lan' },
+    { label: 'Firmware', val: cam.firmware, icon: 'developer_mode' },
+    { label: 'Serial', val: cam.serialNumber, icon: 'barcode' },
+    { label: 'MAC', val: cam.macAddress, icon: 'id_card' }
+    ]; track spec.label) {
+    <div class="bg-bg-surface border border-border-subtle rounded-2xl p-4 shadow-sm space-y-1">
+      <div class="flex items-center gap-2 text-text-tertiary">
+        <span class="material-symbols-outlined text-xs">{{ spec.icon }}</span>
+        <span class="text-[9px] font-black uppercase tracking-widest">{{ spec.label }}</span>
       </div>
-      <div>
-        <dt class="text-xs text-[var(--text-tertiary)]">Lens focal</dt>
-        <dd class="font-mono text-sm text-[var(--text-primary)]">{{ cam.lensFocalMm ? cam.lensFocalMm + ' mm' : '—' }}</dd>
-      </div>
-      <div>
-        <dt class="text-xs text-[var(--text-tertiary)]">Firmware</dt>
-        <dd class="font-mono text-sm text-[var(--text-primary)]">{{ cam.firmware || '—' }}</dd>
-      </div>
-      <div>
-        <dt class="text-xs text-[var(--text-tertiary)]">IP address</dt>
-        <dd class="font-mono text-sm text-[var(--text-primary)]">{{ cam.ipAddress || '—' }}</dd>
-      </div>
-      <div>
-        <dt class="text-xs text-[var(--text-tertiary)]">Serial</dt>
-        <dd class="font-mono text-sm text-[var(--text-primary)]">{{ cam.serialNumber || '—' }}</dd>
-      </div>
-      <div>
-        <dt class="text-xs text-[var(--text-tertiary)]">MAC</dt>
-        <dd class="font-mono text-sm text-[var(--text-primary)]">{{ cam.macAddress || '—' }}</dd>
-      </div>
-      @if (isMira3D() && cam.controllerType) {
-      <div>
-        <dt class="text-xs text-[var(--text-tertiary)]">Robot controller</dt>
-        <dd class="font-mono text-sm text-[var(--text-primary)]">{{ cam.controllerType }}</dd>
-      </div>
-      }
-    </dl>
-
-    @if (cam.plcNotes) {
-    <div class="mt-6 border-t border-[var(--border-subtle)] pt-4">
-      <h3 class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--color-accent-400)]">
-        <mat-icon class="!text-base !w-4 !h-4">memory</mat-icon>
-        PLC / Trigger Notes
-      </h3>
-      <p class="mt-2 whitespace-pre-wrap text-sm text-[var(--text-secondary)]">{{ cam.plcNotes }}</p>
+      <p class="text-xs font-mono font-bold text-text-primary truncate">{{ spec.val || '—' }}</p>
     </div>
     }
-  </section>
+  </div>
 
-  <section class="mb-10">
-    <div class="mb-4 flex items-end justify-between">
-      <h2 class="text-xl font-semibold text-[var(--text-primary)]">
-        Jobs <span class="ml-2 text-sm font-normal text-[var(--text-tertiary)]">({{ cam.jobs.length || 0 }})</span>
-      </h2>
-
-      @if (customer() && plant() && station()) {
-      <a mat-flat-button
-        [routerLink]="['/customers', customer()!.slug, 'plants', plant()!.id, 'stations', station()!.id, 'cameras', cam.id, 'jobs', 'new']"
-        class="!bg-[var(--color-primary-600)] !text-white">
-        <mat-icon>add</mat-icon> New Job
-      </a>
-      }
+  <div class="space-y-6">
+    <div class="flex items-center justify-between">
+      <h2 class="text-2xl font-bold text-text-primary uppercase italic tracking-tight">Vision Jobs</h2>
+      <app-button variant="primary" size="sm" [routerLink]="['jobs', 'new']">
+        <span class="material-symbols-outlined text-sm">add</span> New Job
+      </app-button>
     </div>
 
-    @if (!cam.jobs || cam.jobs.length === 0) {
-    <div class="rounded-lg border border-dashed border-[var(--border-default)] bg-[var(--bg-subtle)] p-8 text-center text-sm text-[var(--text-secondary)]">
-      No jobs configured for this camera yet.
+    @if (cam.jobs.length === 0) {
+    <div
+      class="py-12 text-center border-2 border-dashed border-border-subtle rounded-3xl bg-bg-surface/30 italic text-text-tertiary text-sm font-black uppercase tracking-widest">
+      No vision tasks assigned
     </div>
     } @else {
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <ul class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
       @for (job of cam.jobs; track job.id) {
-        <div (click)="openJobDetails(job.id)"
-             class="group relative block cursor-pointer rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] transition hover:border-[var(--color-primary-500)] hover:shadow-[var(--shadow-md)]">
-          
-          <div class="absolute top-2 right-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 z-10">
-            <button mat-icon-button (click)="$event.stopPropagation(); editJob($event, job.id)" matTooltip="Edit Job">
-              <mat-icon class="!text-[var(--text-tertiary)] hover:!text-[var(--color-primary-600)]">edit</mat-icon>
-            </button>
-            <button mat-icon-button color="warn" (click)="$event.stopPropagation(); deleteJob($event, job.id, job.name)" matTooltip="Delete Job">
-              <mat-icon>delete</mat-icon>
-            </button>
+      <li
+        class="group bg-bg-surface border border-border-subtle rounded-2xl p-6 transition-all hover:border-primary-500/40 hover:shadow-2xl cursor-pointer"
+        [routerLink]="['jobs', job.id, 'edit']">
+        <div class="flex justify-between items-start mb-4">
+          <div class="space-y-1">
+            <h3
+              class="text-lg font-bold text-text-primary tracking-tight group-hover:text-primary-500 transition-colors uppercase">
+              {{ job.name }}</h3>
+            <p class="text-[10px] font-mono text-text-tertiary">Updated: {{ job.updatedAt | date:'shortDate' }}</p>
           </div>
-
-          <div class="flex items-center justify-between mb-2 pr-16">
-            <h3 class="truncate text-lg font-semibold text-[var(--text-primary)]">{{ job.name }}</h3>
-            @if (job.visionToolSlot != null) {
-              <span class="inline-flex shrink-0 items-center rounded bg-[var(--color-primary-50)] px-1.5 py-0.5 font-mono text-[10px] font-bold text-[var(--color-primary-700)]">
-                VT{{ job.visionToolSlot }}
-              </span>
-            }
-          </div>
-          <p class="text-xs text-[var(--text-tertiary)]">Last update: {{ job.updatedAt | date:'mediumDate' }}</p>
+          @if (job.visionToolSlot != null) {
+          <span class="text-[9px] font-black bg-primary-500/10 text-primary-500 px-2 py-1 rounded">SLOT {{
+            job.visionToolSlot }}</span>
+          }
         </div>
+        <div
+          class="flex justify-end pt-4 border-t border-border-subtle/30 opacity-0 group-hover:opacity-100 transition-opacity">
+          <app-button variant="ghost" size="icon" (clicked)="deleteJob($event, job.id, job.name)">
+            <span class="material-symbols-outlined text-sm text-danger-500">delete</span>
+          </app-button>
+        </div>
+      </li>
       }
-    </div>
+    </ul>
     }
-  </section>
+  </div>
 
   @if (isMira3D()) {
-  <section class="mb-10">
-    <div class="mb-4 flex items-end justify-between">
-      <h2 class="text-xl font-semibold text-[var(--text-primary)]">
-        Calibrations <span class="ml-2 text-sm font-normal text-[var(--text-tertiary)]">({{ cam.calibrations.length || 0 }})</span>
-      </h2>
+  <div class="space-y-6 pt-10 border-t border-border-subtle">
+    <h2 class="text-2xl font-bold text-text-primary uppercase italic tracking-tight">Asset & Disaster Recovery</h2>
 
-      @if (customer() && plant() && station()) {
-      <a mat-flat-button
-        [routerLink]="['/customers', customer()!.slug, 'plants', plant()!.id, 'stations', station()!.id, 'cameras', cam.id, 'calibrations', 'new']"
-        class="!bg-[var(--color-primary-600)] !text-white">
-        <mat-icon>add</mat-icon> New Calibration
-      </a>
-      }
-    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      @for (config of ASSET_MAP; track config.key) {
+      @let name = getFileName(cam, config.key);
+      @let size = getFileSize(cam, config.key);
 
-    @if (!cam.calibrations || cam.calibrations.length === 0) {
-    <div class="rounded-lg border border-dashed border-[var(--border-default)] bg-[var(--bg-subtle)] p-8 text-center text-sm text-[var(--text-secondary)]">
-      No calibrations found for this system.
-    </div>
-    } @else {
-    <div class="grid grid-cols-1 gap-4">
-      @for (calib of cam.calibrations; track calib.id) {
-      <a class="block cursor-pointer rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 shadow-[var(--shadow-sm)] transition hover:border-[var(--color-primary-500)]">
-        <div class="flex justify-between items-center">
-          <div class="flex items-center gap-3">
-            <mat-icon class="text-[var(--text-secondary)]">center_focus_strong</mat-icon>
-            <span class="font-semibold text-[var(--text-primary)]">Mode: {{ calib['mode'] }}</span>
-            @if (calib['isCurrent']) {
-            <span class="rounded-full bg-[var(--color-success-50)] px-2 py-0.5 text-xs font-semibold text-[var(--color-success-700)]">Active</span>
-            }
+      <div class="bg-bg-surface border border-border-subtle rounded-3xl p-6 space-y-6 relative overflow-hidden">
+        <div class="flex justify-between items-start">
+          <div class="p-3 bg-primary-500/10 rounded-2xl text-primary-500">
+            <span class="material-symbols-outlined text-3xl">{{ config.icon }}</span>
           </div>
-          <span class="text-xs text-[var(--text-tertiary)]">{{ calib['createdAt'] | date:'mediumDate' }}</span>
+          <span class="text-[9px] font-black px-2 py-1 rounded-full uppercase"
+            [class]="name ? 'bg-success-500/10 text-success-500' : 'bg-bg-subtle text-text-tertiary'">
+            {{ name ? 'Synced' : 'Missing' }}
+          </span>
         </div>
-      </a>
-      }
-    </div>
-    }
-  </section>
-  }
 
-  <section>
-    <h2 class="mb-6 text-xl font-semibold text-[var(--text-primary)] flex items-center gap-2">
-      <mat-icon>folder_zip</mat-icon> Assets Management
-    </h2>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      
-      <div class="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5 flex items-center gap-4">
-        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--bg-subtle)] text-[var(--text-secondary)]">
-          <mat-icon>build</mat-icon>
+        <div class="space-y-1">
+          <h4 class="font-bold text-text-primary uppercase tracking-tight">{{ config.title }}</h4>
+          <p class="text-[10px] text-text-tertiary italic font-mono">Size: {{ formatBytes(size) }}</p>
+          @if (name) {
+          <div
+            class="mt-4 p-2 bg-bg-app rounded font-mono text-[9px] text-primary-400 truncate border border-border-subtle">
+            {{ name }}
+          </div>
+          }
         </div>
-        <div>
-          <p class="text-xs font-bold text-[var(--text-tertiary)] uppercase">Events</p>
-          <p class="text-2xl font-bold text-[var(--text-primary)]">{{ cam._count?.maintenanceEvents || 0 }}</p>
+
+        <div class="flex gap-2">
+          <input type="file" #fileInput (change)="onAssetSelected($event, config.key)" class="hidden"
+            [accept]="config.accept">
+          <app-button variant="primary" class="flex-1" size="sm" (clicked)="fileInput.click()"
+            [loading]="isUploadingAsset() === config.key">
+            Upload
+          </app-button>
+          @if (name) {
+          <app-button variant="outline" size="icon" (clicked)="downloadAsset(config.key)">
+            <span class="material-symbols-outlined text-sm">download</span>
+          </app-button>
+          }
         </div>
       </div>
-
-      @if (isMira3D()) {
-        <ng-container *ngTemplateOutlet="assetCard; context: { 
-          type: 'mira3d', 
-          title: 'MiRa3D Backup', 
-          icon: 'settings_backup_restore',
-          fileName: cam.mira3dBackupName,
-          description: 'Backup completo (~500MB)'
-        }"></ng-container>
-
-        <ng-container *ngTemplateOutlet="assetCard; context: { 
-          type: 'halcon', 
-          title: 'Halcon License', 
-          icon: 'verified_user',
-          fileName: cam.halconLicenseName,
-          description: 'Licenza software .zip'
-        }"></ng-container>
-
-        <ng-container *ngTemplateOutlet="assetCard; context: { 
-          type: 'restart', 
-          title: 'Restart Utility', 
-          icon: 'refresh',
-          fileName: cam.restartOnCrashName,
-          description: 'Utility di monitoraggio'
-        }"></ng-container>
       }
     </div>
-  </section>
+  </div>
+  }
 
   } @else {
-  <div class="rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] p-12 text-center">
-    <p class="text-base text-[var(--text-secondary)]">Camera not found.</p>
+  <div class="py-24 text-center border-2 border-dashed border-border-subtle rounded-3xl bg-bg-surface/30">
+    <span class="material-symbols-outlined text-6xl text-danger-500 mb-4 animate-pulse">videocam_off</span>
+    <h2 class="text-xl font-bold text-text-primary uppercase tracking-tighter italic">Camera Missing</h2>
+    <p class="text-text-secondary text-sm mt-2">L'unità ottica non è stata trovata o è stata rimossa dal database
+      locale.</p>
+    <app-button variant="ghost" class="mt-8" routerLink="/customers">Back to fleet</app-button>
   </div>
   }
 </section>
-
-<ng-template #assetCard let-type="type" let-title="title" let-icon="icon" let-fileName="fileName" let-desc="description">
-  <div class="relative overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5 flex flex-col justify-between transition-all hover:border-[var(--color-primary-500)] hover:shadow-lg shadow-[var(--shadow-sm)]">
-    
-    
-
-    <div class="flex items-start justify-between mb-4">
-      <div class="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-primary-500)]/10 text-[var(--color-primary-500)]">
-        <mat-icon>{{ icon }}</mat-icon>
-      </div>
-      @if (fileName) {
-        <span class="text-[10px] bg-green-500/10 text-green-500 border border-green-500/30 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Ready</span>
-      } @else {
-        <span class="text-[10px] bg-zinc-500/10 text-zinc-400 border border-zinc-500/20 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Empty</span>
-      }
-    </div>
-    
-    <div class="mb-5">
-      <h3 class="font-bold text-[var(--text-primary)] leading-tight text-sm uppercase tracking-wide">{{ title }}</h3>
-      <p class="text-[10px] text-[var(--text-tertiary)] mt-1.5 leading-relaxed">{{ desc }}</p>
-      
-      @if (fileName) {
-        <div class="mt-4 flex items-center gap-2 text-[10px] font-mono text-[var(--color-primary-400)] bg-zinc-950 px-3 py-2 rounded-md border border-zinc-800 shadow-inner group">
-          <mat-icon class="!text-xs !h-3 !w-3 opacity-50">insert_drive_file</mat-icon>
-          <span class="truncate">{{ fileName }}</span>
-        </div>
-      }
-    </div>
-
-    <div class="flex gap-2 border-t border-zinc-100 dark:border-zinc-800 pt-4">
-      <input type="file" #fileInput (change)="onAssetSelected($event, type)" class="hidden" accept=".zip">
-      
-      <button mat-flat-button 
-              class="flex-grow !bg-[var(--bg-strong)] !text-[var(--text-primary)] !text-[10px] !font-bold !uppercase tracking-widest hover:!bg-[var(--color-primary-600)] hover:!text-white transition-all" 
-              (click)="fileInput.click()" 
-              [disabled]="isUploadingAsset() !== null">
-        Upload
-      </button>
-
-      @if (fileName) {
-        <button mat-icon-button 
-                (click)="downloadAsset(type)" 
-                class="!text-[var(--color-primary-500)] hover:!bg-[var(--color-primary-500)]/10"
-                matTooltip="Download Archive">
-          <mat-icon>download</mat-icon>
-        </button>
-      }
-    </div>
-  </div>
-</ng-template>
