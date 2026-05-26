@@ -2,20 +2,19 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { switchMap, filter } from 'rxjs/operators';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatDialog } from '@angular/material/dialog';
+import { switchMap, map } from 'rxjs/operators';
 import { CustomerService } from '../../core/services/customer.service';
 import { PlantService } from '../../core/services/plant.service';
-import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog';
-import { ContactDialogComponent } from '../../shared/components/contact-dialog/contact-dialog';
+import { I18nService } from '../../shared/services/i18n.service';
+import { AppButtonComponent } from '../../shared/components/button/button.component';
+import { AppComponent } from '../../app'; 
+import { NotificationService } from '../../shared/services/notification.service';
 
 @Component({
   selector: 'app-customer-detail',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, MatButtonModule, MatIconModule],
+  imports: [RouterLink, AppButtonComponent],
   templateUrl: './customer-detail.html',
 })
 export class CustomerDetailComponent {
@@ -23,98 +22,102 @@ export class CustomerDetailComponent {
   private readonly router = inject(Router);
   private readonly customerService = inject(CustomerService);
   private readonly plantService = inject(PlantService);
-  private readonly dialog = inject(MatDialog);
-
-  private readonly slug$ = this.route.paramMap.pipe(filter(params => params.has('slug')));
+  private readonly app = inject(AppComponent);
+  private readonly notify = inject(NotificationService);
+  protected readonly i18n = inject(I18nService);
 
   readonly customer = toSignal(
-    this.slug$.pipe(switchMap(params => this.customerService.getBySlug(params.get('slug')!)))
+    this.route.paramMap.pipe(
+      map(params => params.get('slug')!),
+      switchMap(slug => this.customerService.getBySlug(slug))
+    )
   );
 
-  // --- GESTIONE CONTATTI (Pop-up e API Patch) ---
-  openContactDialog(contact?: any): void {
+  // --- GESTIONE CONTATTI ---
+  async openContactDialog(contact?: any) {
     const cust = this.customer();
     if (!cust) return;
 
-    const dialogRef = this.dialog.open(ContactDialogComponent, {
-      width: '400px',
-      data: { contact }
-    });
+    // Apriamo il dialog nativo centrato tramite AppComponent
+    const result = await this.app.contactDialog().open(contact);
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        let updatedContacts = [...(cust.contacts || [])];
-        if (contact && contact.id) {
-          // Modifica
-          updatedContacts = updatedContacts.map((c: any) => c.id === contact.id ? { ...c, ...result } : c);
-        } else {
-          // Aggiunta
-          delete result.id; // Lasciamo generare l'UUID a Postgres
-          updatedContacts.push(result);
+    if (result) {
+      let updatedContacts = [...(cust.contacts || [])];
+      
+      if (contact && contact.id) {
+        // MODIFICA: Aggiorniamo l'elemento esistente mantenendo l'ID originale
+        updatedContacts = updatedContacts.map((c: any) => 
+          c.id === contact.id ? { ...c, ...result, id: contact.id } : c
+        );
+      } else {
+        // AGGIUNTA: Rimuoviamo l'id (che sarebbe undefined) e castiamo per TS
+        // Lasciamo che PostgreSQL generi l'UUID via Prisma
+        const { id, ...newContactData } = result;
+        updatedContacts.push(newContactData as any);
+      }
+      
+      this.customerService.update(cust.id, { contacts: updatedContacts }).subscribe({
+        next: () => {
+          this.notify.success(contact ? 'Contatto aggiornato' : 'Contatto aggiunto');
+          this.reloadRoute();
         }
-        
-        // Salva e forza un re-fetch ricaricando la rotta
-        this.customerService.update(cust.id, { contacts: updatedContacts }).subscribe(() => this.reloadRoute());
-      }
-    });
+      });
+    }
   }
 
-  deleteContact(contact: any): void {
+  async deleteContact(contact: any) {
     const cust = this.customer();
     if (!cust) return;
 
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '400px',
-      data: {
-        title: 'Elimina Contatto',
-        message: `Sei sicuro di voler eliminare il contatto ${contact.name}?`,
-        confirmText: 'Elimina',
-        isDestructive: true
-      }
+    const confirmed = await this.app.confirm().open({
+      title: 'Elimina Contatto',
+      message: `Sei sicuro di voler eliminare il contatto ${contact.name}?`,
+      isDestructive: true
     });
 
-    dialogRef.afterClosed().subscribe(confirmed => {
-      if (confirmed) {
-        const updatedContacts = cust.contacts.filter((c: any) => c.id !== contact.id);
-        this.customerService.update(cust.id, { contacts: updatedContacts }).subscribe(() => this.reloadRoute());
-      }
-    });
+    if (confirmed) {
+      const updatedContacts = cust.contacts.filter((c: any) => c.id !== contact.id);
+      this.customerService.update(cust.id, { contacts: updatedContacts }).subscribe({
+        next: () => {
+          this.notify.success('Contatto eliminato');
+          this.reloadRoute();
+        }
+      });
+    }
   }
 
-  // --- GESTIONE PLANT (Azioni sulle card) ---
-  editPlant(event: Event, plantId: string): void {
+  // --- GESTIONE PLANT ---
+  editPlant(event: Event, plantId: string) {
     event.preventDefault();
     event.stopPropagation();
     const cust = this.customer();
     if (cust) this.router.navigate(['/customers', cust.slug, 'plants', plantId, 'edit']);
   }
 
-  deletePlant(event: Event, plantId: string, plantName: string): void {
+  async deletePlant(event: Event, plantId: string, plantName: string) {
     event.preventDefault();
     event.stopPropagation();
     
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '400px',
-      data: {
-        title: 'Elimina Plant',
-        message: `Sei sicuro di voler eliminare ${plantName}?\n\nTutte le Station e le Camere associate verranno eliminate.`,
-        confirmText: 'Elimina',
-        isDestructive: true
-      }
+    const confirmed = await this.app.confirm().open({
+      title: 'Elimina Plant',
+      message: `Sei sicuro di voler eliminare ${plantName}?`,
+      isDestructive: true
     });
 
-    dialogRef.afterClosed().subscribe(confirmed => {
-      if (confirmed) {
-        this.plantService.delete(plantId).subscribe(() => this.reloadRoute());
-      }
-    });
+    if (confirmed) {
+      this.plantService.delete(plantId).subscribe(() => {
+        this.notify.success('Plant rimosso');
+        this.reloadRoute();
+      });
+    }
   }
 
-  // Metodo helper per forzare il refresh dei dati a schermo senza sfarfallii eccessivi
   private reloadRoute(): void {
-    const currentUrl = this.router.url;
+    const currentSlug = this.customer()?.slug;
+    if (!currentSlug) return;
+    
     this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
-      this.router.navigate([currentUrl]);
+      this.router.navigate(['/customers', currentSlug]);
     });
   }
 }

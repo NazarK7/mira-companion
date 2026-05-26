@@ -13,6 +13,7 @@ import { ToastContainerComponent } from './shared/components/feedback-toast/toas
 import { ConfirmDialogComponent } from './shared/components/confirm-dialog/confirm-dialog';
 import { LoadingOverlayComponent } from "./shared/components/loading-overlay/loading-overlay";
 import { LoadingService } from './shared/services/loading.service';
+import { ContactDialogComponent } from './shared/components/contact-dialog/contact-dialog';
 
 interface NavItem {
   readonly label: string;
@@ -29,6 +30,7 @@ interface NavItem {
     RouterLinkActive,
     AppButtonComponent,
     ToastContainerComponent,
+    ContactDialogComponent,
     ConfirmDialogComponent,
     LoadingOverlayComponent
 ],
@@ -40,8 +42,9 @@ export class AppComponent {
   protected readonly i18n = inject(I18nService);
   private readonly breakpointObserver = inject(BreakpointObserver);
 
-  /** Riferimento globale per dialoghi di conferma (accessibile via iniezione di AppComponent) */
   readonly confirm = viewChild.required(ConfirmDialogComponent);
+  readonly contactDialog = viewChild.required(ContactDialogComponent);
+
   protected readonly loading = inject(LoadingService);
 
   /** Rilevamento Mobile via BreakpointObserver (CDK) convertito in Signal */
