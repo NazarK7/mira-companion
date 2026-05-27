@@ -1,10 +1,10 @@
 // src/app/features/job-editor/job-editor.ts
-import { ChangeDetectionStrategy, Component, computed, inject, input, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, OnInit, signal, ViewChild } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { filter, switchMap, tap } from 'rxjs/operators';
-import { DatePipe } from '@angular/common'; 
+import { DatePipe } from '@angular/common';
 
 import { JobService } from '../../core/services/job.service';
 import { Job } from '../../core/models/domain.model';
@@ -16,7 +16,7 @@ import { AppComponent } from '../../app';
   selector: 'app-job-editor',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, AppButtonComponent, DatePipe, RouterLink], 
+  imports: [ReactiveFormsModule, AppButtonComponent, DatePipe, RouterLink],
   templateUrl: './job-editor.html',
 })
 export class JobEditorComponent implements OnInit {
@@ -38,7 +38,7 @@ export class JobEditorComponent implements OnInit {
   readonly isUploading = signal(false);
   readonly selectedFile = signal<File | null>(null);
   readonly isEditMode = computed(() => !!this.jobId());
-  
+
   // Tab attiva per lo switch tra Backups e Immagini
   readonly activeTab = signal<'backups' | 'images'>('backups');
 
@@ -67,10 +67,9 @@ export class JobEditorComponent implements OnInit {
   protected readonly backups = computed(() => this.jobData()?.backups || []);
   protected readonly images = computed(() => this.jobData()?.testImages || []);
 
-  ngOnInit(): void {}
-
+  ngOnInit(): void { }
   // --- Actions ---
-  
+
   save(): void {
     if (this.form.invalid) return;
     this.isSubmitting.set(true);
@@ -81,10 +80,10 @@ export class JobEditorComponent implements OnInit {
     const payload: Partial<Job> = {
       name: rawValue.name,
       description: rawValue.description || undefined,
-      visionToolSlot: rawValue.visionToolSlot ?? undefined 
+      visionToolSlot: rawValue.visionToolSlot ?? undefined
     };
 
-    const request$ = id 
+    const request$ = id
       ? this.jobService.update(id, payload)
       : this.jobService.create({ ...payload, cameraId: this.cameraId() });
 
@@ -113,9 +112,9 @@ export class JobEditorComponent implements OnInit {
     if (!file || !id) return;
 
     this.isUploading.set(true);
-    
+
     // Lo switch dirige la chiamata al metodo corretto del service
-    const request$ = this.activeTab() === 'backups' 
+    const request$ = this.activeTab() === 'backups'
       ? this.jobService.uploadBackup(id, file, notes)
       : this.jobService.uploadTestImages(id, file, notes);
 
@@ -141,7 +140,7 @@ export class JobEditorComponent implements OnInit {
     });
 
     if (confirmed) {
-      const request$ = type === 'backup' 
+      const request$ = type === 'backup'
         ? this.jobService.deleteBackup(archiveId)
         : this.jobService.deleteTestImage(archiveId);
 

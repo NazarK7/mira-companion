@@ -1,7 +1,8 @@
 // src/app/core/shared/components/button/button.component.ts
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'outline';
+// 1. Aggiungi 'warning' ai tipi supportati
+export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'warning' | 'ghost' | 'outline';
 export type ButtonSize = 'sm' | 'md' | 'lg' | 'icon';
 
 @Component({
@@ -37,11 +38,12 @@ export class AppButtonComponent {
   
   clicked = output<MouseEvent>();
 
-  // Classi Tailwind v4 (usano le variabili CSS definite nel tema)
   protected readonly variantClasses: Record<ButtonVariant, string> = {
     primary: 'bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500 shadow-sm',
     secondary: 'bg-zinc-200 text-zinc-900 hover:bg-zinc-300 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700',
-    danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
+    danger: 'bg-danger-500 text-white hover:bg-danger-700 focus:ring-danger-500',
+    // 2. Aggiungi le classi per il bottone arancione usando i colori del tuo tema
+    warning: 'bg-warning-500 text-white hover:bg-warning-700 focus:ring-warning-500 shadow-sm',
     ghost: 'bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400',
     outline: 'bg-transparent border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-900'
   };
