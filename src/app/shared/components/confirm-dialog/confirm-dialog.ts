@@ -17,11 +17,11 @@ export interface ConfirmOptions {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [AppButtonComponent],
   template: `
-<dialog 
-  #dialogElement
-  class="fixed inset-0 m-auto rounded-2xl border border-border-subtle bg-bg-surface p-0 shadow-2xl backdrop:bg-zinc-950/40 backdrop:backdrop-blur-sm open:flex open:flex-col max-w-md w-[calc(100%-2rem)] focus:outline-none animate-in fade-in zoom-in duration-300"
-  (cancel)="onCancel()"
->
+    <dialog 
+      #dialogElement
+      class="fixed inset-0 m-auto rounded-2xl border border-border-subtle bg-bg-surface p-0 shadow-2xl backdrop:bg-zinc-950/40 backdrop:backdrop-blur-sm open:flex open:flex-col max-w-md w-[calc(100%-2rem)] focus:outline-none animate-in fade-in zoom-in duration-300"
+      (cancel)="onCancel()"
+    >
       <div class="p-6">
         <h2 class="text-xl font-bold text-text-primary">{{ options().title }}</h2>
         <p class="mt-3 text-text-secondary whitespace-pre-wrap leading-relaxed">
@@ -30,15 +30,19 @@ export interface ConfirmOptions {
       </div>
 
       <div class="flex justify-end gap-3 bg-bg-subtle px-6 py-4">
-        <app-button variant="ghost" (clicked)="onCancel()">
+        <app-button variant="outline" (clicked)="onCancel()">
           {{ options().cancelText || i18n.t().common.cancel }}
         </app-button>
-        <app-button 
-          [variant]="options().isDestructive ? 'danger' : 'primary'" 
-          (clicked)="onConfirm()"
-        >
-          {{ options().confirmText || i18n.t().common.confirm }}
-        </app-button>
+        
+        @if (options().isDestructive) {
+          <app-button variant="danger" (clicked)="onConfirm()">
+            {{ options().confirmText || i18n.t().common.confirm }}
+          </app-button>
+        } @else {
+          <app-button variant="primary" (clicked)="onConfirm()">
+            {{ options().confirmText || i18n.t().common.confirm }}
+          </app-button>
+        }
       </div>
     </dialog>
   `,
@@ -51,9 +55,6 @@ export class ConfirmDialogComponent {
   options = signal<ConfirmOptions>({ title: '', message: '' });
   private resolveFn?: (value: boolean) => void;
 
-  /**
-   * Firma corretta: Accetta ConfirmOptions e ritorna Promise<boolean>
-   */
   open(options: ConfirmOptions): Promise<boolean> {
     this.options.set(options);
     this.dialogRef().nativeElement.showModal();

@@ -81,7 +81,7 @@
       <div class="bg-neutral-900 rounded-3xl p-8 shadow-2xl space-y-8">
 
         <div class="flex gap-6 border-b border-white/5 pb-2">
-          <button (click)="activeTab.set('backups')"
+          <button (click)="switchTab('backups')"
             class="relative text-xs font-black uppercase tracking-widest flex items-center gap-2 pb-2 transition-all"
             [class.text-primary-400]="activeTab() === 'backups'" [class.text-neutral-500]="activeTab() !== 'backups'">
             <span class="material-symbols-outlined text-sm">history</span> Logic Backups
@@ -89,7 +89,7 @@
               class="absolute bottom-[-2px] left-0 right-0 h-0.5 bg-primary-500 rounded-full"></div> }
           </button>
 
-          <button (click)="activeTab.set('images')"
+          <button (click)="switchTab('images')"
             class="relative text-xs font-black uppercase tracking-widest flex items-center gap-2 pb-2 transition-all"
             [class.text-primary-400]="activeTab() === 'images'" [class.text-neutral-500]="activeTab() !== 'images'">
             <span class="material-symbols-outlined text-sm">photo_library</span> Image Datasets

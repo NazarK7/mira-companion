@@ -1,9 +1,10 @@
 // src/app/features/job-editor/job-editor.ts
-import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, OnInit, signal, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, OnInit, signal, viewChild } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { filter, switchMap, tap } from 'rxjs/operators';
+import { BehaviorSubject, combineLatest } from 'rxjs'; // <-- Importati costrutti reattivi
 import { DatePipe } from '@angular/common';
 
 import { JobService } from '../../core/services/job.service';
@@ -26,6 +27,10 @@ export class JobEditorComponent implements OnInit {
   private readonly notify = inject(NotificationService);
   private readonly app = inject(AppComponent);
 
+  // --- DOM Element Queries ---
+  readonly fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
+  readonly noteInput = viewChild<ElementRef<HTMLTextAreaElement>>('noteInput');
+
   // --- Route Inputs ---
   slug = input.required<string>();
   plantId = input.required<string>();
@@ -39,8 +44,10 @@ export class JobEditorComponent implements OnInit {
   readonly selectedFile = signal<File | null>(null);
   readonly isEditMode = computed(() => !!this.jobId());
 
-  // Tab attiva per lo switch tra Backups e Immagini
   readonly activeTab = signal<'backups' | 'images'>('backups');
+
+  // Trigger per forzare il refresh dei dati senza distruggere il componente
+  private readonly refreshTrigger$ = new BehaviorSubject<void>(undefined);
 
   // --- Form ---
   readonly form = this.fb.group({
@@ -51,9 +58,12 @@ export class JobEditorComponent implements OnInit {
 
   // --- Data Fetching ---
   protected readonly jobData = toSignal(
-    toObservable(this.jobId).pipe(
-      filter(Boolean),
-      switchMap(id => this.jobService.getById(id)),
+    // combineLatest re-innesca la pipeline se cambia l'ID o se emettiamo un evento di refresh
+    combineLatest([
+      toObservable(this.jobId).pipe(filter(Boolean)),
+      this.refreshTrigger$
+    ]).pipe(
+      switchMap(([id]) => this.jobService.getById(id)),
       tap(job => {
         this.form.patchValue({
           name: job.name,
@@ -68,7 +78,20 @@ export class JobEditorComponent implements OnInit {
   protected readonly images = computed(() => this.jobData()?.testImages || []);
 
   ngOnInit(): void { }
+
   // --- Actions ---
+
+  switchTab(tab: 'backups' | 'images'): void {
+    this.activeTab.set(tab);
+
+    this.selectedFile.set(null);
+
+    const fileEl = this.fileInput()?.nativeElement;
+    if (fileEl) fileEl.value = '';
+
+    const noteEl = this.noteInput()?.nativeElement;
+    if (noteEl) noteEl.value = '';
+  }
 
   save(): void {
     if (this.form.invalid) return;
@@ -105,7 +128,6 @@ export class JobEditorComponent implements OnInit {
     if (file) this.selectedFile.set(file);
   }
 
-  // --- Upload Dispatcher in base alla Tab ---
   uploadArchive(notes: string): void {
     const file = this.selectedFile();
     const id = this.jobId();
@@ -113,7 +135,6 @@ export class JobEditorComponent implements OnInit {
 
     this.isUploading.set(true);
 
-    // Lo switch dirige la chiamata al metodo corretto del service
     const request$ = this.activeTab() === 'backups'
       ? this.jobService.uploadBackup(id, file, notes)
       : this.jobService.uploadTestImages(id, file, notes);
@@ -122,6 +143,10 @@ export class JobEditorComponent implements OnInit {
       next: () => {
         this.isUploading.set(false);
         this.selectedFile.set(null);
+
+        const noteEl = this.noteInput()?.nativeElement;
+        if (noteEl) noteEl.value = '';
+
         this.notify.success('Archivio sincronizzato');
         this.reloadJob();
       },
@@ -164,10 +189,9 @@ export class JobEditorComponent implements OnInit {
     return (b / (1024 * 1024)).toFixed(2) + ' MB';
   }
 
+  // Reload reattivo senza forzature del router
   private reloadJob(): void {
-    this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
-      this.router.navigate(['/customers', this.slug(), 'plants', this.plantId(), 'stations', this.stationId(), 'cameras', this.cameraId(), 'jobs', this.jobId(), 'edit']);
-    });
+    this.refreshTrigger$.next();
   }
 
   navigateBack(): void {
