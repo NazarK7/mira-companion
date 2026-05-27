@@ -4,7 +4,7 @@ import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angula
 import { Router, RouterLink } from '@angular/router';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { filter, switchMap, tap } from 'rxjs/operators';
-import { DatePipe } from '@angular/common'; // DecimalPipe rimosso (Warning NG8113)
+import { DatePipe } from '@angular/common'; 
 
 import { JobService } from '../../core/services/job.service';
 import { Job } from '../../core/models/domain.model';
@@ -16,7 +16,7 @@ import { AppComponent } from '../../app';
   selector: 'app-job-editor',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, AppButtonComponent, DatePipe, RouterLink], // DecimalPipe rimosso
+  imports: [ReactiveFormsModule, AppButtonComponent, DatePipe, RouterLink], 
   templateUrl: './job-editor.html',
 })
 export class JobEditorComponent implements OnInit {
@@ -38,6 +38,9 @@ export class JobEditorComponent implements OnInit {
   readonly isUploading = signal(false);
   readonly selectedFile = signal<File | null>(null);
   readonly isEditMode = computed(() => !!this.jobId());
+  
+  // Tab attiva per lo switch tra Backups e Immagini
+  readonly activeTab = signal<'backups' | 'images'>('backups');
 
   // --- Form ---
   readonly form = this.fb.group({
@@ -62,6 +65,7 @@ export class JobEditorComponent implements OnInit {
   );
 
   protected readonly backups = computed(() => this.jobData()?.backups || []);
+  protected readonly images = computed(() => this.jobData()?.testImages || []);
 
   ngOnInit(): void {}
 
@@ -74,11 +78,10 @@ export class JobEditorComponent implements OnInit {
     const rawValue = this.form.getRawValue();
     const id = this.jobId();
 
-    // Pulizia payload: conversione null -> undefined per TypeScript (Error TS2345)
     const payload: Partial<Job> = {
       name: rawValue.name,
       description: rawValue.description || undefined,
-      visionToolSlot: rawValue.visionToolSlot ?? undefined // Converte null in undefined
+      visionToolSlot: rawValue.visionToolSlot ?? undefined 
     };
 
     const request$ = id 
@@ -103,17 +106,24 @@ export class JobEditorComponent implements OnInit {
     if (file) this.selectedFile.set(file);
   }
 
-  uploadBackup(notes: string): void {
+  // --- Upload Dispatcher in base alla Tab ---
+  uploadArchive(notes: string): void {
     const file = this.selectedFile();
     const id = this.jobId();
     if (!file || !id) return;
 
     this.isUploading.set(true);
-    this.jobService.uploadBackup(id, file, notes).subscribe({
+    
+    // Lo switch dirige la chiamata al metodo corretto del service
+    const request$ = this.activeTab() === 'backups' 
+      ? this.jobService.uploadBackup(id, file, notes)
+      : this.jobService.uploadTestImages(id, file, notes);
+
+    request$.subscribe({
       next: () => {
         this.isUploading.set(false);
         this.selectedFile.set(null);
-        this.notify.success('Backup sincronizzato');
+        this.notify.success('Archivio sincronizzato');
         this.reloadJob();
       },
       error: () => {
@@ -123,23 +133,31 @@ export class JobEditorComponent implements OnInit {
     });
   }
 
-  async deleteBackup(backupId: string) {
+  async deleteArchive(archiveId: string, type: 'backup' | 'image') {
     const confirmed = await this.app.confirm().open({
-      title: 'Elimina Backup',
+      title: 'Elimina Archivio',
       message: 'Rimuovere definitivamente questa versione?',
       isDestructive: true
     });
 
     if (confirmed) {
-      this.jobService.deleteBackup(backupId).subscribe(() => {
+      const request$ = type === 'backup' 
+        ? this.jobService.deleteBackup(archiveId)
+        : this.jobService.deleteTestImage(archiveId);
+
+      request$.subscribe(() => {
         this.notify.success('Versione rimossa');
         this.reloadJob();
       });
     }
   }
 
-  downloadBackup(id: string): void {
-    this.jobService.downloadBackup(id);
+  downloadArchive(id: string, type: 'backup' | 'image'): void {
+    if (type === 'backup') {
+      this.jobService.downloadBackup(id);
+    } else {
+      this.jobService.downloadTestImage(id);
+    }
   }
 
   formatBytes(bytes: any): string {

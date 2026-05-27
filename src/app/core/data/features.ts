@@ -72,7 +72,7 @@ export const CAMERA_STATUS = {
 } as const;
 
 export const CAMERA_TYPE_OPTIONS = [
-  { value: 'MIRA_3D', label: 'MiRa 3D (Robot Guidance)', badgeClass: 'bg-[var(--color-primary-50)] text-[var(--color-primary-700)]' },
+  { value: 'MIRA_3D', label: 'MiRa 3D', badgeClass: 'bg-[var(--color-primary-50)] text-[var(--color-primary-700)]' },
   { value: 'COGNEX_INSIGHT', label: 'Cognex In-Sight', badgeClass: 'bg-[var(--color-accent-50)] text-[var(--color-accent-700)]' },
   { value: 'COGNEX_DATAMAN', label: 'Cognex DataMan', badgeClass: 'bg-[var(--color-info-50)] text-[var(--color-info-700)]' }
 ];
@@ -95,9 +95,9 @@ export interface AssetConfig {
 }
 
 export const ASSET_CONFIGS: AssetConfig[] = [
-  { key: 'mira3d', title: 'System Backup', icon: 'settings_backup_restore', accept: '.zip' },
+  { key: 'mira3d', title: 'MiRa3D Backup', icon: 'settings_backup_restore', accept: '.zip' },
   { key: 'halcon', title: 'Halcon License', icon: 'verified_user', accept: '.zip' },
-  { key: 'restart', title: 'Restart Utility', icon: 'rebase_edit', accept: '.pptx,.zip' }
+  { key: 'restart', title: 'Restart on Crash', icon: 'rebase_edit', accept: '.pptx,.zip' }
 ];
 
 // --- CAMERA SPECIFICATIONS UI ---

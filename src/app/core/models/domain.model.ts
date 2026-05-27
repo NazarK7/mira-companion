@@ -248,14 +248,11 @@ export interface RobotIntegration {
  */
 export interface JobTestImage {
   id: string;
-  filename: string;
-  /** Path al blob nel volume backend (relativo a /blobs/). */
-  filePath?: string;
-  /** Bytes. */
-  fileSize?: number;
-  /** ISO timestamp di acquisizione (se noto). */
-  capturedAt?: string;
+  jobId: string;
+  fileName: string;
+  fileSize: number;
   notes?: string;
+  createdAt: string;
 }
 
 /**
@@ -297,6 +294,7 @@ export interface Job {
   /** Solo MiRa3D: indice 1..99 che lega al VisionTool_NN del robot. */
   visionToolSlot?: number;
   backups: JobBackup[];
+  testImages?: JobTestImage[]; 
   createdAt: string;
   updatedAt: string;
 }

@@ -1,17 +1,17 @@
 <section class="mx-auto max-w-7xl px-6 py-10 pb-32 animate-in fade-in duration-500">
-  
-<nav class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-text-tertiary mb-8">
-  <a routerLink="/customers" class="hover:text-primary-500 transition-colors italic">Customers</a>
-  <span class="material-symbols-outlined text-xs">chevron_right</span>
-  
-  <a [routerLink]="['/customers', slug(), 'plants', plantId(), 'stations', stationId(), 'cameras', cameraId()]" 
-     class="hover:text-primary-500 transition-colors italic">
-     Camera Details
-  </a>
-  
-  <span class="material-symbols-outlined text-xs">chevron_right</span>
-  <span class="text-text-primary italic">{{ isEditMode() ? 'Edit Job' : 'New Job' }}</span>
-</nav>
+
+  <nav class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-text-tertiary mb-8">
+    <a routerLink="/customers" class="hover:text-primary-500 transition-colors italic">Customers</a>
+    <span class="material-symbols-outlined text-xs">chevron_right</span>
+
+    <a [routerLink]="['/customers', slug(), 'plants', plantId(), 'stations', stationId(), 'cameras', cameraId()]"
+      class="hover:text-primary-500 transition-colors italic">
+      Camera Details
+    </a>
+
+    <span class="material-symbols-outlined text-xs">chevron_right</span>
+    <span class="text-text-primary italic">{{ isEditMode() ? 'Edit Job' : 'New Job' }}</span>
+  </nav>
 
   <header class="flex justify-between items-end border-b border-border-subtle pb-8 mb-10">
     <div class="space-y-2">
@@ -24,15 +24,17 @@
     </div>
 
     @if (form.controls.visionToolSlot.value; as slot) {
-      <div class="flex flex-col items-end">
-        <span class="text-[10px] font-black uppercase text-text-tertiary tracking-widest mb-1">Vision Slot</span>
-        <span class="bg-primary-500 text-white font-mono font-bold px-4 py-2 rounded-xl text-2xl shadow-lg shadow-primary-500/20">VT{{ slot }}</span>
-      </div>
+    <div class="flex flex-col items-end">
+      <span class="text-[10px] font-black uppercase text-text-tertiary tracking-widest mb-1">Vision Slot</span>
+      <span
+        class="bg-primary-500 text-white font-mono font-bold px-4 py-2 rounded-xl text-2xl shadow-lg shadow-primary-500/20">VT{{
+        slot }}</span>
+    </div>
     }
   </header>
 
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
-    
+
     <div class="lg:col-span-4 space-y-6">
       <div class="bg-bg-surface border border-border-subtle rounded-3xl p-8 shadow-sm space-y-6">
         <h3 class="text-xs font-black uppercase tracking-widest text-text-tertiary flex items-center gap-2">
@@ -42,7 +44,7 @@
         <form [formGroup]="form" class="space-y-5">
           <div class="flex flex-col gap-2">
             <label class="text-[10px] font-black uppercase tracking-widest text-text-tertiary">Job Name *</label>
-            <input formControlName="name" 
+            <input formControlName="name"
               class="bg-bg-subtle border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all font-bold"
               placeholder="e.g. pick_left_wing" />
           </div>
@@ -55,10 +57,12 @@
           </div>
 
           <div class="flex flex-col gap-2">
-            <label class="text-[10px] font-black uppercase tracking-widest text-text-tertiary">Vision Tool Slot (1-99)</label>
-            <input type="number" formControlName="visionToolSlot" 
+            <label class="text-[10px] font-black uppercase tracking-widest text-text-tertiary">Vision Tool Slot
+              (1-99)</label>
+            <input type="number" formControlName="visionToolSlot"
               class="bg-bg-subtle border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all font-mono font-bold" />
-            <p class="text-[9px] text-text-tertiary italic">L'ID trigger inviato dal PLC per caricare questo job in MiRa3D.</p>
+            <p class="text-[9px] text-text-tertiary italic">L'ID trigger inviato dal PLC per caricare questo job in
+              MiRa3D.</p>
           </div>
         </form>
       </div>
@@ -66,88 +70,143 @@
       <div class="p-4 rounded-2xl bg-info-500/5 border border-info-500/10 flex gap-3">
         <span class="material-symbols-outlined text-info-500 text-lg">info</span>
         <p class="text-[11px] text-info-700 leading-relaxed font-medium">
-          La modifica del <strong>Vision Tool Slot</strong> richiede il riavvio della sequenza PLC per evitare disallineamenti di presa.
+          La modifica del <strong>Vision Tool Slot</strong> richiede il riavvio della sequenza PLC per evitare
+          disallineamenti di presa.
         </p>
       </div>
     </div>
 
     <div class="lg:col-span-8">
       @if (isEditMode()) {
-        <div class="bg-neutral-900 rounded-3xl p-8 shadow-2xl space-y-8">
-          <h3 class="text-xs font-black uppercase tracking-widest text-neutral-500 flex items-center gap-2">
-            <span class="material-symbols-outlined text-sm text-primary-400">history</span> Version Archive (.zip)
-          </h3>
+      <div class="bg-neutral-900 rounded-3xl p-8 shadow-2xl space-y-8">
 
-          <div class="space-y-3">
-            @for (b of backups(); track b.id) {
-              <div class="group flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-2xl hover:border-primary-500/30 transition-all">
-                <div class="flex items-center gap-4">
-                  <div class="p-3 bg-white/5 rounded-xl text-primary-400 group-hover:bg-primary-500/20 transition-colors">
-                    <span class="material-symbols-outlined">folder_zip</span>
-                  </div>
-                  <div>
-                    <h4 class="text-sm font-bold text-neutral-100">{{ b.fileName }}</h4>
-                    <p class="text-[10px] text-neutral-500 font-mono mt-1 uppercase">
-                      {{ b.createdAt | date:'medium' }} • {{ formatBytes(b.fileSize) }}
-                    </p>
-                    @if (b.notes) {
-                      <p class="text-xs text-primary-300/60 mt-2 italic font-medium">"{{ b.notes }}"</p>
-                    }
-                  </div>
-                </div>
-                <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <app-button variant="ghost" size="icon" (clicked)="downloadBackup(b.id)">
-                    <span class="material-symbols-outlined text-sm text-neutral-400">download</span>
-                  </app-button>
-                  <app-button variant="ghost" size="icon" (clicked)="deleteBackup(b.id)">
-                    <span class="material-symbols-outlined text-sm text-danger-500">delete</span>
-                  </app-button>
-                </div>
-              </div>
-            } @empty {
-              <div class="py-16 border-2 border-dashed border-white/5 rounded-3xl text-center">
-                <span class="material-symbols-outlined text-4xl text-neutral-700 mb-2">inventory_2</span>
-                <p class="text-xs text-neutral-600 font-black uppercase tracking-widest">Repository empty</p>
-              </div>
-            }
-          </div>
+        <div class="flex gap-6 border-b border-white/5 pb-2">
+          <button (click)="activeTab.set('backups')"
+            class="relative text-xs font-black uppercase tracking-widest flex items-center gap-2 pb-2 transition-all"
+            [class.text-primary-400]="activeTab() === 'backups'" [class.text-neutral-500]="activeTab() !== 'backups'">
+            <span class="material-symbols-outlined text-sm">history</span> Logic Backups
+            @if (activeTab() === 'backups') { <div
+              class="absolute bottom-[-2px] left-0 right-0 h-0.5 bg-primary-500 rounded-full"></div> }
+          </button>
 
-          <div class="p-8 bg-white/5 border border-white/10 rounded-2xl space-y-6">
-            <h4 class="text-[10px] font-black text-neutral-500 uppercase tracking-widest text-center italic">Deploy New Snapshot</h4>
-            
-            <div class="flex flex-col gap-4">
-              <input type="file" #fileInput (change)="onFileSelected($event)" accept=".zip" class="hidden">
-              
-              <div class="flex gap-4">
-                <textarea #noteInput
-                  class="flex-1 bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-neutral-200 outline-none focus:border-primary-500 transition-all resize-none"
-                  placeholder="Notes for this release (e.g., cycle time optimization)..." rows="2"></textarea>
-                
-                <app-button variant="outline" class="!border-white/10 !text-neutral-300" (clicked)="fileInput.click()">
-                  <span class="material-symbols-outlined mr-2">upload_file</span> SELECT ZIP
-                </app-button>
-              </div>
+          <button (click)="activeTab.set('images')"
+            class="relative text-xs font-black uppercase tracking-widest flex items-center gap-2 pb-2 transition-all"
+            [class.text-primary-400]="activeTab() === 'images'" [class.text-neutral-500]="activeTab() !== 'images'">
+            <span class="material-symbols-outlined text-sm">photo_library</span> Image Datasets
+            @if (activeTab() === 'images') { <div
+              class="absolute bottom-[-2px] left-0 right-0 h-0.5 bg-primary-500 rounded-full"></div> }
+          </button>
+        </div>
 
-              @if (selectedFile(); as file) {
-                <div class="flex items-center justify-between bg-primary-600 p-4 rounded-xl animate-in slide-in-from-top-2">
-                  <div class="flex items-center gap-3">
-                    <span class="material-symbols-outlined text-white">check_circle</span>
-                    <span class="text-xs font-mono text-white font-bold">{{ file.name }}</span>
-                  </div>
-                  <app-button variant="primary" class="!bg-white !text-primary-700" [loading]="isUploading()" (clicked)="uploadBackup(noteInput.value)">
-                    SYNC TO CLOUD
-                  </app-button>
-                </div>
-              }
+        <div class="max-h-[300px] overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+
+          @if (activeTab() === 'backups') {
+          @for (b of backups(); track b.id) {
+          <div
+            class="group flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-2xl hover:border-primary-500/30 transition-all">
+            <div class="flex items-center gap-4">
+              <div class="p-3 bg-white/5 rounded-xl text-primary-400 group-hover:bg-primary-500/20 transition-colors">
+                <span class="material-symbols-outlined">folder_zip</span>
+              </div>
+              <div>
+                <h4 class="text-sm font-bold text-neutral-100">{{ b.fileName }}</h4>
+                <p class="text-[10px] text-neutral-500 font-mono mt-1 uppercase">
+                  {{ b.createdAt | date:'medium' }} • {{ formatBytes(b.fileSize) }}
+                </p>
+                @if (b.notes) { <p class="text-xs text-primary-300/60 mt-2 italic font-medium">"{{ b.notes }}"</p> }
+              </div>
+            </div>
+            <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <app-button variant="ghost" size="icon" (clicked)="downloadArchive(b.id, 'backup')">
+                <span class="material-symbols-outlined text-sm text-neutral-400">download</span>
+              </app-button>
+              <app-button variant="ghost" size="icon" (clicked)="deleteArchive(b.id, 'backup')">
+                <span class="material-symbols-outlined text-sm text-danger-500">delete</span>
+              </app-button>
             </div>
           </div>
+          } @empty {
+          <div class="py-16 border-2 border-dashed border-white/5 rounded-3xl text-center">
+            <span class="material-symbols-outlined text-4xl text-neutral-700 mb-2">inventory_2</span>
+            <p class="text-xs text-neutral-600 font-black uppercase tracking-widest">No Logic Backups</p>
+          </div>
+          }
+          } @else {
+          @for (img of images(); track img.id) {
+          <div
+            class="group flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-2xl hover:border-primary-500/30 transition-all">
+            <div class="flex items-center gap-4">
+              <div class="p-3 bg-white/5 rounded-xl text-accent-400 group-hover:bg-accent-500/20 transition-colors">
+                <span class="material-symbols-outlined">image</span>
+              </div>
+              <div>
+                <h4 class="text-sm font-bold text-neutral-100">{{ img.fileName }}</h4>
+                <p class="text-[10px] text-neutral-500 font-mono mt-1 uppercase">
+                  {{ img.createdAt | date:'medium' }} • {{ formatBytes(img.fileSize) }}
+                </p>
+                @if (img.notes) { <p class="text-xs text-accent-300/60 mt-2 italic font-medium">"{{ img.notes }}"</p> }
+              </div>
+            </div>
+            <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <app-button variant="ghost" size="icon" (clicked)="downloadArchive(img.id, 'image')">
+                <span class="material-symbols-outlined text-sm text-neutral-400">download</span>
+              </app-button>
+              <app-button variant="ghost" size="icon" (clicked)="deleteArchive(img.id, 'image')">
+                <span class="material-symbols-outlined text-sm text-danger-500">delete</span>
+              </app-button>
+            </div>
+          </div>
+          } @empty {
+          <div class="py-16 border-2 border-dashed border-white/5 rounded-3xl text-center">
+            <span class="material-symbols-outlined text-4xl text-neutral-700 mb-2">collections</span>
+            <p class="text-xs text-neutral-600 font-black uppercase tracking-widest">No Datasets Uploaded</p>
+          </div>
+          }
+          }
         </div>
+
+        <div class="p-8 bg-white/5 border border-white/10 rounded-2xl space-y-6">
+          <h3 class="text-xs font-black uppercase tracking-widest text-neutral-500 flex items-center gap-2">
+            <span class="material-symbols-outlined text-sm text-primary-400">cloud_upload</span> Deploy New Snapshot
+          </h3>
+
+          <div class="flex flex-col gap-4">
+            <input type="file" #fileInput (change)="onFileSelected($event)" accept=".zip" class="hidden">
+
+            <div class="flex gap-4">
+              <textarea #noteInput
+                class="flex-1 bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-neutral-200 outline-none focus:border-primary-500 transition-all resize-none"
+                [placeholder]="activeTab() === 'backups' ? 'Notes for this logic release...' : 'Describe dataset conditions (e.g., strong reflections)...'"
+                rows="2"></textarea>
+
+              <app-button variant="outline" class="!border-white/10 !text-neutral-300" (clicked)="fileInput.click()">
+                <span class="material-symbols-outlined mr-2">upload_file</span> SELECT ZIP
+              </app-button>
+            </div>
+
+            @if (selectedFile(); as file) {
+            <div class="flex items-center justify-between bg-primary-600 p-4 rounded-xl animate-in slide-in-from-top-2">
+              <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-white">check_circle</span>
+                <span class="text-xs font-mono text-white font-bold">{{ file.name }}</span>
+              </div>
+              <app-button variant="primary" class="!bg-white !text-primary-700" [loading]="isUploading()"
+                (clicked)="uploadArchive(noteInput.value)">
+                SYNC TO CLOUD
+              </app-button>
+            </div>
+            }
+          </div>
+        </div>
+      </div>
       } @else {
-        <div class="h-full min-h-[400px] flex flex-col items-center justify-center bg-bg-subtle/30 border-2 border-dashed border-border-subtle rounded-3xl text-center p-12">
-          <span class="material-symbols-outlined text-6xl text-text-disabled mb-4 opacity-20">cloud_off</span>
-          <h3 class="text-xl font-bold text-text-primary italic uppercase tracking-tight">Archive Locked</h3>
-          <p class="text-sm text-text-tertiary max-w-xs mt-2">Salva le proprietà del job per attivare il repository dei file.</p>
-        </div>
+      <div
+        class="h-full min-h-[400px] flex flex-col items-center justify-center bg-bg-subtle/30 border-2 border-dashed border-border-subtle rounded-3xl text-center p-12">
+        <span class="material-symbols-outlined text-6xl text-text-disabled mb-4 opacity-20">cloud_off</span>
+        <h3 class="text-xl font-bold text-text-primary italic uppercase tracking-tight">Archive Locked</h3>
+        <p class="text-sm text-text-tertiary max-w-xs mt-2">Salva le proprietà del job per attivare il repository dei
+          file.</p>
+      </div>
       }
     </div>
   </div>
@@ -155,7 +214,8 @@
   <div class="fixed bottom-0 left-0 right-0 z-50 bg-bg-surface/80 backdrop-blur-xl border-t border-border-subtle p-5">
     <div class="max-w-7xl mx-auto flex justify-between items-center px-6">
       <div class="flex items-center gap-3">
-        <div class="w-2 h-2 rounded-full" [class]="isEditMode() ? 'bg-success-500 animate-pulse' : 'bg-primary-500'"></div>
+        <div class="w-2 h-2 rounded-full" [class]="isEditMode() ? 'bg-success-500 animate-pulse' : 'bg-primary-500'">
+        </div>
         <span class="text-[10px] font-black uppercase text-text-tertiary tracking-widest">
           {{ isEditMode() ? 'Active Production Edit' : 'New Configuration Draft' }}
         </span>
