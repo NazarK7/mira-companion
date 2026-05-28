@@ -32,7 +32,9 @@ function makePlateSpec(size_mm: number): PlateSpec {
 
 export const PLATE_CATALOG: readonly PlateSpec[] = [
   makePlateSpec(300),
+  makePlateSpec(288),
   makePlateSpec(250),
+  makePlateSpec(200),
   makePlateSpec(150),
   makePlateSpec(100),
   makePlateSpec(75),
