@@ -45,7 +45,6 @@ const POSE_STATUS_COLORS: Record<CalibrationPoseStatus, number> = {
   'skipped': 0xd1d5db,
 };
 
-
 const ANCHOR_COLOR = 0x0033a0;
 const CONFLICT_HIGHLIGHT_COLOR = 0xef4444;
 const SELECTED_OUTLINE_COLOR = 0xffffff;
@@ -69,12 +68,10 @@ const CROSSHAIR_COLOR = 0xffffff;
   styleUrl: './three-viewer.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-
 export class ThreeViewer implements AfterViewInit {
   // ---------------------------------------------------------------------------
   // Inputs
   // ---------------------------------------------------------------------------
-
 
   readonly poses = input.required<CanonicalPose[]>();
   readonly plateSetup = input.required<PlateWorldSetup>();
@@ -128,9 +125,9 @@ export class ThreeViewer implements AfterViewInit {
   protected readonly scaleWidthPx = signal<number>(0);
 
   /**
- * Info della pose selezionata: indice, posizione, distanza dall'anchor.
- * null quando nessuna pose è selezionata. Usato dal pannello HUD bottom-right.
- */
+   * Info della pose selezionata: indice, posizione, distanza dall'anchor.
+   * null quando nessuna pose è selezionata. Usato dal pannello HUD bottom-right.
+   */
   protected readonly selectedPoseInfo = computed(() => {
     const idx = this.selectedPoseIndex();
     const poses = this.poses();
@@ -176,8 +173,6 @@ export class ThreeViewer implements AfterViewInit {
   // ---------------------------------------------------------------------------
 
   ngAfterViewInit(): void {
-
-
     this.initScene();
     this.setupControls();
     this.setupResize();
@@ -201,12 +196,8 @@ export class ThreeViewer implements AfterViewInit {
       this.showOrigin(),
     );
 
-
-    //this.rebuildRobotBase();
-
     this.fitCameraToScene();
     this.updateDynamicScale();
-    // this.requestRender();
     this.renderLoop();
     this.destroyRef.onDestroy(() => this.dispose());
   }
@@ -242,7 +233,6 @@ export class ThreeViewer implements AfterViewInit {
     this.markersGroup = new THREE.Group();
     this.aidsGroup = new THREE.Group();
 
-
     this.sceneRoot.add(this.plateGroup, this.markersGroup, this.aidsGroup, this.robotBaseGroup);
     this.scene.add(this.sceneRoot);
   }
@@ -268,11 +258,9 @@ export class ThreeViewer implements AfterViewInit {
     if (showAxis) {
       const axisLen = Math.max(s * 0.5, 150);
       const axes = new THREE.AxesHelper(axisLen);
-      // Posizionamento nell'angolo in basso a sinistra del plate
-      axes.position.set(cx - s / 2, cy - s / 2, cz + 1); // +1 per evitare flickering
+      axes.position.set(cx - s / 2, cy - s / 2, cz + 1);
       this.aidsGroup.add(axes);
 
-      // Aggiunta etichette X, Y, Z
       const labelX = this.buildPoseLabelSprite('X', 0xff0000, 20);
       labelX.position.set(cx - s / 2 + axisLen, cy - s / 2, cz + 10);
 
@@ -286,7 +274,6 @@ export class ThreeViewer implements AfterViewInit {
     }
 
     if (showOrigin) {
-      // Sfera bianca al centro esatto del plate
       const originGeom = new THREE.SphereGeometry(8, 16, 16);
       const originMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
       const originMesh = new THREE.Mesh(originGeom, originMat);
@@ -322,8 +309,6 @@ export class ThreeViewer implements AfterViewInit {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.08;
-
-    //this.controls.addEventListener('change', () => this.requestRender());
   }
 
   private renderLoop(): void {
@@ -331,14 +316,13 @@ export class ThreeViewer implements AfterViewInit {
 
     this.rafId = requestAnimationFrame(() => this.renderLoop());
 
-    this.controls?.update(); // Calcola l'inerzia frame by frame
+    this.controls?.update();
     this.updateDynamicScale();
     this.renderer.render(this.scene, this.camera);
   }
 
   private setupResize(): void {
     this.resizeObserver = new ResizeObserver(() => {
-      // Sposta l'esecuzione al prossimo frame per spezzare il loop sincrono
       requestAnimationFrame(() => this.handleResize());
     });
     this.resizeObserver.observe(this.hostRef.nativeElement);
@@ -393,10 +377,7 @@ export class ThreeViewer implements AfterViewInit {
   // ---------------------------------------------------------------------------
 
   private rebuildPlate(plate: PlateWorldSetup): void {
-
     this.clearGroup(this.plateGroup);
-
-
 
     if (this.plateTexture) {
       this.plateTexture.dispose();
@@ -404,7 +385,6 @@ export class ThreeViewer implements AfterViewInit {
     }
     this.plateTexture = generatePlateTexture({
       size_mm: plate.size_mm,
-     // dot_count: 7,
     });
 
     const plateGeom = new THREE.PlaneGeometry(plate.size_mm, plate.size_mm);
@@ -514,153 +494,116 @@ export class ThreeViewer implements AfterViewInit {
     });
   }
 
-  /**
-   * Costruisce il "footprint" della FOV proiettato sul piano Z del plate per
-   * la pose selezionata. Composto da:
-   *   1) 4 linee continue dall'apex (camera) ai 4 punti di intersezione dei
-   *      raggi-bordo del frustum con il piano del plate.
-   *   2) Un loop chiuso sul terreno che mostra l'area effettivamente inquadrata.
-   *   3) AxesHelper + crosshair al centro del footprint (intersezione asse ottico).
-   *   4) Sprite con dimensioni W × H del footprint in mm.
-   *
-   * Colore: bianco se completamente dentro al plate, rosso se almeno un
-   * angolo esce dai bordi (= si stanno acquisendo punti fuori dal pattern).
-   *
-   * Ritorna null se la camera non punta verso il piano (parallela / dietro).
-   */
   private buildFovFootprint(
     pose: CanonicalPose,
     plate: PlateWorldSetup,
     halfWFar: number,
     halfHFar: number,
     far: number,
-  ): THREE.Group | null {
+  ): THREE.Group {
     const groundZ = plate.center[2];
-    const origin = new THREE.Vector3(
-      pose.position[0],
-      pose.position[1],
-      pose.position[2],
-    );
-    const quaternion = new THREE.Quaternion(
-      pose.quaternion[0],
-      pose.quaternion[1],
-      pose.quaternion[2],
-      pose.quaternion[3],
-    );
+    const origin = new THREE.Vector3(pose.position[0], pose.position[1], pose.position[2]);
+    const quaternion = new THREE.Quaternion(pose.quaternion[0], pose.quaternion[1], pose.quaternion[2], pose.quaternion[3]);
 
-    // Direzioni in camera-local dei 4 corner del frustum (apex → piano far).
     const localCorners: ReadonlyArray<readonly [number, number, number]> = [
-      [-halfWFar, +halfHFar, far], // TL
-      [+halfWFar, +halfHFar, far], // TR
-      [+halfWFar, -halfHFar, far], // BR
-      [-halfWFar, -halfHFar, far], // BL
+      [-halfWFar, +halfHFar, far],
+      [+halfWFar, +halfHFar, far],
+      [+halfWFar, -halfHFar, far],
+      [-halfWFar, -halfHFar, far],
     ];
 
     const hitPoints: THREE.Vector3[] = [];
+    let allHitGround = true;
+
+    // Disegna sempre i raggi. Se non colpiscono terra (paralleli o verso l'alto),
+    // li proiettiamo a 2000mm di distanza giusto per indicare la direzione
     for (const [lx, ly, lz] of localCorners) {
-      const dir = new THREE.Vector3(lx, ly, lz)
-        .applyQuaternion(quaternion)
-        .normalize();
-      if (Math.abs(dir.z) < 1e-5) return null;
-      const t = (groundZ - origin.z) / dir.z;
-      if (t <= 0) return null;
-      hitPoints.push(origin.clone().addScaledVector(dir, t));
+      const dir = new THREE.Vector3(lx, ly, lz).applyQuaternion(quaternion).normalize();
+
+      if (Math.abs(dir.z) < 1e-5) {
+        allHitGround = false;
+        hitPoints.push(origin.clone().addScaledVector(dir, 2000));
+      } else {
+        const t = (groundZ - origin.z) / dir.z;
+        if (t <= 0) {
+          allHitGround = false;
+          hitPoints.push(origin.clone().addScaledVector(dir, 2000));
+        } else {
+          hitPoints.push(origin.clone().addScaledVector(dir, t));
+        }
+      }
     }
 
-    // Intersezione asse ottico (forward locale = +Z) col piano.
-    const forward = new THREE.Vector3(0, 0, 1)
-      .applyQuaternion(quaternion)
-      .normalize();
-    if (Math.abs(forward.z) < 1e-5) return null;
-    const tCenter = (groundZ - origin.z) / forward.z;
-    if (tCenter <= 0) return null;
-    const centerHit = origin.clone().addScaledVector(forward, tCenter);
+    const forward = new THREE.Vector3(0, 0, 1).applyQuaternion(quaternion).normalize();
+    let centerHit: THREE.Vector3 | null = null;
 
-    // Controllo bordi plate per colore.
+    if (Math.abs(forward.z) > 1e-5) {
+      const tCenter = (groundZ - origin.z) / forward.z;
+      if (tCenter > 0) {
+        centerHit = origin.clone().addScaledVector(forward, tCenter);
+      }
+    }
+
+    // Se anche solo un punto non colpisce terra, l'area è per forza "sbordata"
+    let outside = !allHitGround;
     const halfP = plate.size_mm / 2;
     const px = plate.center[0];
     const py = plate.center[1];
-    const outside = hitPoints.some(
-      (p) =>
-        p.x < px - halfP ||
-        p.x > px + halfP ||
-        p.y < py - halfP ||
-        p.y > py + halfP,
-    );
-    const color = outside ? FOOTPRINT_OUT_COLOR : FOOTPRINT_OK_COLOR;
 
+    if (!outside) {
+      outside = hitPoints.some(
+        (p) => p.x < px - halfP || p.x > px + halfP || p.y < py - halfP || p.y > py + halfP,
+      );
+    }
+
+    const color = outside ? FOOTPRINT_OUT_COLOR : FOOTPRINT_OK_COLOR;
     const group = new THREE.Group();
 
-    // 1) 4 linee laterali (apex → corner a terra).
+    // 1) 4 linee laterali: Vengono sempre disegnate per mostrare il volume FOV
     const sidePts: THREE.Vector3[] = [];
     for (const hp of hitPoints) {
       sidePts.push(origin.clone(), hp.clone());
     }
     const sidesGeom = new THREE.BufferGeometry().setFromPoints(sidePts);
-    const sidesMat = new THREE.LineBasicMaterial({
-      color,
-      transparent: true,
-      opacity: 0.85,
-    });
+    const sidesMat = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.85 });
     const sides = new THREE.LineSegments(sidesGeom, sidesMat);
     sides.renderOrder = 9;
     group.add(sides);
 
-    // 2) Loop chiuso sul terreno.
-    const loopGeom = new THREE.BufferGeometry().setFromPoints([
-      hitPoints[0],
-      hitPoints[1],
-      hitPoints[2],
-      hitPoints[3],
-      hitPoints[0],
-    ]);
-    const loopMat = new THREE.LineBasicMaterial({
-      color,
-      transparent: true,
-      opacity: 1,
-    });
-    const loop = new THREE.Line(loopGeom, loopMat);
-    loop.renderOrder = 10;
-    group.add(loop);
+    // 2) Rettangolo a terra: disegnato solo se i raggi colpiscono effettivamente il pavimento
+    if (allHitGround) {
+      const loopGeom = new THREE.BufferGeometry().setFromPoints([
+        hitPoints[0], hitPoints[1], hitPoints[2], hitPoints[3], hitPoints[0],
+      ]);
+      const loopMat = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 1 });
+      const loop = new THREE.Line(loopGeom, loopMat);
+      loop.renderOrder = 10;
+      group.add(loop);
+    }
 
-    // 3) AxesHelper + crosshair al centro footprint.
-    const diag = hitPoints[0].distanceTo(hitPoints[2]);
-    const axisLen = Math.max(diag * 0.22, 50);
-    const axes = new THREE.AxesHelper(axisLen);
-    axes.position.set(centerHit.x, centerHit.y, centerHit.z + 1);
-    axes.renderOrder = 11;
-    group.add(axes);
+    // 3) Croce centrale: disegnata solo se il centro dell'ottica colpisce il pavimento
+    if (centerHit) {
+      const diag = hitPoints[0].distanceTo(hitPoints[2]);
+      const axisLen = Math.max(diag * 0.22, 50);
+      const axes = new THREE.AxesHelper(axisLen);
+      axes.position.set(centerHit.x, centerHit.y, centerHit.z + 1);
+      axes.renderOrder = 11;
+      group.add(axes);
 
-    const ch = axisLen * 0.35;
-    const crosshairGeom = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(centerHit.x - ch, centerHit.y, centerHit.z + 1),
-      new THREE.Vector3(centerHit.x + ch, centerHit.y, centerHit.z + 1),
-      new THREE.Vector3(centerHit.x, centerHit.y - ch, centerHit.z + 1),
-      new THREE.Vector3(centerHit.x, centerHit.y + ch, centerHit.z + 1),
-    ]);
-    const crosshairMat = new THREE.LineBasicMaterial({
-      color: CROSSHAIR_COLOR,
-      transparent: true,
-      opacity: 0.7,
-    });
-    const crosshair = new THREE.LineSegments(crosshairGeom, crosshairMat);
-    crosshair.renderOrder = 11;
-    group.add(crosshair);
+      const ch = axisLen * 0.35;
+      const crosshairGeom = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(centerHit.x - ch, centerHit.y, centerHit.z + 1),
+        new THREE.Vector3(centerHit.x + ch, centerHit.y, centerHit.z + 1),
+        new THREE.Vector3(centerHit.x, centerHit.y - ch, centerHit.z + 1),
+        new THREE.Vector3(centerHit.x, centerHit.y + ch, centerHit.z + 1),
+      ]);
+      const crosshairMat = new THREE.LineBasicMaterial({ color: CROSSHAIR_COLOR, transparent: true, opacity: 0.7 });
+      const crosshair = new THREE.LineSegments(crosshairGeom, crosshairMat);
+      crosshair.renderOrder = 11;
+      group.add(crosshair);
+    }
 
-    // 4) Etichetta dimensioni footprint (W × H mm).
-    const widthMm = hitPoints[0].distanceTo(hitPoints[1]);
-    const heightMm = hitPoints[1].distanceTo(hitPoints[2]);
-    const dimLabel = this.buildPoseLabelSprite(
-      `${widthMm.toFixed(0)} × ${heightMm.toFixed(0)} mm`,
-      color,
-      Math.max(axisLen * 0.55, 42),
-    );
-    dimLabel.position.set(
-      centerHit.x,
-      centerHit.y - heightMm / 2 - axisLen * 0.5,
-      centerHit.z + 4,
-    );
-    group.add(dimLabel);
+    // ELIMINATO: Etichetta dimensionale (dimLabel) rimossa per evitare ostruzioni visive
 
     return group;
   }

@@ -11,12 +11,6 @@ export const routes: Routes = [
   },
 
   {
-    path: 'calibration-sandbox',
-    loadComponent: () => import('./features/calibration-sandbox/calibration-sandbox').then(m => m.CalibrationSandboxComponent),
-    title: 'Calibration Sandbox — MiRa Companion',
-  },
-
-  {
     path: 'calibration-wizard',
     loadComponent: () => import('./features/calibration-wizard/calibration-wizard').then(m => m.CalibrationWizardComponent),
     title: 'Calibration Wizard — MiRa Companion',

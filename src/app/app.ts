@@ -62,8 +62,6 @@ export class AppComponent {
     { label: 'Dashboard', icon: 'grid_view', route: '/dashboard' },
     { label: 'Customers', icon: 'business', route: '/customers' },
     { label: 'Calib. Wizard', icon: 'auto_awesome', route: '/calibration-wizard' },
-    { label: '3D Sandbox', icon: 'view_in_ar', route: '/calibration-sandbox' },
-    { label: 'Calculators', icon: 'calculate', route: '/calculators' },
     { label: 'Settings', icon: 'settings', route: '/settings' },
   ] as const;
 
