@@ -6,20 +6,13 @@
 // calibration-wizard.scss
 
 // =============================================================================
-// RIGHT STAGE (3D VIEWER) - STICKY & SUB-SPLIT
+// RIGHT STAGE (3D VIEWER) - FULL WIDTH, NON-STICKY
 // =============================================================================
 .wizard-stage-panel {
-    // Configurazione sticky esistente (per turn 8)
-    position: sticky;
-    top: var(--space-4);
-    height: calc(100vh - var(--space-4) * 2);
-    min-height: 650px;
-
-    @media (max-width: 1200px) {
-        position: relative;
-        top: 0;
-        height: 700px;
-    }
+    position: relative;
+    width: 100%;
+    height: clamp(560px, 70vh, 820px);
+    min-height: 560px;
 }
 
 // Estendiamo .wizard-stage-frame per supportare il sub-split
@@ -168,24 +161,94 @@ app-three-viewer {
 // SPLIT LAYOUT CORE
 // =============================================================================
 .wizard-shell {
-    display: grid;
-    // Layout asimmetrico: Form stretto a sx, 3D largo a dx
-    grid-template-columns: minmax(380px, 460px) 1fr;
-    gap: var(--space-6);
-    align-items: start; // Cruciale per far funzionare lo sticky del figlio
-
-    @media (max-width: 1200px) {
-        grid-template-columns: 1fr; // Stack mobile/tablet
-    }
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    align-items: stretch;
 }
 
 // =============================================================================
-// LEFT SIDEBAR (FORMS & TABLE)
+// FORM ACCORDION (compact, collapsible above the 3D scene)
 // =============================================================================
-.wizard-sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-6);
+.wizard-form-accordion {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+
+    ::ng-deep .mat-expansion-panel-header {
+        height: 56px;
+        padding: 0 var(--space-5);
+    }
+
+    ::ng-deep .mat-expansion-panel-body {
+        padding: var(--space-4) var(--space-5) var(--space-5);
+    }
+}
+
+.wizard-accordion-summary {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-tertiary);
+    letter-spacing: 0.03em;
+}
+
+// Compact variant of the form panel (used inside the accordion).
+.wizard-form-panel--compact {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: var(--space-4) var(--space-3);
+    align-items: start;
+
+    .wizard-paste-box {
+        grid-column: span 12;
+        margin-bottom: 0;
+        padding: var(--space-3) var(--space-4);
+        display: flex;
+        align-items: center;
+        gap: var(--space-4);
+
+        .wizard-paste-copy {
+            flex: 1 1 auto;
+            min-width: 0;
+
+            p { margin-bottom: 0; }
+        }
+
+        .wizard-field { flex: 0 1 360px; margin: 0; }
+    }
+
+    .wizard-form-section {
+        grid-column: span 4;
+        border-top: none;
+        margin-top: 0;
+        padding-top: 0;
+
+        @media (max-width: 1100px) { grid-column: span 6; }
+        @media (max-width: 720px)  { grid-column: span 12; }
+    }
+
+    .wizard-section-heading { margin-bottom: var(--space-3); }
+
+    .wizard-grid-three,
+    .wizard-grid-four {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    mat-card {
+        grid-column: span 12;
+        background: transparent;
+        box-shadow: none;
+
+        ::ng-deep .mat-mdc-card-content {
+            padding: 0;
+        }
+    }
+
+    .wizard-generate-button {
+        margin-top: var(--space-2);
+    }
 }
 
 .wizard-panel {

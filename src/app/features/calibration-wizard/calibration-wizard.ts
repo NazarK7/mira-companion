@@ -8,6 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { DecimalPipe } from '@angular/common';
 import { quat } from 'gl-matrix';
@@ -27,7 +28,8 @@ import { toSignal } from '@angular/core/rxjs-interop'
   standalone: true,
   imports: [
     ReactiveFormsModule, MatButtonModule, MatCardModule, MatFormFieldModule,
-    MatInputModule, MatSelectModule, MatIconModule, MatTableModule, ThreeViewer, DecimalPipe, CameraPovViewer
+    MatInputModule, MatSelectModule, MatIconModule, MatTableModule, MatExpansionModule,
+    ThreeViewer, DecimalPipe, CameraPovViewer
   ],
   templateUrl: './calibration-wizard.html',
   styleUrl: './calibration-wizard.scss',

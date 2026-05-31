@@ -20,8 +20,21 @@
     </header>
 
     <div class="wizard-shell">
-        <div class="wizard-sidebar custom-scrollbar">
-            <form [formGroup]="form" class="wizard-panel wizard-form-panel">
+        <mat-expansion-panel class="wizard-form-accordion" [expanded]="generatedPoses().length === 0">
+            <mat-expansion-panel-header>
+                <mat-panel-title>
+                    <mat-icon class="mr-2">tune</mat-icon>
+                    <span>Configurazione</span>
+                </mat-panel-title>
+                <mat-panel-description>
+                    <span class="wizard-accordion-summary">
+                        {{ form.value.controller }} · WD {{ form.value.workingDistance }} mm ·
+                        {{ form.value.nPoses }} pose
+                    </span>
+                </mat-panel-description>
+            </mat-expansion-panel-header>
+
+            <form [formGroup]="form" class="wizard-form-panel wizard-form-panel--compact">
                 <div class="wizard-paste-box">
                     <div class="wizard-paste-copy">
                         <span class="wizard-paste-label">Smart Paste</span>
@@ -162,95 +175,7 @@
 
 
             </form>
-
-            @if (generatedPoses().length > 0) {
-            <section class="wizard-panel wizard-table-panel">
-                <div class="wizard-panel-header">
-                    <div>
-                        <p class="wizard-panel-kicker">Results</p>
-                        <h2 class="wizard-panel-title">Generated pose set</h2>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="wizard-panel-chip">{{ generatedPoses().length }} pose</span>
-                        <button mat-icon-button (click)="copyPosesToClipboard()" type="button"
-                            matTooltip="Copia pose negli appunti">
-                            <mat-icon>content_copy</mat-icon>
-                        </button>
-                        <button mat-icon-button (click)="toggleRotationDisplay()" type="button"
-                            matTooltip="showQuaternions() ? 'Mostra angoli Euler' : 'Mostra quaternioni'">
-                            <mat-icon>{{ showQuaternions() ? '3d_rotation' : 'sync_alt' }}</mat-icon>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="wizard-table-shell">
-                    <table mat-table [dataSource]="generatedPoses()" class="wizard-table">
-                        <ng-container matColumnDef="idx">
-                            <th mat-header-cell *matHeaderCellDef class="wizard-col-index">#</th>
-                            <td mat-cell *matCellDef="let el; let i = index" class="wizard-cell-index">P{{ i + 1 }}</td>
-                        </ng-container>
-
-                        <ng-container matColumnDef="x">
-                            <th mat-header-cell *matHeaderCellDef>X</th>
-                            <td mat-cell *matCellDef="let el" class="wizard-mono-cell">{{ el.canonical.position[0] |
-                                number:'1.2-2' }}</td>
-                        </ng-container>
-                        <ng-container matColumnDef="y">
-                            <th mat-header-cell *matHeaderCellDef>Y</th>
-                            <td mat-cell *matCellDef="let el" class="wizard-mono-cell">{{ el.canonical.position[1] |
-                                number:'1.2-2' }}</td>
-                        </ng-container>
-                        <ng-container matColumnDef="z">
-                            <th mat-header-cell *matHeaderCellDef>Z</th>
-                            <td mat-cell *matCellDef="let el" class="wizard-mono-cell">{{ el.canonical.position[2] |
-                                number:'1.2-2' }}</td>
-                        </ng-container>
-
-                        <ng-container matColumnDef="q1">
-                            <th mat-header-cell *matHeaderCellDef>Q1 (w)</th>
-                            <td mat-cell *matCellDef="let el" class="wizard-mono-cell">{{ el.canonical.quaternion[3] |
-                                number:'1.2-2' }}</td>
-                        </ng-container>
-                        <ng-container matColumnDef="q2">
-                            <th mat-header-cell *matHeaderCellDef>Q2 (x)</th>
-                            <td mat-cell *matCellDef="let el" class="wizard-mono-cell">{{ el.canonical.quaternion[0] |
-                                number:'1.2-2' }}</td>
-                        </ng-container>
-                        <ng-container matColumnDef="q3">
-                            <th mat-header-cell *matHeaderCellDef>Q3 (y)</th>
-                            <td mat-cell *matCellDef="let el" class="wizard-mono-cell">{{ el.canonical.quaternion[1] |
-                                number:'1.2-2' }}</td>
-                        </ng-container>
-                        <ng-container matColumnDef="q4">
-                            <th mat-header-cell *matHeaderCellDef>Q4 (z)</th>
-                            <td mat-cell *matCellDef="let el" class="wizard-mono-cell">{{ el.canonical.quaternion[2] |
-                                number:'1.2-2' }}</td>
-                        </ng-container>
-
-                        <ng-container matColumnDef="rx">
-                            <th mat-header-cell *matHeaderCellDef>Rx</th>
-                            <td mat-cell *matCellDef="let el" class="wizard-mono-cell">{{
-                                getEulerDisplay(el.canonical.quaternion)[0] | number:'1.2-2' }}</td>
-                        </ng-container>
-                        <ng-container matColumnDef="ry">
-                            <th mat-header-cell *matHeaderCellDef>Ry</th>
-                            <td mat-cell *matCellDef="let el" class="wizard-mono-cell">{{
-                                getEulerDisplay(el.canonical.quaternion)[1] | number:'1.2-2' }}</td>
-                        </ng-container>
-                        <ng-container matColumnDef="rz">
-                            <th mat-header-cell *matHeaderCellDef>Rz</th>
-                            <td mat-cell *matCellDef="let el" class="wizard-mono-cell">{{
-                                getEulerDisplay(el.canonical.quaternion)[2] | number:'1.2-2' }}</td>
-                        </ng-container>
-
-                        <tr mat-header-row *matHeaderRowDef="displayColumns(); sticky: true"></tr>
-                        <tr mat-row *matRowDef="let row; columns: displayColumns(); let i = index;"
-                            [class.wizard-row-confirmed]="isPoseConfirmed(i)"></tr>
-                    </table>
-                </div>
-            </section>
-            }
-        </div>
+        </mat-expansion-panel>
 
         <section class="wizard-stage-panel">
             <div class="wizard-stage-header">
@@ -357,5 +282,93 @@
                 }
             </div>
         </section>
+
+        @if (generatedPoses().length > 0) {
+        <section class="wizard-panel wizard-table-panel">
+            <div class="wizard-panel-header">
+                <div>
+                    <p class="wizard-panel-kicker">Results</p>
+                    <h2 class="wizard-panel-title">Generated pose set</h2>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="wizard-panel-chip">{{ generatedPoses().length }} pose</span>
+                    <button mat-icon-button (click)="copyPosesToClipboard()" type="button"
+                        matTooltip="Copia pose negli appunti">
+                        <mat-icon>content_copy</mat-icon>
+                    </button>
+                    <button mat-icon-button (click)="toggleRotationDisplay()" type="button"
+                        matTooltip="showQuaternions() ? 'Mostra angoli Euler' : 'Mostra quaternioni'">
+                        <mat-icon>{{ showQuaternions() ? '3d_rotation' : 'sync_alt' }}</mat-icon>
+                    </button>
+                </div>
+            </div>
+
+            <div class="wizard-table-shell">
+                <table mat-table [dataSource]="generatedPoses()" class="wizard-table">
+                    <ng-container matColumnDef="idx">
+                        <th mat-header-cell *matHeaderCellDef class="wizard-col-index">#</th>
+                        <td mat-cell *matCellDef="let el; let i = index" class="wizard-cell-index">P{{ i + 1 }}</td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="x">
+                        <th mat-header-cell *matHeaderCellDef>X</th>
+                        <td mat-cell *matCellDef="let el" class="wizard-mono-cell">{{ el.canonical.position[0] |
+                            number:'1.2-2' }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="y">
+                        <th mat-header-cell *matHeaderCellDef>Y</th>
+                        <td mat-cell *matCellDef="let el" class="wizard-mono-cell">{{ el.canonical.position[1] |
+                            number:'1.2-2' }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="z">
+                        <th mat-header-cell *matHeaderCellDef>Z</th>
+                        <td mat-cell *matCellDef="let el" class="wizard-mono-cell">{{ el.canonical.position[2] |
+                            number:'1.2-2' }}</td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="q1">
+                        <th mat-header-cell *matHeaderCellDef>Q1 (w)</th>
+                        <td mat-cell *matCellDef="let el" class="wizard-mono-cell">{{ el.canonical.quaternion[3] |
+                            number:'1.2-2' }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="q2">
+                        <th mat-header-cell *matHeaderCellDef>Q2 (x)</th>
+                        <td mat-cell *matCellDef="let el" class="wizard-mono-cell">{{ el.canonical.quaternion[0] |
+                            number:'1.2-2' }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="q3">
+                        <th mat-header-cell *matHeaderCellDef>Q3 (y)</th>
+                        <td mat-cell *matCellDef="let el" class="wizard-mono-cell">{{ el.canonical.quaternion[1] |
+                            number:'1.2-2' }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="q4">
+                        <th mat-header-cell *matHeaderCellDef>Q4 (z)</th>
+                        <td mat-cell *matCellDef="let el" class="wizard-mono-cell">{{ el.canonical.quaternion[2] |
+                            number:'1.2-2' }}</td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="rx">
+                        <th mat-header-cell *matHeaderCellDef>Rx</th>
+                        <td mat-cell *matCellDef="let el" class="wizard-mono-cell">{{
+                            getEulerDisplay(el.canonical.quaternion)[0] | number:'1.2-2' }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="ry">
+                        <th mat-header-cell *matHeaderCellDef>Ry</th>
+                        <td mat-cell *matCellDef="let el" class="wizard-mono-cell">{{
+                            getEulerDisplay(el.canonical.quaternion)[1] | number:'1.2-2' }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="rz">
+                        <th mat-header-cell *matHeaderCellDef>Rz</th>
+                        <td mat-cell *matCellDef="let el" class="wizard-mono-cell">{{
+                            getEulerDisplay(el.canonical.quaternion)[2] | number:'1.2-2' }}</td>
+                    </ng-container>
+
+                    <tr mat-header-row *matHeaderRowDef="displayColumns(); sticky: true"></tr>
+                    <tr mat-row *matRowDef="let row; columns: displayColumns(); let i = index;"
+                        [class.wizard-row-confirmed]="isPoseConfirmed(i)"></tr>
+                </table>
+            </div>
+        </section>
+        }
     </div>
 </section>

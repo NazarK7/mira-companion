@@ -53,6 +53,12 @@ const SELECTED_RAY_COLOR = 0xf8fafc;
 const FRUSTUM_FAR_MM = 100;
 const SCENE_BG_COLOR = 0x111418;
 
+// Colore del footprint FOV proiettato a terra: bianco se completamente
+// dentro al plate, rosso se almeno un angolo esce dai bordi.
+const FOOTPRINT_OK_COLOR = 0xf8fafc;
+const FOOTPRINT_OUT_COLOR = 0xef4444;
+const CROSSHAIR_COLOR = 0xffffff;
+
 // =============================================================================
 // COMPONENT
 // =============================================================================
@@ -489,9 +495,15 @@ export class ThreeViewer implements AfterViewInit {
         const outline = new THREE.LineSegments(edgeGeom, edgeMat);
         mesh.add(outline);
 
-        const sightLine = this.buildGroundSightLine(pose, plate.center[2]);
-        if (sightLine) {
-          this.markersGroup.add(sightLine);
+        const footprint = this.buildFovFootprint(
+          pose,
+          plate,
+          halfWFar,
+          halfHFar,
+          far,
+        );
+        if (footprint) {
+          this.markersGroup.add(footprint);
         }
 
         mesh.scale.set(1.08, 1.08, 1.08);
@@ -502,46 +514,155 @@ export class ThreeViewer implements AfterViewInit {
     });
   }
 
-  private buildGroundSightLine(
+  /**
+   * Costruisce il "footprint" della FOV proiettato sul piano Z del plate per
+   * la pose selezionata. Composto da:
+   *   1) 4 linee continue dall'apex (camera) ai 4 punti di intersezione dei
+   *      raggi-bordo del frustum con il piano del plate.
+   *   2) Un loop chiuso sul terreno che mostra l'area effettivamente inquadrata.
+   *   3) AxesHelper + crosshair al centro del footprint (intersezione asse ottico).
+   *   4) Sprite con dimensioni W × H del footprint in mm.
+   *
+   * Colore: bianco se completamente dentro al plate, rosso se almeno un
+   * angolo esce dai bordi (= si stanno acquisendo punti fuori dal pattern).
+   *
+   * Ritorna null se la camera non punta verso il piano (parallela / dietro).
+   */
+  private buildFovFootprint(
     pose: CanonicalPose,
-    groundZ: number,
-  ): THREE.Line | null {
-    const worldDirection = new THREE.Vector3(0, 0, 1)
-      .applyQuaternion(new THREE.Quaternion(
-        pose.quaternion[0],
-        pose.quaternion[1],
-        pose.quaternion[2],
-        pose.quaternion[3],
-      ))
+    plate: PlateWorldSetup,
+    halfWFar: number,
+    halfHFar: number,
+    far: number,
+  ): THREE.Group | null {
+    const groundZ = plate.center[2];
+    const origin = new THREE.Vector3(
+      pose.position[0],
+      pose.position[1],
+      pose.position[2],
+    );
+    const quaternion = new THREE.Quaternion(
+      pose.quaternion[0],
+      pose.quaternion[1],
+      pose.quaternion[2],
+      pose.quaternion[3],
+    );
+
+    // Direzioni in camera-local dei 4 corner del frustum (apex → piano far).
+    const localCorners: ReadonlyArray<readonly [number, number, number]> = [
+      [-halfWFar, +halfHFar, far], // TL
+      [+halfWFar, +halfHFar, far], // TR
+      [+halfWFar, -halfHFar, far], // BR
+      [-halfWFar, -halfHFar, far], // BL
+    ];
+
+    const hitPoints: THREE.Vector3[] = [];
+    for (const [lx, ly, lz] of localCorners) {
+      const dir = new THREE.Vector3(lx, ly, lz)
+        .applyQuaternion(quaternion)
+        .normalize();
+      if (Math.abs(dir.z) < 1e-5) return null;
+      const t = (groundZ - origin.z) / dir.z;
+      if (t <= 0) return null;
+      hitPoints.push(origin.clone().addScaledVector(dir, t));
+    }
+
+    // Intersezione asse ottico (forward locale = +Z) col piano.
+    const forward = new THREE.Vector3(0, 0, 1)
+      .applyQuaternion(quaternion)
       .normalize();
+    if (Math.abs(forward.z) < 1e-5) return null;
+    const tCenter = (groundZ - origin.z) / forward.z;
+    if (tCenter <= 0) return null;
+    const centerHit = origin.clone().addScaledVector(forward, tCenter);
 
-    if (Math.abs(worldDirection.z) < 1e-5) {
-      return null;
+    // Controllo bordi plate per colore.
+    const halfP = plate.size_mm / 2;
+    const px = plate.center[0];
+    const py = plate.center[1];
+    const outside = hitPoints.some(
+      (p) =>
+        p.x < px - halfP ||
+        p.x > px + halfP ||
+        p.y < py - halfP ||
+        p.y > py + halfP,
+    );
+    const color = outside ? FOOTPRINT_OUT_COLOR : FOOTPRINT_OK_COLOR;
+
+    const group = new THREE.Group();
+
+    // 1) 4 linee laterali (apex → corner a terra).
+    const sidePts: THREE.Vector3[] = [];
+    for (const hp of hitPoints) {
+      sidePts.push(origin.clone(), hp.clone());
     }
-
-    const origin = new THREE.Vector3(pose.position[0], pose.position[1], pose.position[2]);
-    const distanceToGround = (groundZ - origin.z) / worldDirection.z;
-    if (distanceToGround <= 0) {
-      return null;
-    }
-
-    const hitPoint = origin.clone().addScaledVector(worldDirection, distanceToGround);
-
-    const lineGeometry = new THREE.BufferGeometry().setFromPoints([
-      origin,
-      hitPoint,
-    ]);
-    const lineMaterial = new THREE.LineDashedMaterial({
-      color: SELECTED_RAY_COLOR,
-      dashSize: 18,
-      gapSize: 10,
+    const sidesGeom = new THREE.BufferGeometry().setFromPoints(sidePts);
+    const sidesMat = new THREE.LineBasicMaterial({
+      color,
       transparent: true,
-      opacity: 0.9,
+      opacity: 0.85,
     });
-    const line = new THREE.Line(lineGeometry, lineMaterial);
-    line.computeLineDistances();
-    line.renderOrder = 9;
-    return line;
+    const sides = new THREE.LineSegments(sidesGeom, sidesMat);
+    sides.renderOrder = 9;
+    group.add(sides);
+
+    // 2) Loop chiuso sul terreno.
+    const loopGeom = new THREE.BufferGeometry().setFromPoints([
+      hitPoints[0],
+      hitPoints[1],
+      hitPoints[2],
+      hitPoints[3],
+      hitPoints[0],
+    ]);
+    const loopMat = new THREE.LineBasicMaterial({
+      color,
+      transparent: true,
+      opacity: 1,
+    });
+    const loop = new THREE.Line(loopGeom, loopMat);
+    loop.renderOrder = 10;
+    group.add(loop);
+
+    // 3) AxesHelper + crosshair al centro footprint.
+    const diag = hitPoints[0].distanceTo(hitPoints[2]);
+    const axisLen = Math.max(diag * 0.22, 50);
+    const axes = new THREE.AxesHelper(axisLen);
+    axes.position.set(centerHit.x, centerHit.y, centerHit.z + 1);
+    axes.renderOrder = 11;
+    group.add(axes);
+
+    const ch = axisLen * 0.35;
+    const crosshairGeom = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(centerHit.x - ch, centerHit.y, centerHit.z + 1),
+      new THREE.Vector3(centerHit.x + ch, centerHit.y, centerHit.z + 1),
+      new THREE.Vector3(centerHit.x, centerHit.y - ch, centerHit.z + 1),
+      new THREE.Vector3(centerHit.x, centerHit.y + ch, centerHit.z + 1),
+    ]);
+    const crosshairMat = new THREE.LineBasicMaterial({
+      color: CROSSHAIR_COLOR,
+      transparent: true,
+      opacity: 0.7,
+    });
+    const crosshair = new THREE.LineSegments(crosshairGeom, crosshairMat);
+    crosshair.renderOrder = 11;
+    group.add(crosshair);
+
+    // 4) Etichetta dimensioni footprint (W × H mm).
+    const widthMm = hitPoints[0].distanceTo(hitPoints[1]);
+    const heightMm = hitPoints[1].distanceTo(hitPoints[2]);
+    const dimLabel = this.buildPoseLabelSprite(
+      `${widthMm.toFixed(0)} × ${heightMm.toFixed(0)} mm`,
+      color,
+      Math.max(axisLen * 0.55, 42),
+    );
+    dimLabel.position.set(
+      centerHit.x,
+      centerHit.y - heightMm / 2 - axisLen * 0.5,
+      centerHit.z + 4,
+    );
+    group.add(dimLabel);
+
+    return group;
   }
 
   private buildPoseLabelSprite(label: string, color: number, labelHeight: number): THREE.Sprite {

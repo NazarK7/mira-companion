@@ -209,33 +209,95 @@ export class CameraPovViewer implements AfterViewInit {
   }
 
   /**
- * Aggiunge una guida visiva nel POV per mostrare l'area target (1/6 del FOV).
- * Aiuta a capire se il plate è troppo piccolo o troppo grande.
- */
-private drawTargetGuide(): void {
-  // Rimuovi guide precedenti se esistono
-  const oldGuide = this.scene.getObjectByName('targetGuide');
-  if (oldGuide) this.scene.remove(oldGuide);
+   * Disegna la guida "target 1/6 FOV" come un QUADRATO nel world (sul piano
+   * del plate), così da essere visivamente confrontabile col plate:
+   *  - Il plate è un quadrato giacente sul piano Z = plate.center[2].
+   *  - La guida è anch'essa un quadrato sullo stesso piano, world-aligned.
+   *  - Per vista perpendicolare copre esattamente 1/6 (≈16.667%) dell'area
+   *    immagine. Per camere inclinate è una buona approssimazione visiva: il
+   *    quadrato si deforma a trapezio in POV identicamente al plate, perché
+   *    entrambi sono superfici planari sullo stesso piano world.
+   *
+   * NOTA sulla percezione: 1/6 dell'AREA significa lato = √(1/6) ≈ 40.8% del
+   * lato frame. Visivamente sembra "grosso" ma l'area è davvero ~16.7%.
+   *
+   * MATEMATICA del lato S (vista perpendicolare):
+   *   image_area / sensor_area = S²·f² / (D²·Ws·Hs) = 1/6
+   *   ⟹ S = D · √(Ws·Hs/6) / f
+   * dove D = distanza camera↔centro lungo l'asse ottico, f = focale,
+   * Ws·Hs = area sensore in mm².
+   */
+  private drawTargetGuide(): void {
+    // Cleanup guide precedente
+    const oldGuide = this.scene.getObjectByName('targetGuide');
+    if (oldGuide) {
+      this.scene.remove(oldGuide);
+      const asLine = oldGuide as THREE.Line;
+      asLine.geometry?.dispose();
+      (asLine.material as THREE.Material | undefined)?.dispose();
+    }
 
-  // Calcolo dimensioni target (sqrt(1/6) dell'area sensore)
-  const targetRatio = Math.sqrt(1/6); 
-  const cam = this.cameraSpec();
-  const sensorW = cam.resolution_px.w * cam.pixel_pitch_mm;
-  const sensorH = cam.resolution_px.h * cam.pixel_pitch_mm;
-  
-  const guideW = (sensorW * targetRatio * this.cameraPose().position[2]) / this.lensSpec().focal_length_mm;
-  const guideH = (sensorH * targetRatio * this.cameraPose().position[2]) / this.lensSpec().focal_length_mm;
+    const pose = this.cameraPose();
+    const plate = this.plateSetup();
+    const cam = this.cameraSpec();
+    const lens = this.lensSpec();
 
-  const geometry = new THREE.PlaneGeometry(guideW, guideH);
-  const edges = new THREE.EdgesGeometry(geometry);
-  const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x00ff00, transparent: true, opacity: 0.3 }));
-  
-  line.name = 'targetGuide';
-  // Posiziona la guida sul piano del plate (Z=0 del mondo)
-  line.position.set(this.plateSetup().center[0], this.plateSetup().center[1], this.plateSetup().center[2] + 1);
-  this.scene.add(line);
-}
+    const groundZ = plate.center[2];
+    const cameraPos = new THREE.Vector3(
+      pose.position[0],
+      pose.position[1],
+      pose.position[2],
+    );
+    const cameraQuat = new THREE.Quaternion(
+      pose.quaternion[0],
+      pose.quaternion[1],
+      pose.quaternion[2],
+      pose.quaternion[3],
+    );
 
+    // Intersezione asse ottico (+Z OpenCV) col piano del plate.
+    const forward = new THREE.Vector3(0, 0, 1)
+      .applyQuaternion(cameraQuat)
+      .normalize();
+    if (Math.abs(forward.z) < 1e-5) return;
+    const tCenter = (groundZ - cameraPos.z) / forward.z;
+    if (tCenter <= 0) return;
+    const centerHit = cameraPos.clone().addScaledVector(forward, tCenter);
+
+    // Distanza camera↔centro lungo l'asse ottico (NON la sola componente Z!).
+    const D = cameraPos.distanceTo(centerHit);
+
+    const sensorW = cam.resolution_px.w * cam.pixel_pitch_mm;
+    const sensorH = cam.resolution_px.h * cam.pixel_pitch_mm;
+    const focal = lens.focal_length_mm;
+
+    // Lato del quadrato world che copre 1/6 dell'area immagine (vista perp.).
+    const side = (D * Math.sqrt((sensorW * sensorH) / 6)) / focal;
+    const half = side / 2;
+
+    // Quadrato world-aligned su piano XY, centrato sul punto di mira.
+    // Lift leggero (+1 mm) per evitare z-fighting con il plate.
+    const z = groundZ + 1;
+    const corners = [
+      new THREE.Vector3(centerHit.x - half, centerHit.y - half, z),
+      new THREE.Vector3(centerHit.x + half, centerHit.y - half, z),
+      new THREE.Vector3(centerHit.x + half, centerHit.y + half, z),
+      new THREE.Vector3(centerHit.x - half, centerHit.y + half, z),
+      new THREE.Vector3(centerHit.x - half, centerHit.y - half, z),
+    ];
+
+    const geom = new THREE.BufferGeometry().setFromPoints(corners);
+    const line = new THREE.Line(
+      geom,
+      new THREE.LineBasicMaterial({
+        color: 0x00ff00,
+        transparent: true,
+        opacity: 0.8,
+      }),
+    );
+    line.name = 'targetGuide';
+    this.scene.add(line);
+  }
   // ---------------------------------------------------------------------------
   // Plate update (texture + mesh)
   // ---------------------------------------------------------------------------
