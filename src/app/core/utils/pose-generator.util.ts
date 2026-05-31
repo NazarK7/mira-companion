@@ -268,49 +268,86 @@ export function generateCalibrationPoses(
   const minTrans = constraints.min_translation_diff_mm;
   const plateCenter = options.plate_setup.center;
 
-  // --- 1. GENERAZIONE TARGET (Centro + 4 Angoli) ---
-  const targets = [
-    { h: 0, v: 0 },   // Centro (Anchor)
-    { h: -1, v: -1 }, // Top-Left
-    { h: 1, v: -1 },  // Top-Right
-    { h: 1, v: 1 },   // Bottom-Right
-    { h: -1, v: 1 },  // Bottom-Left
+  // Anchor sempre prima
+  selected.push(anchor);
+
+  // --- 1. GENERAZIONE TARGET ESTREMI ---
+  // Anchor (centro), 4 angoli, 4 centri-bordi del FOV. Per ogni target:
+  //  - spostiamo la camera lateralmente per ottenere parallasse
+  //  - ruotiamo OLTRE il lookAt-al-centro per spostare il plate verso il
+  //    quadrante target del FOV (NDC u,v). Senza questa rotazione il plate
+  //    apparirebbe SEMPRE al centro dell'immagine, vanificando lo scopo.
+  // h,v = direzione spostamento camera nel piano del plate
+  // ndcU, ndcV = posizione target del plate nel FOV (OpenCV: u→destra, v→giù)
+  const extremeTargets: ReadonlyArray<{ label: string; h: number; v: number; ndcU: number; ndcV: number }> = [
+    // 4 angoli
+    { label: 'TL', h: -1, v: -1, ndcU: -1, ndcV: -1 },
+    { label: 'TR', h:  1, v: -1, ndcU:  1, ndcV: -1 },
+    { label: 'BR', h:  1, v:  1, ndcU:  1, ndcV:  1 },
+    { label: 'BL', h: -1, v:  1, ndcU: -1, ndcV:  1 },
+    // 4 centri-bordi
+    { label: 'T',  h:  0, v: -1, ndcU:  0, ndcV: -1 },
+    { label: 'R',  h:  1, v:  0, ndcU:  1, ndcV:  0 },
+    { label: 'B',  h:  0, v:  1, ndcU:  0, ndcV:  1 },
+    { label: 'L',  h: -1, v:  0, ndcU: -1, ndcV:  0 },
   ];
 
-  for (const t of targets) {
+  // Pre-calcolo half-tan FOV per posizionare il plate nel NDC desiderato
+  const sensor = computeSensorDimensions(
+    options.camera_hw.sensor.width_px,
+    options.camera_hw.sensor.height_px,
+    options.camera_hw.sensor.pixel_pitch_um,
+  );
+  const focal = options.camera_hw.lens.focal_length_mm;
+  const halfTanH = (sensor.width_mm / 2) / focal;
+  const halfTanV = (sensor.height_mm / 2) / focal;
+
+  // Magnitudine NDC iniziale (0.6 = plate posizionato al 60% verso il bordo).
+  // Schedule con livelli di rigorosità decrescente, per garantire SEMPRE che
+  // l'estremo entri nel set (anche se solo parzialmente visibile).
+  // strict=true → richiede tutti i 4 corner del plate in FOV.
+  // strict=false → accetta se centro plate visibile + ≥2 corner visibili.
+  const ndcMagSchedule: ReadonlyArray<{ mag: number; strict: boolean }> = [
+    { mag: 0.6,  strict: true  },
+    { mag: 0.45, strict: true  },
+    { mag: 0.3,  strict: true  },
+    { mag: 0.2,  strict: false },
+    { mag: 0.1,  strict: false },
+    { mag: 0.0,  strict: false }, // ultimissimo fallback: lookAt puro, posizione comunque distinta
+  ];
+
+  for (const t of extremeTargets) {
     const [offX, offY] = getCornerOffset(t.h, t.v, options.camera_hw, constraints.dome.radius_mm);
-    
-    // Calcoliamo la posizione target
     const targetPos: DomainVec3 = [
       anchor.position[0] + offX,
       anchor.position[1] + offY,
-      anchor.position[2]
+      anchor.position[2],
     ];
 
-    // FIX CRITICO: Ricalcoliamo l'orientamento LookAt specifico per questa posizione!
-    const direction = vec3.normalize(vec3.create(), [
-      plateCenter[0] - targetPos[0],
-      plateCenter[1] - targetPos[1],
-      plateCenter[2] - targetPos[2]
-    ]);
-    
-    // Creiamo il quaternione che guarda il plate (Z+ forward)
-    const lookAtQ = calculateLookAtQuaternion(targetPos, plateCenter);
-    
-    const candidate: CanonicalPose = { 
-      position: targetPos, 
-      quaternion: lookAtQ 
-    };
+    // Skip se la posizione è troppo vicina ad anchor o estremi già accettati.
+    const hasConflict = selected.some(s => vec3Distance(s.position, targetPos) < minTrans);
+    if (hasConflict) continue;
 
-    // Verifichiamo se questa posa target confligge con quelle già inserite
-    const hasConflict = selected.some(s => vec3Distance(s.position, candidate.position) < minTrans);
-    
-    // La inseriamo solo se valida e se vede il plate
-    const visibility = checkPlateVisibility(candidate, options.plate_setup, options.camera_hw);
-    
-    if (!hasConflict && visibility.all_corners_visible) {
-      selected.push(candidate);
+    const lookAtQ = calculateLookAtQuaternion(targetPos, plateCenter);
+
+    let accepted: CanonicalPose | null = null;
+    for (const step of ndcMagSchedule) {
+      const u = t.ndcU * step.mag;
+      const v = t.ndcV * step.mag;
+      const finalQ = composeLookAtWithNdcOffset(lookAtQ, u, v, halfTanH, halfTanV);
+      const candidate: CanonicalPose = { position: targetPos, quaternion: finalQ };
+
+      const visibility = checkPlateVisibility(candidate, options.plate_setup, options.camera_hw);
+      const ok = step.strict
+        ? visibility.all_corners_visible
+        : (visibility.plate_center_px !== null && visibility.n_corners_visible >= 2);
+      if (ok) {
+        accepted = candidate;
+        break;
+      }
     }
+
+    if (accepted) selected.push(accepted);
   }
 
   // --- 2. RIEMPIMENTO GREEDY (Pose da 6 a N) ---
@@ -369,6 +406,60 @@ function calculateLookAtQuaternion(source: DomainVec3, target: DomainVec3): Quat
   const q = quat.fromMat3(quat.create(), m3);
   return [q[0], q[1], q[2], q[3]];
 }
+
+/**
+ * Compone un lookAt con una rotazione locale che porta il punto attualmente
+ * al centro del frame (NDC 0,0) verso (ndcU, ndcV) nel piano immagine OpenCV.
+ *
+ * Convenzione: NDC u → destra, NDC v → giù. Camera frame OpenCV: X→right,
+ * Y→down, Z→forward.
+ *
+ * Risultato: composizione finalQ = lookAtQ · rLocal, applicata come
+ * rotazione *intrinseca* della camera. Dopo finalQ, un punto che prima
+ * stava a (0,0) NDC apparirà a (ndcU, ndcV) NDC.
+ */
+function composeLookAtWithNdcOffset(
+  lookAtQ: Quaternion,
+  ndcU: number,
+  ndcV: number,
+  halfTanH: number,
+  halfTanV: number,
+): Quaternion {
+  // Direzione (in camera-locale dopo lookAt) verso cui vogliamo che vada
+  // l'attuale forward (0,0,1). NDC v positivo = giù in immagine OpenCV =
+  // camera-y positivo.
+  const dirX = ndcU * halfTanH;
+  const dirY = ndcV * halfTanV;
+  const dirZ = 1;
+  const dir = vec3.normalize(vec3.create(), vec3.fromValues(dirX, dirY, dirZ));
+
+  // Quaternione che mappa dir → (0,0,1). Così R_local^T · (0,0,1) = dir,
+  // ovvero il plate (che dopo lookAt è in (0,0,d)) finisce in d·dir → NDC (u,v).
+  const from = dir;
+  const to = vec3.fromValues(0, 0, 1);
+  const d = vec3.dot(from, to);
+  let rLocal: Quaternion;
+  if (d > 0.9999999) {
+    rLocal = [0, 0, 0, 1];
+  } else if (d < -0.9999999) {
+    // 180° flip: scegli asse perpendicolare arbitrario
+    rLocal = [1, 0, 0, 0];
+  } else {
+    const c = vec3.cross(vec3.create(), from, to);
+    const s = Math.sqrt((1 + d) * 2);
+    const invs = 1 / s;
+    rLocal = [c[0] * invs, c[1] * invs, c[2] * invs, s * 0.5];
+  }
+
+  // finalQ = lookAtQ · rLocal (intrinseca)
+  const lq = quat.fromValues(lookAtQ[0], lookAtQ[1], lookAtQ[2], lookAtQ[3]);
+  const rq = quat.fromValues(rLocal[0], rLocal[1], rLocal[2], rLocal[3]);
+  const out = quat.create();
+  quat.multiply(out, lq, rq);
+  quat.normalize(out, out);
+  return [out[0], out[1], out[2], out[3]];
+}
+
 /**
  * Calcola un offset sulla cupola per forzare il plate in un angolo del FOV.
  * @param horizontal 0 = centro, -1 = sinistra, 1 = destra

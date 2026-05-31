@@ -1,4 +1,5 @@
-<div class="pov-frame">
+<div class="pov-frame"
+     [style.aspect-ratio]="cameraSpec().resolution_px.w + ' / ' + cameraSpec().resolution_px.h">
   <canvas #canvasEl class="pov-canvas"></canvas>
 
   <div class="pov-overlay">
@@ -24,3 +25,31 @@
     <div></div><div></div>
   </div>
 </div>
+
+@if (totalPoses() > 1) {
+  <div class="pov-pagination">
+    <button type="button"
+            class="pov-page-btn"
+            (click)="prevPose()"
+            [disabled]="!canPrev()"
+            aria-label="Pose precedente">
+      ‹
+    </button>
+    <div class="pov-page-input">
+      <input type="number"
+             [min]="1"
+             [max]="totalPoses()"
+             [ngModel]="displayIndex()"
+             (change)="onIndexInputChange($any($event.target).value)"
+             aria-label="Numero pose corrente" />
+      <span class="pov-page-total">/ {{ totalPoses() }}</span>
+    </div>
+    <button type="button"
+            class="pov-page-btn"
+            (click)="nextPose()"
+            [disabled]="!canNext()"
+            aria-label="Pose successiva">
+      ›
+    </button>
+  </div>
+}

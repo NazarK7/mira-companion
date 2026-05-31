@@ -421,13 +421,9 @@ app-three-viewer {
 }
 
 // =============================================================================
-// RIGHT STAGE (3D VIEWER) - STICKY
+// RIGHT STAGE (3D VIEWER) - layout decorations (height defined earlier)
 // =============================================================================
 .wizard-stage-panel {
-    position: sticky;
-    top: var(--space-4); // Resta incollato in alto quando scrolli la pagina
-    height: calc(100vh - var(--space-4) * 2); // Occupa quasi tutta l'altezza del monitor
-    min-height: 650px;
     background: var(--bg-surface);
     border: 1px solid var(--border-default);
     border-radius: var(--radius-lg);
@@ -435,12 +431,6 @@ app-three-viewer {
     flex-direction: column;
     overflow: hidden;
     box-shadow: var(--shadow-md);
-
-    @media (max-width: 1200px) {
-        position: relative;
-        top: 0;
-        height: 700px;
-    }
 }
 
 .wizard-stage-header {
@@ -479,9 +469,7 @@ app-three-viewer {
 
 .wizard-stage-frame {
     flex: 1;
-    position: relative;
     background: var(--bg-app); // Sfondo profondo per contrasto col 3D
-    overflow: hidden;
 }
 
 // Empty state prima della generazione

@@ -203,11 +203,13 @@
                         </button>
                     </div>
 
-                    <div class="rounded-lg overflow-hidden border border-divider"
-                        [style.aspect-ratio]="selectedCamera().resolution_px.w + ' / ' + selectedCamera().resolution_px.h">
+                    <div class="rounded-lg border border-divider">
                         <app-camera-pov-viewer [cameraPose]="canonicalPosesFor3D()[selectedIndex()!]"
                             [plateSetup]="wizardPlateSetup()" [cameraSpec]="selectedCamera()"
-                            [lensSpec]="selectedLens()" [plateSpec]="selectedPlate()" />
+                            [lensSpec]="selectedLens()" [plateSpec]="selectedPlate()"
+                            [currentIndex]="selectedIndex()!"
+                            [totalPoses]="generatedPoses().length"
+                            (indexChange)="selectedIndex.set($event)" />
                     </div>
 
                     @if (conflictWithAny() !== null) {

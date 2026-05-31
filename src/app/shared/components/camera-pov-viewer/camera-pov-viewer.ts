@@ -28,6 +28,7 @@ import {
   Component,
   DestroyRef,
   ElementRef,
+  computed,
   effect,
   inject,
   input,
@@ -35,6 +36,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import * as THREE from 'three';
 
 import type {
@@ -61,6 +63,7 @@ const SCENE_BG_COLOR = 0x0a0a0e;
   selector: 'app-camera-pov-viewer',
   templateUrl: './camera-pov-viewer.html',
   styleUrl: './camera-pov-viewer.scss',
+  imports: [FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CameraPovViewer implements AfterViewInit {
@@ -85,6 +88,22 @@ export class CameraPovViewer implements AfterViewInit {
 
   /** Output: coverage % della FOV per il pannello di stato del wizard. */
   readonly coveragePct = output<number>();
+
+  // ---------------------------------------------------------------------------
+  // Pagination inputs/outputs
+  // ---------------------------------------------------------------------------
+
+  /** Indice 0-based della pose corrente (per pagination). */
+  readonly currentIndex = input<number>(0);
+  /** Numero totale di pose disponibili. */
+  readonly totalPoses = input<number>(1);
+  /** Emette il nuovo indice 0-based quando l'utente naviga. */
+  readonly indexChange = output<number>();
+
+  /** Valore 1-based mostrato nell'input numerico. */
+  protected readonly displayIndex = signal<number>(1);
+  protected readonly canPrev = computed(() => this.currentIndex() > 0);
+  protected readonly canNext = computed(() => this.currentIndex() < this.totalPoses() - 1);
 
   // ---------------------------------------------------------------------------
   // UI signals (protected: usati nel template)
@@ -123,6 +142,11 @@ export class CameraPovViewer implements AfterViewInit {
   })();
 
   constructor() {
+    effect(() => {
+      // Sincronizza input numerico (1-based) col currentIndex (0-based).
+      this.displayIndex.set(this.currentIndex() + 1);
+    });
+
     effect(() => {
       // Trigger su tutti gli input reattivi
       const pose = this.cameraPose();
@@ -438,6 +462,33 @@ export class CameraPovViewer implements AfterViewInit {
       if (!this.initialized) return;
       this.renderer.render(this.scene, this.camera);
     });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Pagination handlers
+  // ---------------------------------------------------------------------------
+
+  protected prevPose(): void {
+    const idx = this.currentIndex();
+    if (idx > 0) this.indexChange.emit(idx - 1);
+  }
+
+  protected nextPose(): void {
+    const idx = this.currentIndex();
+    if (idx < this.totalPoses() - 1) this.indexChange.emit(idx + 1);
+  }
+
+  /** Clamp [1, totalPoses] sull'input numerico. */
+  protected onIndexInputChange(value: number | string): void {
+    const total = this.totalPoses();
+    const parsed = typeof value === 'number' ? value : parseInt(String(value), 10);
+    const safe = Number.isFinite(parsed) ? parsed : this.currentIndex() + 1;
+    const clamped = Math.min(Math.max(Math.round(safe), 1), Math.max(total, 1));
+    this.displayIndex.set(clamped);
+    const zeroBased = clamped - 1;
+    if (zeroBased !== this.currentIndex()) {
+      this.indexChange.emit(zeroBased);
+    }
   }
 
   // ---------------------------------------------------------------------------
