@@ -23,13 +23,14 @@ import { LENS_CATALOG, DEFAULT_LENS_ID, findLensById, isLensCompatible } from '.
 import { PLATE_CATALOG, DEFAULT_PLATE_ID, findPlateById } from '../../core/data/plate-catalog';
 import { CameraPovViewer } from '../../shared/components/camera-pov-viewer/camera-pov-viewer';
 import { toSignal } from '@angular/core/rxjs-interop'
+import { AppButtonComponent } from '../../shared/components/button/button.component';
 @Component({
   selector: 'app-calibration-wizard',
   standalone: true,
   imports: [
     ReactiveFormsModule, MatButtonModule, MatCardModule, MatFormFieldModule,
     MatInputModule, MatSelectModule, MatIconModule, MatTableModule, MatExpansionModule,
-    ThreeViewer, DecimalPipe, CameraPovViewer
+    ThreeViewer, DecimalPipe, CameraPovViewer, AppButtonComponent
   ],
   templateUrl: './calibration-wizard.html',
   styleUrl: './calibration-wizard.scss',

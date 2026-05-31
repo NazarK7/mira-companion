@@ -1,413 +1,91 @@
-:host {
-    display: block;
-    padding: var(--space-4) 0 var(--space-12) 0;
-}
-
 // calibration-wizard.scss
 
+:host {
+    display: block;
+}
+
 // =============================================================================
-// RIGHT STAGE (3D VIEWER) - FULL WIDTH, NON-STICKY
+// RIGHT STAGE (3D VIEWER)
 // =============================================================================
 .wizard-stage-panel {
     position: relative;
     width: 100%;
+    // L'altezza reattiva del canvas ThreeJS la gestiamo in SCSS per comodità e clamp
     height: clamp(560px, 70vh, 820px);
     min-height: 560px;
+    
+    /* FIX 1: Layout Flexbox per impilare Header e Canvas senza overflow */
+    display: flex;
+    flex-direction: column;
+    
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
 }
 
-// Estendiamo .wizard-stage-frame per supportare il sub-split
 .wizard-stage-frame {
+    /* FIX 2: Usa flex: 1 invece di height: 100% per calcolare esattamente lo spazio rimanente */
+    flex: 1;
+    min-height: 0; /* Cruciale per far funzionare lo scroll interno della sidebar */
+    
     position: relative;
-    min-height: 0;
-    height: 100%;
-    border: 1px solid color-mix(in srgb, var(--border-subtle) 78%, transparent);
-    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
     overflow: hidden;
     background: linear-gradient(180deg, #06080d 0%, #10151d 100%);
 
-    // Prepariamo il contenitore per i figli (ThreeViewer e EditPanel)
-    display: flex;
-    flex-direction: row; // Split-view orizzontale di default
-    align-items: stretch;
-    gap: 0; // Gestiamo il gap internamente ai pannelli
-
-    // Gestione responsive: stack verticale su schermi piccoli
     @media (max-width: 768px) {
         flex-direction: column;
     }
 }
 
-// Selettore specifico per app-three-viewer all'interno del frame
 app-three-viewer {
-    flex: 1; // Prende tutto lo spazio disponibile
-    min-width: 0; // Evita che il viewer spinga fuori il pannello di edit
-    height: 100%;
-    display: block; // Assicuriamoci che si comporti come un blocco
-
-    // Quando un edit è attivo, il viewer non copre più nulla
-    .wizard-edit-mode & {
-        // Possiamo opzionalmente forzare delle dimensioni qui se necessario,
-        // ma `flex: 1` dovrebbe bastare.
-    }
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    display: block;
 }
-
-// Pannello edit fluttuante — lo spostiamo in un'area riservata lateralmente
-.absolute {
-    // RESET DELLE POSIZIONI ABSOLUTE LEGACY
-    position: relative !important; // Rimuove l'assoluto
-    top: 0 !important;
-    right: 0 !important;
-    z-index: 10 !important;
-    margin: 0 !important;
-
-    // Configurazione pannello laterale
-    width: 420px; // Larghezza fissa per il pannello POV
-    height: 100%;
-    flex-shrink: 0; // Impedisce al pannello di restringersi
-    background-color: var(--bg-surface);
-    border-left: 1px solid var(--border-divider);
-    padding: var(--space-4);
-    overflow-y: auto; // Rende scrollabile il pannello POV se lungo
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
-    box-shadow: none !important; // Rimuove ombre fluttuanti
-
-    // Responsive: stack verticale
-    @media (max-width: 768px) {
-        width: 100%;
-        height: 400px; // Altezza fissa quando stacked
-        border-left: none;
-        border-top: 1px solid var(--border-divider);
-    }
-
-    // --- OVERRIDE LOGIC ---
-    // Quando in conflitto, mostriamo lo snackbar, non cambiamo il colore del pannello.
-    // I messaggi di conflitto nel pannello rimangono, come gestito in .ts.
-}
-
-// Altri elementi all'interno di .absolute mantengono i loro stili.
-
 // =============================================================================
-// TYPOGRAPHY & HEADER
+// FIX MATERIAL OVERRIDES
 // =============================================================================
-.wizard-eyebrow {
-    color: var(--color-accent-500);
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    font-weight: 600;
-    margin-bottom: var(--space-2);
-}
 
-.wizard-title {
-    font-size: var(--text-3xl);
-    font-weight: 700;
-    color: var(--text-primary);
-    margin: 0 0 var(--space-2);
-}
-
-.wizard-subtitle {
-    color: var(--text-secondary);
-    font-size: var(--text-base);
-    max-width: 65ch;
-    line-height: 1.5;
-}
-
-.wizard-hero {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: flex-end;
-    gap: var(--space-6);
-    margin-bottom: var(--space-6);
-    padding-bottom: var(--space-6);
-    border-bottom: 1px solid var(--border-subtle);
-}
-
-.wizard-stats {
-    display: flex;
-    gap: var(--space-4);
-}
-
-.wizard-stat-card {
-    background: var(--bg-surface);
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-md);
-    padding: var(--space-3) var(--space-4);
-    display: flex;
-    flex-direction: column;
-    min-width: 140px;
-}
-
-.wizard-stat-label {
-    font-size: var(--text-xs);
-    color: var(--text-tertiary);
-    text-transform: uppercase;
-    margin-bottom: var(--space-1);
-    font-weight: 600;
-    letter-spacing: 0.05em;
-}
-
-.wizard-stat-value {
-    font-size: var(--text-lg);
-    font-weight: 600;
-    font-family: var(--font-mono);
-    color: var(--text-primary);
-}
-
-// =============================================================================
-// SPLIT LAYOUT CORE
-// =============================================================================
-.wizard-shell {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-5);
-    align-items: stretch;
-}
-
-// =============================================================================
-// FORM ACCORDION (compact, collapsible above the 3D scene)
-// =============================================================================
-.wizard-form-accordion {
-    background: var(--bg-surface);
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-sm);
-    overflow: hidden;
-
-    ::ng-deep .mat-expansion-panel-header {
-        height: 56px;
-        padding: 0 var(--space-5);
-    }
-
-    ::ng-deep .mat-expansion-panel-body {
-        padding: var(--space-4) var(--space-5) var(--space-5);
-    }
-}
-
-.wizard-accordion-summary {
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    color: var(--text-tertiary);
-    letter-spacing: 0.03em;
-}
-
-// Compact variant of the form panel (used inside the accordion).
-.wizard-form-panel--compact {
-    display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    gap: var(--space-4) var(--space-3);
-    align-items: start;
-
-    .wizard-paste-box {
-        grid-column: span 12;
-        margin-bottom: 0;
-        padding: var(--space-3) var(--space-4);
-        display: flex;
-        align-items: center;
-        gap: var(--space-4);
-
-        .wizard-paste-copy {
-            flex: 1 1 auto;
-            min-width: 0;
-
-            p { margin-bottom: 0; }
-        }
-
-        .wizard-field { flex: 0 1 360px; margin: 0; }
-    }
-
-    .wizard-form-section {
-        grid-column: span 4;
-        border-top: none;
-        margin-top: 0;
-        padding-top: 0;
-
-        @media (max-width: 1100px) { grid-column: span 6; }
-        @media (max-width: 720px)  { grid-column: span 12; }
-    }
-
-    .wizard-section-heading { margin-bottom: var(--space-3); }
-
-    .wizard-grid-three,
-    .wizard-grid-four {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    mat-card {
-        grid-column: span 12;
-        background: transparent;
-        box-shadow: none;
-
-        ::ng-deep .mat-mdc-card-content {
-            padding: 0;
-        }
-    }
-
-    .wizard-generate-button {
-        margin-top: var(--space-2);
-    }
-}
-
-.wizard-panel {
-    background: var(--bg-surface);
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-lg);
-    padding: var(--space-5);
-    box-shadow: var(--shadow-sm);
-}
-
-// Form sezioni
-.wizard-section-heading {
-    margin-bottom: var(--space-4);
-}
-
-.wizard-section-kicker {
-    color: var(--color-primary-500);
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    text-transform: uppercase;
-    margin: 0 0 var(--space-1);
-    font-weight: 600;
-}
-
-.wizard-section-title {
-    font-size: var(--text-lg);
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0;
-}
-
-.wizard-grid {
-    display: grid;
-    gap: var(--space-3);
-}
-
-.wizard-grid-three {
-    grid-template-columns: repeat(3, 1fr);
-}
-
-.wizard-grid-four {
-    grid-template-columns: 1fr 1fr;
-}
-
-// Stretti nella sidebar, 2 colonne bastano
-.wizard-field {
-    width: 100%;
-}
-
+// Stringe l'altezza interna degli input per la form compatta nella side-bar
 .dense-field {
     ::ng-deep .mat-mdc-text-field-wrapper {
+        height: 48px !important;
+        padding: 0 12px !important;
+    }
+
+    ::ng-deep .mat-mdc-form-field-flex {
+        height: 48px !important;
+        align-items: center !important;
+    }
+
+    ::ng-deep .mat-mdc-form-field-infix {
         padding-top: 0 !important;
         padding-bottom: 0 !important;
-        height: 48px !important;
+        min-height: auto !important;
+    }
+    
+    // Assicura che la label flottante non venga tagliata
+    ::ng-deep .mdc-floating-label--float-above {
+        top: 24px !important;
     }
 }
-
-.wizard-paste-box {
-    background: color-mix(in srgb, var(--color-primary-500) 8%, var(--bg-subtle));
-    border: 1px dashed var(--color-primary-500);
-    border-radius: var(--radius-md);
-    padding: var(--space-4);
-    margin-bottom: var(--space-6);
-
-    .wizard-paste-label {
-        font-weight: 600;
-        color: var(--color-primary-600);
-        font-size: var(--text-sm);
-        display: block;
-        margin-bottom: var(--space-1);
-    }
-
-    p {
-        font-size: var(--text-xs);
-        color: var(--text-secondary);
-        margin-bottom: var(--space-3);
-    }
-}
-
-.wizard-form-section {
-    padding-top: var(--space-4);
-    border-top: 1px solid var(--border-subtle);
-    margin-top: var(--space-4);
-
-    &:first-of-type {
-        border-top: none;
-        padding-top: 0;
-        margin-top: 0;
-    }
-}
-
-.wizard-generate-button {
-    width: 100%;
-    margin-top: var(--space-6);
-    height: 48px;
-    font-size: var(--text-base);
-    letter-spacing: 0.05em;
-    font-weight: 600;
-}
-
-// Tabella Pose
-.wizard-panel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    margin-bottom: var(--space-4);
-
-    .wizard-panel-kicker {
-        color: var(--color-accent-500);
-        font-family: var(--font-mono);
-        font-size: var(--text-xs);
-        text-transform: uppercase;
-        margin: 0;
-        font-weight: 600;
-    }
-
-    .wizard-panel-title {
-        font-size: var(--text-xl);
-        font-weight: 600;
-        color: var(--text-primary);
-        margin: 0;
-    }
-
-    .wizard-panel-chip {
-        background: var(--bg-subtle);
-        border: 1px solid var(--border-default);
-        padding: 4px 10px;
-        border-radius: 16px;
-        font-size: var(--text-xs);
-        font-weight: 600;
-        color: var(--text-primary);
-    }
-}
-
+// Tabella custom
 .wizard-table-shell {
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-md);
     overflow-x: auto;
-
-    table {
-        width: 100%;
-        background: transparent;
-    }
 
     th {
         color: var(--text-secondary);
         font-size: var(--text-xs);
         text-transform: uppercase;
         letter-spacing: 0.05em;
-    }
-
-    td.wizard-mono-cell {
-        font-family: var(--font-mono);
-        font-size: var(--text-sm);
-    }
-
-    .wizard-cell-index {
-        font-weight: 600;
-        color: var(--color-primary-500);
     }
 
     tr.wizard-row-confirmed {
@@ -418,108 +96,4 @@ app-three-viewer {
             font-weight: 500;
         }
     }
-}
-
-// =============================================================================
-// RIGHT STAGE (3D VIEWER) - layout decorations (height defined earlier)
-// =============================================================================
-.wizard-stage-panel {
-    background: var(--bg-surface);
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-lg);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    box-shadow: var(--shadow-md);
-}
-
-.wizard-stage-header {
-    padding: var(--space-4) var(--space-5);
-    border-bottom: 1px solid var(--border-subtle);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--bg-subtle);
-
-    .wizard-panel-kicker {
-        color: var(--color-primary-500);
-        font-family: var(--font-mono);
-        font-size: var(--text-xs);
-        text-transform: uppercase;
-        margin: 0;
-        font-weight: 600;
-    }
-
-    .wizard-panel-title {
-        font-size: var(--text-lg);
-        font-weight: 600;
-        color: var(--text-primary);
-        margin: 0;
-    }
-
-    .wizard-panel-chip {
-        background: var(--color-primary-500);
-        color: white;
-        padding: 2px 8px;
-        border-radius: 12px;
-        font-size: var(--text-xs);
-        font-weight: 600;
-    }
-}
-
-.wizard-stage-frame {
-    flex: 1;
-    background: var(--bg-app); // Sfondo profondo per contrasto col 3D
-}
-
-// Empty state prima della generazione
-.wizard-empty-state {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    color: var(--text-secondary);
-    padding: var(--space-6);
-
-    .wizard-empty-orb {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        background: var(--bg-subtle);
-        border: 1px dashed var(--border-strong);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: var(--space-4);
-
-        mat-icon {
-            font-size: 40px;
-            width: 40px;
-            height: 40px;
-            color: var(--text-tertiary);
-        }
-    }
-
-    h3 {
-        color: var(--text-primary);
-        margin: 0 0 var(--space-2);
-        font-size: var(--text-xl);
-        font-weight: 600;
-    }
-
-    p {
-        max-width: 40ch;
-        margin: 0;
-    }
-}
-
-.pose-warning {
-    color: #ffd740;
-    background: rgba(0, 0, 0, 0.2);
-    padding: 12px;
-    border-radius: 4px;
-    margin: 16px 0;
-    border: 1px solid #ffd740;
 }
