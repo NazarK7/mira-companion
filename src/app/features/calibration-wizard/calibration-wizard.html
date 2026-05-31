@@ -209,7 +209,7 @@
                             [lensSpec]="selectedLens()" [plateSpec]="selectedPlate()"
                             [currentIndex]="selectedIndex()!"
                             [totalPoses]="generatedPoses().length"
-                            (indexChange)="selectedIndex.set($event)" />
+                            (indexChange)="onPoseSelectedFrom3D($event)" />
                     </div>
 
                     @if (conflictWithAny() !== null) {

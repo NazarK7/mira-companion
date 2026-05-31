@@ -47,6 +47,7 @@ import type {
   PlateWorldSetup,
 } from '../../../core/models/domain.model';
 import { generatePlateTexture } from '../../../core/utils/texture-generator.util';
+import { AppButtonComponent } from '../button/button.component';
 
 // =============================================================================
 // CONSTANTS
@@ -63,7 +64,7 @@ const SCENE_BG_COLOR = 0x0a0a0e;
   selector: 'app-camera-pov-viewer',
   templateUrl: './camera-pov-viewer.html',
   styleUrl: './camera-pov-viewer.scss',
-  imports: [FormsModule],
+  imports: [FormsModule, AppButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CameraPovViewer implements AfterViewInit {

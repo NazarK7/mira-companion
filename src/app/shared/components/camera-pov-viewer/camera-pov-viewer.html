@@ -27,29 +27,35 @@
 </div>
 
 @if (totalPoses() > 1) {
-  <div class="pov-pagination">
-    <button type="button"
-            class="pov-page-btn"
-            (click)="prevPose()"
-            [disabled]="!canPrev()"
-            aria-label="Pose precedente">
-      ‹
-    </button>
-    <div class="pov-page-input">
+  <div class="flex items-center justify-center gap-2 mt-4" aria-label="Navigazione pose">
+    <app-button 
+      variant="outline" 
+      size="icon" 
+      (clicked)="prevPose()" 
+      [disabled]="!canPrev()" 
+      aria-label="Pose precedente">
+      <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+    </app-button>
+
+    <div class="flex items-center gap-2 px-3 min-h-[36px] bg-bg-surface border border-border-subtle rounded-lg focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-500/20 transition-all">
       <input type="number"
              [min]="1"
              [max]="totalPoses()"
              [ngModel]="displayIndex()"
              (change)="onIndexInputChange($any($event.target).value)"
+             (keydown.enter)="onIndexInputChange($any($event.target).value)"
+             class="w-12 text-center bg-transparent border-none text-text-primary font-bold text-sm outline-none font-mono focus:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
              aria-label="Numero pose corrente" />
-      <span class="pov-page-total">/ {{ totalPoses() }}</span>
+      <span class="text-text-tertiary text-[11px] font-bold font-mono leading-none">/ {{ totalPoses() }}</span>
     </div>
-    <button type="button"
-            class="pov-page-btn"
-            (click)="nextPose()"
-            [disabled]="!canNext()"
-            aria-label="Pose successiva">
-      ›
-    </button>
+
+    <app-button 
+      variant="outline" 
+      size="icon" 
+      (clicked)="nextPose()" 
+      [disabled]="!canNext()" 
+      aria-label="Pose successiva">
+      <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+    </app-button>
   </div>
 }
