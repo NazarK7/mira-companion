@@ -1,10 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, OnInit, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import type { CameraType, Job } from './../../../core/models/domain.model';
+import { CAMERA_TYPES, type CameraType, type Job } from './../../../core/models/domain.model';
 import {
   formatDate,
   formatFileSize,
-  relativeTime,} from './../../../core/utils/date-format.util';
+  relativeTime,
+} from './../../../core/utils/date-format.util';
 
 @Component({
   selector: 'app-job-card',
@@ -13,16 +14,15 @@ import {
   imports: [MatIconModule],
   templateUrl: './job-card.html',
 })
-export class JobCardComponent {
+
+export class JobCardComponent  {
   readonly job = input.required<Job>();
   readonly cameraType = input<CameraType>('MIRA_3D');
 
   readonly expanded = signal(false);
 
-  readonly sortedBackups = computed(() =>
-    [...this.job().backups].sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    ),
+  readonly sortedBackups = computed(() => [...this.job().backups].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
   );
 
   readonly latestBackup = computed(() => this.sortedBackups()[0] ?? null);
@@ -30,8 +30,12 @@ export class JobCardComponent {
   readonly previousBackups = computed(() => this.sortedBackups().slice(1));
 
   readonly isCognex = computed(
-    () => this.cameraType() === 'COGNEX_INSIGHT' || this.cameraType() === 'COGNEX_DATAMAN',
+    () => this.cameraType() === CAMERA_TYPES.COGNEX_INSIGHT || this.cameraType() === CAMERA_TYPES.COGNEX_DATAMAN,
   );
+
+  isMatrox(): boolean {
+    return this.cameraType() === CAMERA_TYPES.MIRA_3D;
+  }
 
   toggleExpand(): void {
     this.expanded.update(v => !v);

@@ -71,12 +71,7 @@ export class CameraService {
 
   delete(id: string): Observable<any> {
     // Aggiungiamo { responseType: 'text' } per gestire il corpo vuoto del 200 OK
-    return this.http.delete(`${this.endpoint}/${id}`, { responseType: 'text' }).pipe(
-      tap(() => {
-        // Aggiorna il segnale locale delle camere
-        this.cameras.update(list => list.filter(c => c.id !== id));
-      })
-    );
+    return this.http.delete(`${this.endpoint}/${id}`, { responseType: 'text' })
   }
 
   // --- UTILS ---

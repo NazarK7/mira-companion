@@ -1,8 +1,9 @@
 // src/app/features/station-detail/station-detail.ts
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, Signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { switchMap, map, distinctUntilChanged } from 'rxjs/operators';
+import { toSignal, toObservable } from '@angular/core/rxjs-interop';
+import { switchMap, map, distinctUntilChanged, filter } from 'rxjs/operators';
+import { combineLatest } from 'rxjs';
 
 import { CustomerService } from '../../core/services/customer.service';
 import { CameraService } from '../../core/services/camera.service';
@@ -11,8 +12,7 @@ import { AppButtonComponent } from '../../shared/components/button/button.compon
 import { AppComponent } from '../../app';
 import { NotificationService } from '../../shared/services/notification.service';
 import { CAMERA_TYPE_OPTIONS, STATION_STATUS_OPTIONS } from '../../core/data/features';
-
-type CameraType = 'COGNEX_INSIGHT' | 'COGNEX_DATAMAN' | 'MIRA_3D';
+import { CameraType } from '../../core/models/domain.model';
 
 @Component({
   selector: 'app-station-detail',
@@ -30,29 +30,35 @@ export class StationDetailComponent {
   private readonly notify = inject(NotificationService);
   protected readonly i18n = inject(I18nService);
 
-  // Trigger reattivo per il refresh dei dati
-  private readonly refreshTrigger = signal(0);
+  // 1. Reactive invalidate trigger
+  private readonly refreshTrigger = signal<number>(0);
 
+  // 2. Reactive Route Parameters Stream (Eliminating raw snapshots from computed)
+  private readonly activeParams = toSignal(this.route.paramMap);
 
-
-  // Re-implementazione semplificata del fetch senza BehaviorSubject manuale
+  // 3. Unified Data Stream: Fires on Route change OR when refreshTrigger increments
   readonly customerData = toSignal(
-    this.route.paramMap.pipe(
-      map(params => params.get('slug')!),
-      switchMap(slug => this.customerService.getBySlug(slug))
+    combineLatest([
+      this.route.paramMap.pipe(map(params => params.get('slug')), filter(Boolean), distinctUntilChanged()),
+      toObservable(this.refreshTrigger)
+    ]).pipe(
+      switchMap(([slug, _]) => this.customerService.getBySlug(slug))
     )
   );
 
+  // 4. Pure Computed Signals driving the UI reactively
   readonly plant = computed(() => {
     const cust = this.customerData();
-    const id = this.route.snapshot.paramMap.get('plantId');
+    const params = this.activeParams();
+    const id = params?.get('plantId');
     if (!cust || !id) return null;
     return cust.plants.find((p: any) => p.id === id) ?? null;
   });
 
   readonly station = computed(() => {
     const p = this.plant();
-    const id = this.route.snapshot.paramMap.get('stationId');
+    const params = this.activeParams();
+    const id = params?.get('stationId');
     if (!p || !id) return null;
     return p.stations.find((s: any) => s.id === id) ?? null;
   });
@@ -68,7 +74,7 @@ export class StationDetailComponent {
     }
   }
 
-  async deleteCamera(event: Event, id: string, name: string) {
+  async deleteCamera(event: Event, id: string, name: string): Promise<void> {
     event.preventDefault();
     event.stopPropagation();
 
@@ -82,34 +88,24 @@ export class StationDetailComponent {
       this.cameraService.delete(id).subscribe({
         next: () => {
           this.notify.success('Camera eliminata con successo');
-          this.customerService.getBySlug(this.customerData()!.slug).subscribe(() => {
-            this.reloadRoute();
-          });
+
+          // 5. Elite execution: we increment the trigger, forcing automatic pull and UI repaint
+          this.refreshTrigger.update(current => current + 1);
         },
         error: (err) => {
-          console.error('Errore durante la delete:', err);
-          this.notify.error('Errore durante l\'eliminazione');
+          console.error('[STATION_DETAIL] [DELETE_FAILED]', err);
+          this.notify.error("Errore durante l'eliminazione");
         }
       });
     }
   }
 
   typeLabel(t: CameraType): string {
-    const option = CAMERA_TYPE_OPTIONS.find(opt => opt.value === t);
-    return option?.label ?? 'Unknown';
+    return CAMERA_TYPE_OPTIONS.find(opt => opt.value === t)?.label ?? 'Unknown';
   }
 
   statusBadgeClass(status: string | undefined | null): string {
     if (!status) return 'hidden';
-
-    const option = STATION_STATUS_OPTIONS.find(o => o.value === status.toUpperCase());
-    return option?.badgeClass ?? 'bg-bg-subtle text-text-tertiary border-border-subtle';
-  }
-
-  private reloadRoute(): void {
-    const currentUrl = this.router.url;
-    this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
-      this.router.navigateByUrl(currentUrl);
-    });
+    return STATION_STATUS_OPTIONS.find(o => o.value === status.toUpperCase())?.badgeClass ?? 'bg-bg-subtle text-text-tertiary border-border-subtle';
   }
 }

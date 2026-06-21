@@ -1,5 +1,5 @@
 // src/app/features/job-editor/job-editor.ts
-import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, OnInit, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, OnInit, Signal, signal, viewChild } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
@@ -8,10 +8,12 @@ import { BehaviorSubject, combineLatest } from 'rxjs'; // <-- Importati costrutt
 import { DatePipe } from '@angular/common';
 
 import { JobService } from '../../core/services/job.service';
-import { Job } from '../../core/models/domain.model';
+import { CAMERA_TYPES, Job } from '../../core/models/domain.model';
 import { NotificationService } from '../../shared/services/notification.service';
 import { AppButtonComponent } from '../../shared/components/button/button.component';
 import { AppComponent } from '../../app';
+import { DataSharingService } from '../../shared/services/dataSharing.service';
+import { CAMERA_TYPE_OPTIONS } from '../../core/data/features';
 
 @Component({
   selector: 'app-job-editor',
@@ -20,12 +22,13 @@ import { AppComponent } from '../../app';
   imports: [ReactiveFormsModule, AppButtonComponent, DatePipe, RouterLink],
   templateUrl: './job-editor.html',
 })
-export class JobEditorComponent implements OnInit {
+export class JobEditorComponent {
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly router = inject(Router);
   private readonly jobService = inject(JobService);
   private readonly notify = inject(NotificationService);
   private readonly app = inject(AppComponent);
+  private readonly dataSharing = inject(DataSharingService);
 
   // --- DOM Element Queries ---
   readonly fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
@@ -36,6 +39,7 @@ export class JobEditorComponent implements OnInit {
   plantId = input.required<string>();
   stationId = input.required<string>();
   cameraId = input.required<string>();
+  cameraType = input.required<string>();
   jobId = input<string>();
 
   // --- UI States ---
@@ -43,6 +47,8 @@ export class JobEditorComponent implements OnInit {
   readonly isUploading = signal(false);
   readonly selectedFile = signal<File | null>(null);
   readonly isEditMode = computed(() => !!this.jobId());
+  public currentCameraType: Signal<string> = this.dataSharing.activeCameraType;
+  public readonly activeCameraType: Signal<string> = this.dataSharing.activeCameraType;
 
   readonly activeTab = signal<'backups' | 'images'>('backups');
 
@@ -56,15 +62,17 @@ export class JobEditorComponent implements OnInit {
     visionToolSlot: [null as number | null, [Validators.min(1), Validators.max(99)]]
   });
 
-  // --- Data Fetching ---
+
+public readonly isMira3D: Signal<boolean> = computed(() => {
+    const hardwareType = this.activeCameraType();
+    return hardwareType === CAMERA_TYPES.MIRA_3D;
+  });
+
+
   protected readonly jobData = toSignal(
     // combineLatest re-innesca la pipeline se cambia l'ID o se emettiamo un evento di refresh
-    combineLatest([
-      toObservable(this.jobId).pipe(filter(Boolean)),
-      this.refreshTrigger$
-    ]).pipe(
-      switchMap(([id]) => this.jobService.getById(id)),
-      tap(job => {
+    combineLatest([toObservable(this.jobId).pipe(filter(Boolean)), this.refreshTrigger$]).pipe(
+      switchMap(([id]) => this.jobService.getById(id)), tap(job => {
         this.form.patchValue({
           name: job.name,
           description: job.description || '',
@@ -76,10 +84,6 @@ export class JobEditorComponent implements OnInit {
 
   protected readonly backups = computed(() => this.jobData()?.backups || []);
   protected readonly images = computed(() => this.jobData()?.testImages || []);
-
-  ngOnInit(): void { }
-
-  // --- Actions ---
 
   switchTab(tab: 'backups' | 'images'): void {
     this.activeTab.set(tab);

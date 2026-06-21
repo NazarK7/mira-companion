@@ -436,6 +436,12 @@ export interface Issue {
 
 export type CameraType = 'COGNEX_INSIGHT' | 'COGNEX_DATAMAN' | 'MIRA_3D';
 
+export const CAMERA_TYPES = {
+  COGNEX_INSIGHT: 'COGNEX_INSIGHT',
+  COGNEX_DATAMAN: 'COGNEX_DATAMAN',
+  MIRA_3D: 'MIRA_3D',
+};
+
 export type CameraStatus =
   | 'PLANNING'
   | 'CALIBRATING'

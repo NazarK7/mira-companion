@@ -1,5 +1,5 @@
 // src/app/features/camera-details/camera-details.ts
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, computed, effect, inject, input, Signal, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { filter, switchMap, distinctUntilChanged } from 'rxjs/operators';
@@ -24,6 +24,7 @@ import {
   getAssetFileSize
 } from '../../core/data/features';
 import { Camera, CameraType } from '../../core/models/domain.model';
+import { DataSharingService } from '../../shared/services/dataSharing.service';
 
 @Component({
   selector: 'app-camera-details',
@@ -40,6 +41,7 @@ export class CameraDetailsComponent {
   private readonly app = inject(AppComponent);
   private readonly notify = inject(NotificationService);
   protected readonly i18n = inject(I18nService);
+  private readonly dataSharing = inject(DataSharingService);
 
   // --- Exposed to Template ---
   protected readonly ASSET_MAP = ASSET_CONFIGS;
@@ -62,6 +64,20 @@ export class CameraDetailsComponent {
   readonly station = computed(() => this.plant()?.stations.find(s => s.id === this.stationId()) ?? null);
   readonly isMira3D = computed(() => this.camera()?.type === 'MIRA_3D');
 
+  // Unified Single Source of Truth for Camera Type Label
+  readonly cameraType: Signal<string> = computed(() => {
+    const currentType = this.camera()?.type;
+    if (!currentType) return 'Unknown';
+    return CAMERA_TYPE_OPTIONS.find(opt => opt.value === currentType)?.label ?? 'Unknown';
+  });
+
+ constructor() {
+    effect(() => {
+      let currentRawType = this.camera()?.type;
+      currentRawType && this.dataSharing.setCameraType(currentRawType);
+    });
+  } 
+
   // --- Logic Wrappers ---
   getFileName(cam: Camera, key: AssetKey) { return getAssetFileName(cam, key); }
   getFileSize(cam: Camera, key: AssetKey) { return getAssetFileSize(cam, key); }
@@ -72,7 +88,10 @@ export class CameraDetailsComponent {
     return (b / (1024 * 1024)).toFixed(2) + ' MB';
   }
 
-  typeLabel(t: CameraType): string { return CAMERA_TYPE_OPTIONS.find(opt => opt.value === t)?.label ?? 'Unknown'; }
+  typeLabel(t: CameraType): string {
+    return CAMERA_TYPE_OPTIONS.find(opt => opt.value === t)?.label ?? 'Unknown';
+  }
+
   typeBadgeClass(t: CameraType): string { return CAMERA_TYPE_OPTIONS.find(opt => opt.value === t)?.badgeClass ?? 'bg-bg-subtle'; }
   statusBadgeClass(status: string | undefined | null): string {
     if (!status) return 'hidden';

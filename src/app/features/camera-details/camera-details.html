@@ -24,7 +24,7 @@
             }}</h1>
           <span class="text-[10px] font-black uppercase tracking-widest border px-3 py-1 rounded-lg"
             [class]="typeBadgeClass(cam.type)">
-            {{ typeLabel(cam.type) }}
+            {{ cameraType()  }}
           </span>
         </div>
         <div class="flex items-center gap-2">
@@ -57,9 +57,8 @@
     { label: 'Model', val: cam.cameraModel, icon: 'videocam' },
     { label: 'Focal', val: cam.lensFocalMm ? cam.lensFocalMm + 'mm' : 'N/A', icon: 'center_focus_strong' },
     { label: 'IP', val: cam.ipAddress, icon: 'lan' },
-    { label: 'Firmware', val: cam.firmware, icon: 'developer_mode' },
+    { label: 'Firmware', val: cam.cameraModel, icon: 'developer_mode' },
     { label: 'Serial', val: cam.serialNumber, icon: 'barcode' },
-    { label: 'MAC', val: cam.macAddress, icon: 'id_card' }
     ]; track spec.label) {
     <div class="bg-bg-surface border border-border-subtle rounded-2xl p-4 shadow-sm space-y-1">
       <div class="flex items-center gap-2 text-text-tertiary">

@@ -81,7 +81,6 @@ export class CameraEditorComponent implements OnInit {
             ipAddress: camera.ipAddress || '',
             firmware: camera.firmware || '',
             serialNumber: camera.serialNumber || '',
-            macAddress: camera.macAddress || '',
             controllerType: camera.controllerType || null,
             plcNotes: camera.plcNotes || '',
             notes: camera.notes || ''

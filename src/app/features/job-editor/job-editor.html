@@ -55,7 +55,7 @@
               class="bg-bg-subtle border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all resize-none text-sm"
               placeholder="Technical notes for cell operators..."></textarea>
           </div>
-
+          @if (isMira3D()) {
           <div class="flex flex-col gap-2">
             <label class="text-[10px] font-black uppercase tracking-widest text-text-tertiary">Vision Tool Slot
               (1-99)</label>
@@ -64,8 +64,10 @@
             <p class="text-[9px] text-text-tertiary italic">L'ID trigger inviato dal PLC per caricare questo job in
               MiRa3D.</p>
           </div>
+          }
         </form>
       </div>
+
 
       <div class="p-4 rounded-2xl bg-info-500/5 border border-info-500/10 flex gap-3">
         <span class="material-symbols-outlined text-info-500 text-lg">info</span>
@@ -74,6 +76,7 @@
           disallineamenti di presa.
         </p>
       </div>
+
     </div>
 
     <div class="lg:col-span-8">
